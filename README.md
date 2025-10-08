@@ -1,4 +1,4 @@
-# AI Scientist v2 — Boilerplate (Python + CrewAI)
+# AI chicocienciaV1 — Boilerplate (Python + CrewAI)
 
 Este boilerplate recria um sistema de **descoberta científica autônoma** inspirado no mind-map v2,
 usando **CrewAI** para orquestração, um **Agentic Tree Search** com 4 estágios e
