@@ -1,0 +1,13 @@
+objective:
+  title: "Investigate simple compositional regularization on small vision tasks"
+  dataset: "iris"
+  primary_metric: "accuracy"
+  hypotheses:
+    - "Adding L2 regularization improves generalization vs baseline"
+    - "Small dropout improves robustness"
+  constraints:
+    - "Training time below 60s per run"
+    - "No human-authored code templates"
+  ethical:
+    - "Always report negative results"
+    - "Disclose seeds, datasets and limitations"
