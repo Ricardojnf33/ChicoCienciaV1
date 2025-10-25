@@ -2,6 +2,7 @@ import typer
 import structlog
 import uuid
 from pathlib import Path
+import json
 from src.crews.ai_scientist_v2 import build_crew
 from src.processes.ats_process import run_agentic_tree
 from src.core.tree import AgenticTree
@@ -49,10 +50,23 @@ def resume(run_id: str, out_dir: str = "runs", budget: int = 5):
     log.info("resume.done", run_id=run_id)
 
 @app.command()
-def inspect(run_id: str, out_dir: str = "runs", show_frontier: bool = True):
+def inspect(run_id: str, out_dir: str = "runs", limit: int = 20):
     path = f"{out_dir}/{run_id}.json"
-    data = Path(path).read_text()
-    typer.echo(data)
+    obj = json.loads(Path(path).read_text())
+    nodes = obj.get("nodes", [])
+    frontier = set(obj.get("frontier", []))
+    # Ordena por score desc, visits desc
+    nodes_sorted = sorted(nodes, key=lambda n: (n.get("score") or 0.0, n.get("visits", 0)), reverse=True)
+    header = f"{'id':8}  {'stage':14}  {'score':7}  {'visits':6}  {'status':10}  {'frontier':8}  prompt"
+    typer.echo(header)
+    typer.echo("-" * len(header))
+    for n in nodes_sorted[:limit]:
+        line = f"{n['id'][:8]:8}  {str(n['stage']):14}  {str(n.get('score')):7}  {str(n.get('visits',0)):6}  {n.get('status',''):10}  {('yes' if n['id'] in frontier else 'no'):8}  {n.get('prompt','')[:60]}"
+        typer.echo(line)
+    typer.echo("")
+    best = nodes_sorted[0] if nodes_sorted else None
+    if best:
+        typer.echo(f"Best: id={best['id']} score={best.get('score')} stage={best['stage']}")
 
 if __name__ == "__main__":
     app()
