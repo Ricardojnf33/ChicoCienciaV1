@@ -21,15 +21,36 @@ from src.core.tree import AgenticTree
 from src.prompts.stages import build_prompt, next_stage
 from src.config.settings import Settings
 import structlog
+from src.core.persistence import init_db, NodeRow, upsert_node
+import json as _json
 
 def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int = 2):
     settings = Settings()
     dry_run = settings.OPENAI_API_KEY is None
     log = structlog.get_logger()
+    engine = init_db(settings.SQLITE_URL)
     for _ in range(budget):
         node = tree.select()
         prompt = build_prompt(node.stage, objective_json=node.prompt)
         log.info("ats.iter.start", node_id=node.id, stage=node.stage.name)
+
+        # Persiste snapshot do nó atual
+        upsert_node(engine, NodeRow(
+            id=node.id,
+            parent_id=node.parent_id,
+            type=node.type.name,
+            stage=node.stage.value,
+            prompt=node.prompt,
+            plan=node.plan,
+            code_path=node.code_path,
+            results_path=node.results_path,
+            figs_paths=_json.dumps(node.figs_paths) if node.figs_paths else None,
+            score=node.score,
+            visits=node.visits,
+            value_sum=node.value_sum,
+            status=node.status.name,
+            meta=_json.dumps(node.meta) if node.meta else None,
+        ))
 
         def _agent_by_name(c: Crew, name: str):
             return next(a for a in c.agents if getattr(a, "name", None) == name)
@@ -84,6 +105,24 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
                 json.dump({"accuracy": 0.5}, f)
 
         tree.update_result(node.id, res_path, vlm_ok=vlm_ok)
+        # Persiste nó atualizado após resultado
+        n = tree.nodes[node.id]
+        upsert_node(engine, NodeRow(
+            id=n.id,
+            parent_id=n.parent_id,
+            type=n.type.name,
+            stage=n.stage.value,
+            prompt=n.prompt,
+            plan=n.plan,
+            code_path=n.code_path,
+            results_path=n.results_path,
+            figs_paths=_json.dumps(n.figs_paths) if n.figs_paths else None,
+            score=n.score,
+            visits=n.visits,
+            value_sum=n.value_sum,
+            status=n.status.name,
+            meta=_json.dumps(n.meta) if n.meta else None,
+        ))
         score = tree.nodes[node.id].score or 0.0
         tree.backpropagate(tree.nodes[node.id], score)
         log.info("ats.iter.scored", node_id=node.id, score=score)
@@ -94,6 +133,23 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
         for cid in child_ids:
             c = tree.nodes[cid]
             c.stage = next_stage(c.stage)
+            # Persiste cada filho criado
+            upsert_node(engine, NodeRow(
+                id=c.id,
+                parent_id=c.parent_id,
+                type=c.type.name,
+                stage=c.stage.value,
+                prompt=c.prompt,
+                plan=c.plan,
+                code_path=c.code_path,
+                results_path=c.results_path,
+                figs_paths=_json.dumps(c.figs_paths) if c.figs_paths else None,
+                score=c.score,
+                visits=c.visits,
+                value_sum=c.value_sum,
+                status=c.status.name,
+                meta=_json.dumps(c.meta) if c.meta else None,
+            ))
         log.info("ats.iter.children", node_id=node.id, children=child_ids)
 
         if tree.should_early_stop(threshold=tree.settings.EARLY_STOP_SCORE):
