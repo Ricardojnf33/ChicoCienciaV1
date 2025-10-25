@@ -82,3 +82,69 @@ class AgenticTree:
     def should_early_stop(self, threshold: float = 0.72) -> bool:
         best = max((n.score or 0.0) for n in self.nodes.values())
         return best >= threshold
+
+    # --- Persistência simples em JSON ---
+    def to_dict(self) -> dict:
+        def node_to_dict(n: Node) -> dict:
+            return {
+                "id": n.id,
+                "parent_id": n.parent_id,
+                "type": n.type.name,
+                "stage": n.stage.name,
+                "prompt": n.prompt,
+                "plan": n.plan,
+                "code_path": n.code_path,
+                "results_path": n.results_path,
+                "figs_paths": list(n.figs_paths),
+                "score": n.score,
+                "visits": n.visits,
+                "value_sum": n.value_sum,
+                "status": n.status.name,
+                "meta": n.meta,
+            }
+
+        return {
+            "objective": self.objective,
+            "primary_metric": self.primary_metric,
+            "artifact_root": str(self.artifact_root),
+            "frontier": list(self.frontier),
+            "nodes": [node_to_dict(n) for n in self.nodes.values()],
+        }
+
+    def save_json(self, path: str) -> None:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        Path(path).write_text(json.dumps(self.to_dict(), indent=2, ensure_ascii=False))
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "AgenticTree":
+        obj = data.get("objective", {})
+        primary_metric = data.get("primary_metric", "accuracy")
+        artifact_root = data.get("artifact_root", "./experiments")
+        tree = cls(obj, primary_metric, artifact_root)
+        # Reconstroi nós
+        tree.nodes = {}
+        for nd in data.get("nodes", []):
+            n = Node(
+                id=nd["id"],
+                parent_id=nd.get("parent_id"),
+                type=NodeType[nd["type"]],
+                stage=Stage[nd["stage"]],
+                prompt=nd.get("prompt", ""),
+                plan=nd.get("plan"),
+                code_path=nd.get("code_path"),
+                results_path=nd.get("results_path"),
+                figs_paths=nd.get("figs_paths", []),
+                score=nd.get("score"),
+                visits=int(nd.get("visits", 0)),
+                value_sum=float(nd.get("value_sum", 0.0)),
+                status=ExecStatus[nd.get("status", "PENDING")],
+                meta=nd.get("meta", {}),
+            )
+            tree.nodes[n.id] = n
+        tree.frontier = list(data.get("frontier", []))
+        return tree
+
+    @classmethod
+    def load_json(cls, path: str) -> "AgenticTree":
+        data = json.loads(Path(path).read_text())
+        return cls.from_dict(data)
