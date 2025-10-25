@@ -1,0 +1,110 @@
+{
+  "objective": {
+    "objective": {
+      "title": "Investigate simple compositional regularization on small vision tasks",
+      "dataset": "iris",
+      "primary_metric": "accuracy",
+      "hypotheses": [
+        "Adding L2 regularization improves generalization vs baseline",
+        "Small dropout improves robustness"
+      ],
+      "constraints": [
+        "Training time below 60s per run",
+        "No human-authored code templates"
+      ],
+      "ethical": [
+        "Always report negative results",
+        "Disclose seeds, datasets and limitations"
+      ]
+    }
+  },
+  "primary_metric": "accuracy",
+  "artifact_root": "experiments",
+  "frontier": [
+    "14a072b1",
+    "42163746",
+    "c589c352"
+  ],
+  "nodes": [
+    {
+      "id": "b4ce0d60",
+      "parent_id": null,
+      "type": "HYPOTHESIS",
+      "stage": "PRELIM",
+      "prompt": "{\"title\": \"Investigate simple compositional regularization on small vision tasks\", \"dataset\": \"iris\", \"primary_metric\": \"accuracy\", \"hypotheses\": [\"Adding L2 regularization improves generalization vs baseline\", \"Small dropout improves robustness\"], \"constraints\": [\"Training time below 60s per run\", \"No human-authored code templates\"], \"ethical\": [\"Always report negative results\", \"Disclose seeds, datasets and limitations\"]}",
+      "plan": null,
+      "code_path": null,
+      "results_path": "./experiments/b4ce0d60/results.json",
+      "figs_paths": [],
+      "score": 0.5125,
+      "visits": 2,
+      "value_sum": 1.025,
+      "status": "PENDING",
+      "meta": {}
+    },
+    {
+      "id": "67f9a6ca",
+      "parent_id": "b4ce0d60",
+      "type": "HYPOTHESIS",
+      "stage": "TUNING",
+      "prompt": "{\"title\": \"Investigate simple compositional regularization on small vision tasks\", \"dataset\": \"iris\", \"primary_metric\": \"accuracy\", \"hypotheses\": [\"Adding L2 regularization improves generalization vs baseline\", \"Small dropout improves robustness\"], \"constraints\": [\"Training time below 60s per run\", \"No human-authored code templates\"], \"ethical\": [\"Always report negative results\", \"Disclose seeds, datasets and limitations\"]}",
+      "plan": "Auto-generated plan stub.",
+      "code_path": null,
+      "results_path": "./experiments/67f9a6ca/results.json",
+      "figs_paths": [],
+      "score": 0.5125,
+      "visits": 1,
+      "value_sum": 0.5125,
+      "status": "PENDING",
+      "meta": {}
+    },
+    {
+      "id": "14a072b1",
+      "parent_id": "b4ce0d60",
+      "type": "HYPOTHESIS",
+      "stage": "TUNING",
+      "prompt": "{\"title\": \"Investigate simple compositional regularization on small vision tasks\", \"dataset\": \"iris\", \"primary_metric\": \"accuracy\", \"hypotheses\": [\"Adding L2 regularization improves generalization vs baseline\", \"Small dropout improves robustness\"], \"constraints\": [\"Training time below 60s per run\", \"No human-authored code templates\"], \"ethical\": [\"Always report negative results\", \"Disclose seeds, datasets and limitations\"]}",
+      "plan": "Auto-generated plan stub.",
+      "code_path": null,
+      "results_path": null,
+      "figs_paths": [],
+      "score": null,
+      "visits": 0,
+      "value_sum": 0.0,
+      "status": "PENDING",
+      "meta": {}
+    },
+    {
+      "id": "42163746",
+      "parent_id": "67f9a6ca",
+      "type": "HYPOTHESIS",
+      "stage": "RESEARCH_GRADE",
+      "prompt": "{\"title\": \"Investigate simple compositional regularization on small vision tasks\", \"dataset\": \"iris\", \"primary_metric\": \"accuracy\", \"hypotheses\": [\"Adding L2 regularization improves generalization vs baseline\", \"Small dropout improves robustness\"], \"constraints\": [\"Training time below 60s per run\", \"No human-authored code templates\"], \"ethical\": [\"Always report negative results\", \"Disclose seeds, datasets and limitations\"]}",
+      "plan": "Auto-generated plan stub.",
+      "code_path": null,
+      "results_path": null,
+      "figs_paths": [],
+      "score": null,
+      "visits": 0,
+      "value_sum": 0.0,
+      "status": "PENDING",
+      "meta": {}
+    },
+    {
+      "id": "c589c352",
+      "parent_id": "67f9a6ca",
+      "type": "HYPOTHESIS",
+      "stage": "RESEARCH_GRADE",
+      "prompt": "{\"title\": \"Investigate simple compositional regularization on small vision tasks\", \"dataset\": \"iris\", \"primary_metric\": \"accuracy\", \"hypotheses\": [\"Adding L2 regularization improves generalization vs baseline\", \"Small dropout improves robustness\"], \"constraints\": [\"Training time below 60s per run\", \"No human-authored code templates\"], \"ethical\": [\"Always report negative results\", \"Disclose seeds, datasets and limitations\"]}",
+      "plan": "Auto-generated plan stub.",
+      "code_path": null,
+      "results_path": null,
+      "figs_paths": [],
+      "score": null,
+      "visits": 0,
+      "value_sum": 0.0,
+      "status": "PENDING",
+      "meta": {}
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 from sqlmodel import Field, SQLModel, create_engine, Session, select
-from typing import Optional, List, Dict, Any
+from typing import Dict, Any
 from datetime import datetime
 
 class NodeRow(SQLModel, table=True):

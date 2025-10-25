@@ -1,4 +1,4 @@
-import json, math
+import json
 from pathlib import Path
 
 def metric_score(results_path: str, primary_metric: str = "accuracy") -> float:

@@ -1,0 +1,14 @@
+objective:
+  title: "Regularização L2 melhora acurácia no Iris"
+  primary_metric: accuracy
+  question: "Qual impacto de L2 e dropout leve na generalização vs baseline?"
+  datasets: ["iris"]
+  figures:
+    - "Lineplot: accuracy vs C (inverso do L2)"
+  constraints:
+    - "Reprodutibilidade (seed fixo)"
+    - "Salvar results.json e figuras por nó"
+  literature_query: "logistic regression iris regularization reproducibility"
+  acceptance_criteria:
+    min_improvement: 0.02
+

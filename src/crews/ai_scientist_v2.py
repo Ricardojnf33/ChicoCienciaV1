@@ -1,4 +1,17 @@
-from crewai import Crew, Process
+try:
+    from crewai import Crew, Process
+except Exception:
+    class Crew:  # minimal stub for dry-run
+        def __init__(self, agents=None, process=None, verbose: bool = False):
+            self.agents = agents or []
+            self.process = process
+            self.verbose = verbose
+
+        def kickoff(self, tasks):
+            return None
+
+    class Process:
+        hierarchical = "hierarchical"
 from src.agents.manager import manager
 from src.agents.researcher import researcher
 from src.agents.coder import coder

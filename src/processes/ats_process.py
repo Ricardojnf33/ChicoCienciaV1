@@ -77,7 +77,8 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
                 kickoff_output = None
 
         # Extração de resultados reais (best-effort) ou simulação fallback
-        import json, os
+        import json
+        import os
         res_path = None
         vlm_ok = True
         if kickoff_output:
