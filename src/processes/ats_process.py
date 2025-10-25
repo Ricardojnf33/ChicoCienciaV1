@@ -18,7 +18,6 @@ except Exception:
     class Process:
         hierarchical = "hierarchical"
 from src.core.tree import AgenticTree
-from src.core.scoring import final_score
 from src.prompts.stages import build_prompt, next_stage
 from src.config.settings import Settings
 
@@ -29,12 +28,21 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
         node = tree.select()
         prompt = build_prompt(node.stage, objective_json=node.prompt)
 
+        def _agent_by_name(c: Crew, name: str):
+            return next(a for a in c.agents if getattr(a, "name", None) == name)
+
+        researcher = _agent_by_name(crew, "researcher")
+        coder = _agent_by_name(crew, "coder")
+        runner = _agent_by_name(crew, "runner")
+        reviewer = _agent_by_name(crew, "reviewer")
+        vlm_critic = _agent_by_name(crew, "vlm_critic")
+
         tasks = [
-            Task(agent=crew.agents[1], description=f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}."),
-            Task(agent=crew.agents[2], description=f"Implementar o melhor plano para o nó {node.id} com reprodutibilidade."),
-            Task(agent=crew.agents[3], description=f"Executar o código do nó {node.id} e salvar artifacts."),
-            Task(agent=crew.agents[4], description=f"Avaliar resultados do nó {node.id}, checar validade e gerar report."),
-            Task(agent=crew.agents[5], description=f"Revisar figuras do nó {node.id} (VLM) e classificar BUG/NON_BUG."),
+            Task(agent=researcher, description=f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}."),
+            Task(agent=coder, description=f"Implementar o melhor plano para o nó {node.id} com reprodutibilidade."),
+            Task(agent=runner, description=f"Executar o código do nó {node.id} e salvar artifacts."),
+            Task(agent=reviewer, description=f"Avaliar resultados do nó {node.id}, checar validade e gerar report."),
+            Task(agent=vlm_critic, description=f"Revisar figuras do nó {node.id} (VLM) e classificar BUG/NON_BUG."),
         ]
         if not dry_run:
             crew.kickoff(tasks)

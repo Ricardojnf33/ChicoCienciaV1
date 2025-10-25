@@ -1,16 +1,17 @@
 [tool.poetry]
-name = "ai-scientist-v2"
+name = "ChicoCienciaV1"
 version = "0.1.0"
-description = "Boilerplate for an AI Scientist v2-style project using Python + CrewAI"
-authors = ["Ricardo Fernandes <you@example.com>"]
+description = "AI Scientist v2-style project using CrewAI and Agentic Tree Search"
+authors = ["Ricardo Fernandes (Ricardojnf33) <ricardo.jnf1@gmail.com>"]
 readme = "README.md"
 packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-crewai = "*"
-crewai-tools = "*"
+crewai = "^0.51.0"
+crewai-tools = "^0.4.0"
 pydantic = "^2.7.0"
+pydantic-settings = "^2.5.2"
 typer = "^0.12.0"
 structlog = "^24.1.0"
 sqlmodel = "^0.0.16"
