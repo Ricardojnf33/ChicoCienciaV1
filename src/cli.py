@@ -1,4 +1,5 @@
 import typer
+from typing import Optional
 import structlog
 import uuid
 from pathlib import Path
@@ -67,6 +68,42 @@ def inspect(run_id: str, out_dir: str = "runs", limit: int = 20):
     best = nodes_sorted[0] if nodes_sorted else None
     if best:
         typer.echo(f"Best: id={best['id']} score={best.get('score')} stage={best['stage']}")
+
+
+@app.command()
+def report(run_id: str, out_dir: str = "runs", out_md: Optional[str] = None):
+    path = f"{out_dir}/{run_id}.json"
+    obj = json.loads(Path(path).read_text())
+    nodes = obj.get("nodes", [])
+    nodes_sorted = sorted(nodes, key=lambda n: (n.get("score") or 0.0, n.get("visits", 0)), reverse=True)
+    best = nodes_sorted[0] if nodes_sorted else None
+    title = obj.get("objective", {}).get("title", f"Run {run_id}")
+    lines = []
+    lines.append(f"# {title}")
+    lines.append("")
+    lines.append("## Introdução")
+    lines.append("Baseado na consulta de literatura e objetivo fornecidos.")
+    lines.append("")
+    lines.append("## Método")
+    lines.append(f"Datasets: {obj.get('objective', {}).get('datasets', [])}")
+    lines.append(f"Métrica primária: {obj.get('primary_metric', 'accuracy')}")
+    lines.append("")
+    lines.append("## Resultados")
+    if best:
+        lines.append(f"Melhor nó: `{best['id']}` | score: {best.get('score')} | stage: {best.get('stage')}")
+        if best.get("results_path"):
+            lines.append(f"Resultados: `{best['results_path']}`")
+    else:
+        lines.append("Sem nós disponíveis.")
+    lines.append("")
+    lines.append("## Discussão")
+    lines.append("Interpretação dos ganhos e limitações.")
+    lines.append("")
+    md = "\n".join(lines)
+    if out_md is None:
+        out_md = f"{out_dir}/{run_id}.md"
+    Path(out_md).write_text(md)
+    typer.echo(f"Relatório gerado em: {out_md}")
 
 if __name__ == "__main__":
     app()
