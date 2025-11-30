@@ -1,0 +1,79 @@
+{
+  "objective": {
+    "objective": {
+      "title": "Regularização L2 melhora acurácia no Iris",
+      "primary_metric": "accuracy",
+      "question": "Qual impacto de L2 e dropout leve na generalização vs baseline?",
+      "datasets": [
+        "iris"
+      ],
+      "figures": [
+        "Lineplot: accuracy vs C (inverso do L2)"
+      ],
+      "constraints": [
+        "Reprodutibilidade (seed fixo)",
+        "Salvar results.json e figuras por nó"
+      ],
+      "literature_query": "logistic regression iris regularization reproducibility",
+      "acceptance_criteria": {
+        "min_improvement": 0.02
+      }
+    }
+  },
+  "primary_metric": "accuracy",
+  "artifact_root": "experiments",
+  "frontier": [
+    "1208e408",
+    "a5005955"
+  ],
+  "nodes": [
+    {
+      "id": "d5068c16",
+      "parent_id": null,
+      "type": "HYPOTHESIS",
+      "stage": "PRELIM",
+      "prompt": "{\"title\": \"Regularização L2 melhora acurácia no Iris\", \"primary_metric\": \"accuracy\", \"question\": \"Qual impacto de L2 e dropout leve na generalização vs baseline?\", \"datasets\": [\"iris\"], \"figures\": [\"Lineplot: accuracy vs C (inverso do L2)\"], \"constraints\": [\"Reprodutibilidade (seed fixo)\", \"Salvar results.json e figuras por nó\"], \"literature_query\": \"logistic regression iris regularization reproducibility\", \"acceptance_criteria\": {\"min_improvement\": 0.02}}",
+      "plan": null,
+      "code_path": null,
+      "results_path": "./experiments/d5068c16/results.json",
+      "figs_paths": [],
+      "score": 0.2875,
+      "visits": 1,
+      "value_sum": 0.2875,
+      "status": "PENDING",
+      "meta": {}
+    },
+    {
+      "id": "1208e408",
+      "parent_id": "d5068c16",
+      "type": "HYPOTHESIS",
+      "stage": "TUNING",
+      "prompt": "{\"title\": \"Regularização L2 melhora acurácia no Iris\", \"primary_metric\": \"accuracy\", \"question\": \"Qual impacto de L2 e dropout leve na generalização vs baseline?\", \"datasets\": [\"iris\"], \"figures\": [\"Lineplot: accuracy vs C (inverso do L2)\"], \"constraints\": [\"Reprodutibilidade (seed fixo)\", \"Salvar results.json e figuras por nó\"], \"literature_query\": \"logistic regression iris regularization reproducibility\", \"acceptance_criteria\": {\"min_improvement\": 0.02}}",
+      "plan": "Auto-generated plan stub.",
+      "code_path": null,
+      "results_path": null,
+      "figs_paths": [],
+      "score": null,
+      "visits": 0,
+      "value_sum": 0.0,
+      "status": "PENDING",
+      "meta": {}
+    },
+    {
+      "id": "a5005955",
+      "parent_id": "d5068c16",
+      "type": "HYPOTHESIS",
+      "stage": "TUNING",
+      "prompt": "{\"title\": \"Regularização L2 melhora acurácia no Iris\", \"primary_metric\": \"accuracy\", \"question\": \"Qual impacto de L2 e dropout leve na generalização vs baseline?\", \"datasets\": [\"iris\"], \"figures\": [\"Lineplot: accuracy vs C (inverso do L2)\"], \"constraints\": [\"Reprodutibilidade (seed fixo)\", \"Salvar results.json e figuras por nó\"], \"literature_query\": \"logistic regression iris regularization reproducibility\", \"acceptance_criteria\": {\"min_improvement\": 0.02}}",
+      "plan": "Auto-generated plan stub.",
+      "code_path": null,
+      "results_path": null,
+      "figs_paths": [],
+      "score": null,
+      "visits": 0,
+      "value_sum": 0.0,
+      "status": "PENDING",
+      "meta": {}
+    }
+  ]
+}
