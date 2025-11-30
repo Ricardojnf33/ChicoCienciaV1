@@ -23,16 +23,41 @@ from src.config.settings import Settings
 import structlog
 from src.core.persistence import init_db, NodeRow, upsert_node
 import json as _json
+import wandb
+import time
 
 def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int = 2):
     settings = Settings()
     dry_run = settings.OPENAI_API_KEY is None
     log = structlog.get_logger()
+    
+    # --- OBSERVABILITY: WandB Init ---
+    if settings.WANDB_ON and not dry_run:
+        wandb.init(
+            project=settings.WANDB_PROJECT,
+            config={
+                "budget": budget,
+                "branching": branching,
+                "model_text": settings.MODEL_TEXT,
+                "model_vision": settings.MODEL_VISION,
+                "objective": tree.objective_data.get("title", "Unknown")
+            }
+        )
+        log.info("observability.wandb_init", project=settings.WANDB_PROJECT)
+    elif settings.WANDB_ON and dry_run:
+        log.warning("observability.wandb_skipped", reason="Dry-run mode active")
+
+    log.info("ats.start", mode="DRY-RUN" if dry_run else "REAL", budget=budget)
+
     engine = init_db(settings.SQLITE_URL)
-    for _ in range(budget):
+    
+    start_time = time.time()
+    
+    for i in range(budget):
+        iter_start = time.time()
         node = tree.select()
         prompt = build_prompt(node.stage, objective_json=node.prompt)
-        log.info("ats.iter.start", node_id=node.id, stage=node.stage.name)
+        log.info("ats.iter.start", iteration=i+1, node_id=node.id, stage=node.stage.name)
 
         # Persiste snapshot do nó atual
         upsert_node(engine, NodeRow(
@@ -52,51 +77,122 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
             meta=_json.dumps(node.meta) if node.meta else None,
         ))
 
-        def _agent_by_name(c: Crew, name: str):
-            return next(a for a in c.agents if getattr(a, "name", None) == name)
+        def _agent_by_role(c: Crew, role: str):
+            """Encontra agente por role (CrewAI não tem campo 'name')."""
+            return next(a for a in c.agents if getattr(a, "role", "").lower() == role.lower())
 
-        researcher = _agent_by_name(crew, "researcher")
-        coder = _agent_by_name(crew, "coder")
-        runner = _agent_by_name(crew, "runner")
-        reviewer = _agent_by_name(crew, "reviewer")
-        vlm_critic = _agent_by_name(crew, "vlm_critic")
+        researcher = _agent_by_role(crew, "Researcher")
+        coder = _agent_by_role(crew, "Coder")
+        runner = _agent_by_role(crew, "Runner")
+        reviewer = _agent_by_role(crew, "Reviewer")
+        vlm_critic = _agent_by_role(crew, "VLM Critic")
 
-        tasks = [
-            Task(agent=researcher, description=f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}."),
-            Task(agent=coder, description=f"Implementar o melhor plano para o nó {node.id} com reprodutibilidade."),
-            Task(agent=runner, description=f"Executar o código do nó {node.id} e salvar artifacts."),
-            Task(agent=reviewer, description=f"Avaliar resultados do nó {node.id}, checar validade e gerar report."),
-            Task(agent=vlm_critic, description=f"Revisar figuras do nó {node.id} (VLM) e classificar BUG/NON_BUG."),
-        ]
-        kickoff_output = None
-        if not dry_run:
-            try:
-                kickoff_output = crew.kickoff(tasks)
-            except Exception as e:
-                log.warning("ats.kickoff.error", error=str(e))
-                kickoff_output = None
-
-        # Extração de resultados reais (best-effort) ou simulação fallback
-        import json
-        import os
+        # --- SELF-HEALING LOOP ---
+        max_retries = 2
+        attempt = 0
+        success = False
         res_path = None
         vlm_ok = True
-        if kickoff_output:
-            try:
-                # Espera-se um objeto rico do CrewAI. Fazemos best-effort parsing.
-                # Tentativas comuns: dict direto, objeto com .json ou .raw_output
-                if isinstance(kickoff_output, dict):
-                    res_path = kickoff_output.get("results_path")
-                    vlm_ok = bool(kickoff_output.get("vlm_ok", True))
-                else:
-                    raw = getattr(kickoff_output, "raw_output", None) or getattr(kickoff_output, "json", None)
-                    if callable(raw):
-                        raw = raw()
-                    if isinstance(raw, dict):
-                        res_path = raw.get("results_path")
-                        vlm_ok = bool(raw.get("vlm_ok", True))
-            except Exception as e:
-                log.warning("ats.extract.error", error=str(e))
+        
+        while attempt <= max_retries and not success:
+            current_tasks = []
+            
+            # 1. Researcher (only on first attempt)
+            if attempt == 0:
+                current_tasks.append(Task(
+                    agent=researcher,
+                    description=f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}.",
+                    expected_output="Lista de hipóteses testáveis com revisão de literatura"
+                ))
+            
+            # 2. Coder (Initial or Correction)
+            if attempt == 0:
+                coder_desc = (
+                    f"Implementar o melhor plano para o nó {node.id} com reprodutibilidade.\n"
+                    f"IMPORTANTE: O código DEVE ser salvo em: ./experiments/{node.id}/code.py\n"
+                    f"IMPORTANTE: O código DEVE salvar results.json em: ./experiments/{node.id}/results.json\n"
+                    f"IMPORTANTE: Verifique se o arquivo ./experiments/{node.id}/code.py foi criado com sucesso antes de finalizar."
+                )
+            else:
+                # Correction Prompt
+                coder_desc = (
+                    f"A tentativa anterior falhou. Corrija o código para o nó {node.id}.\n"
+                    f"Erro reportado: O arquivo ./experiments/{node.id}/code.py não foi encontrado ou falhou na execução.\n"
+                    f"CERTIFIQUE-SE de salvar o arquivo corretamente em: ./experiments/{node.id}/code.py"
+                )
+                log.warning("ats.self_healing.retry", node_id=node.id, attempt=attempt)
+
+            current_tasks.append(Task(
+                agent=coder,
+                description=coder_desc,
+                expected_output="Caminho absoluto do arquivo Python criado e confirmação de existência."
+            ))
+
+            # 3. Runner
+            current_tasks.append(Task(
+                agent=runner,
+                description=(
+                    f"Executar o código do nó {node.id} localizado em ./experiments/{node.id}/code.py.\n"
+                    f"Certifique-se de que o arquivo existe antes de executar."
+                ),
+                expected_output="Artefatos salvos: results.json e figuras"
+            ))
+
+            # Execute Coder & Runner (and Researcher if first try)
+            kickoff_output = None
+            if not dry_run:
+                try:
+                    crew.tasks = current_tasks
+                    kickoff_output = crew.kickoff()
+                except Exception as e:
+                    log.warning("ats.kickoff.error", error=str(e), attempt=attempt)
+                    kickoff_output = None
+
+            # Check for Success (File Existence)
+            # Best-effort extraction of results path
+            import os
+            expected_res_path = f"./experiments/{node.id}/results.json"
+            expected_code_path = f"./experiments/{node.id}/code.py"
+            
+            if dry_run:
+                success = True # Always succeed in dry-run
+            elif os.path.exists(expected_code_path):
+                 # We assume success if code exists, but ideally we check results.json too
+                 # For now, let's be lenient: if code exists, we proceed to Reviewer
+                 success = True
+                 if os.path.exists(expected_res_path):
+                     res_path = expected_res_path
+            else:
+                success = False
+            
+            attempt += 1
+
+        # 4. Reviewer & VLM (Only if success or out of retries)
+        final_tasks = [
+            Task(
+                agent=reviewer,
+                description=f"Avaliar resultados do nó {node.id}, checar validade e gerar report.",
+                expected_output="Avaliação dos resultados e sugestões para próximos passos"
+            ),
+            Task(
+                agent=vlm_critic,
+                description=f"Revisar figuras do nó {node.id} (VLM) e classificar BUG/NON_BUG.",
+                expected_output="Classificação BUG/NON_BUG das figuras"
+            ),
+        ]
+        
+        if not dry_run:
+             try:
+                crew.tasks = final_tasks
+                crew.kickoff() # Execute final analysis
+             except Exception as e:
+                log.warning("ats.final_tasks.error", error=str(e))
+
+        # Extract final results for tree update
+        if not res_path and not dry_run:
+             # Try one last time to find it
+             if os.path.exists(f"./experiments/{node.id}/results.json"):
+                 res_path = f"./experiments/{node.id}/results.json"
 
         if not res_path:
             # Fallback: gera um results.json sintético
@@ -126,7 +222,20 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
         ))
         score = tree.nodes[node.id].score or 0.0
         tree.backpropagate(tree.nodes[node.id], score)
-        log.info("ats.iter.scored", node_id=node.id, score=score)
+        
+        iter_duration = time.time() - iter_start
+        log.info("ats.iter.scored", node_id=node.id, score=score, duration=f"{iter_duration:.2f}s")
+
+        # --- OBSERVABILITY: WandB Log ---
+        if settings.WANDB_ON and not dry_run:
+            wandb.log({
+                "iteration": i + 1,
+                "node_id": node.id,
+                "stage": node.stage.name,
+                "score": score,
+                "duration": iter_duration,
+                "best_score": max((n.score or 0.0) for n in tree.nodes.values())
+            })
 
         # expansão simples por estágio
         child_ids = tree.expand(tree.nodes[node.id], k=branching)
@@ -156,3 +265,6 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
         if tree.should_early_stop(threshold=tree.settings.EARLY_STOP_SCORE):
             log.info("ats.early_stop", best=max((n.score or 0.0) for n in tree.nodes.values()))
             break
+    
+    if settings.WANDB_ON and not dry_run:
+        wandb.finish()

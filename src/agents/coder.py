@@ -8,14 +8,18 @@ except Exception:
             self.verbose = verbose
             self.tools = tools or []
             self.name = name
-from src.tools.datasets import DatasetTool
-from src.tools.python_repl import PythonRunnerTool
-from src.tools.plotting import PlotTool
+try:
+    from src.tools.crewai_adapters import DatasetTool, PythonRunnerTool, PlotTool
+except ImportError:
+    from src.tools.datasets import DatasetTool
+    from src.tools.python_repl import PythonRunnerTool
+    from src.tools.plotting import PlotTool
 
 coder = Agent(
     role="Coder",
     goal=("Converter planos em código executável reprodutível, sem copiar templates humanos; "
           "salvar results.json e figuras."),
+    backstory="Desenvolvedor Python experiente em ciência de dados, focado em código limpo e reprodutível.",
     verbose=True,
     tools=[DatasetTool(), PythonRunnerTool(), PlotTool()],
 )

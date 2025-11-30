@@ -8,11 +8,15 @@ except Exception:
             self.verbose = verbose
             self.tools = tools or []
             self.name = name
-from src.tools.python_repl import PythonRunnerTool
+try:
+    from src.tools.crewai_adapters import PythonRunnerTool
+except ImportError:
+    from src.tools.python_repl import PythonRunnerTool
 
 runner = Agent(
     role="Runner",
     goal="Executar scripts em sandbox, capturar stdout/stderr e registrar artefatos.",
+    backstory="Especialista em execução segura de código Python em ambientes isolados.",
     verbose=True,
     tools=[PythonRunnerTool()],
 )

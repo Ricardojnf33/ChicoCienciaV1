@@ -8,11 +8,15 @@ except Exception:
             self.verbose = verbose
             self.tools = tools or []
             self.name = name
-from src.tools.literature import LiteratureTool
+try:
+    from src.tools.crewai_adapters import LiteratureTool
+except ImportError:
+    from src.tools.literature import LiteratureTool
 
 researcher = Agent(
     role="Researcher",
     goal="Gerar hipóteses e planos experimentais com revisão de literatura e novidade.",
+    backstory="Pesquisador experiente em revisão de literatura científica e formulação de hipóteses testáveis.",
     verbose=True,
     tools=[LiteratureTool()],
 )

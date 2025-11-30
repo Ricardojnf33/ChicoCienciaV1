@@ -7,19 +7,13 @@ import json
 from src.crews.ai_scientist_v2 import build_crew
 from src.processes.ats_process import run_agentic_tree
 from src.core.tree import AgenticTree
+from src.config.logging_config import configure_logging
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
 
 @app.command()
-def init(objective: str, budget: int = 10, out_dir: str = "runs"):
-    structlog.configure(
-        processors=[
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.add_log_level,
-            structlog.processors.JSONRenderer(),
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(20),
-    )
+def init(objective: str, budget: int = 10, out_dir: str = "runs", verbose: bool = False):
+    configure_logging(verbose=verbose)
     log = structlog.get_logger()
     run_id = str(uuid.uuid4())[:8]
     Path(out_dir).mkdir(parents=True, exist_ok=True)
@@ -32,15 +26,8 @@ def init(objective: str, budget: int = 10, out_dir: str = "runs"):
     typer.echo("Run finalizado. Confira a pasta 'experiments/'.")
 
 @app.command()
-def resume(run_id: str, out_dir: str = "runs", budget: int = 5):
-    structlog.configure(
-        processors=[
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.add_log_level,
-            structlog.processors.JSONRenderer(),
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(20),
-    )
+def resume(run_id: str, out_dir: str = "runs", budget: int = 5, verbose: bool = False):
+    configure_logging(verbose=verbose)
     log = structlog.get_logger()
     path = f"{out_dir}/{run_id}.json"
     tree = AgenticTree.load_json(path)

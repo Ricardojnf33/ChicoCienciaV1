@@ -18,6 +18,11 @@ class Settings(BaseSettings):
 
     HUMAN_IN_LOOP: bool = os.getenv("HUMAN_IN_LOOP", "false").lower() == "true"
     WANDB_ON: bool = os.getenv("WANDB_ON", "false").lower() == "true"
+    WANDB_PROJECT: str = os.getenv("WANDB_PROJECT", "ChicoCienciaV1")
+
+    # Semantic Scholar rate limiting
+    SEMANTIC_SCHOLAR_RATE_LIMIT: float = float(os.getenv("SEMANTIC_SCHOLAR_RATE_LIMIT", "1.1"))
+    SEMANTIC_SCHOLAR_CACHE_TTL: int = int(os.getenv("SEMANTIC_SCHOLAR_CACHE_TTL", "3600"))
 
     class Config:
         env_file = ".env"

@@ -1,0 +1,138 @@
+{
+  "executive_summary": {
+    "test_date": "2025-11-08T20:59:28.192228",
+    "run_id": "70f8222b",
+    "status": "SUCCESS",
+    "duration_seconds": 0.7600367069244385,
+    "objective": "objective.live.yaml",
+    "budget": 3
+  },
+  "metrics": {
+    "test_start": "2025-11-08T20:59:28.192228",
+    "test_end": "2025-11-08T20:59:28.952266",
+    "duration_seconds": 0.7600367069244385,
+    "run_id": "70f8222b",
+    "objective": "objective.live.yaml",
+    "budget": 3,
+    "api_calls": {
+      "semantic_scholar": 0,
+      "arxiv": 0,
+      "cache_hits": 0
+    },
+    "rate_limiting": {
+      "waits": 0,
+      "total_wait_time": 0.0
+    },
+    "nodes_created": 6,
+    "nodes_executed": 3,
+    "errors": [],
+    "warnings": []
+  },
+  "performance": {
+    "nodes_per_second": 3.0,
+    "avg_rate_limit_wait": 0,
+    "cache_hit_rate": 0.0
+  },
+  "api_usage": {
+    "semantic_scholar_calls": 0,
+    "cache_hits": 0,
+    "rate_limit_waits": 0,
+    "total_wait_time": 0.0
+  },
+  "tree_statistics": {
+    "nodes_created": 6,
+    "nodes_executed": 3,
+    "expansion_rate": 2.0
+  },
+  "errors": [],
+  "warnings": [],
+  "logs_sample": [
+    {
+      "objective": "objective.live.yaml",
+      "budget": 3,
+      "run_id": "70f8222b",
+      "event": "init.start",
+      "timestamp": "2025-11-08T20:59:28.714377Z",
+      "level": "info"
+    },
+    {
+      "node_id": "05b55df7",
+      "stage": "PRELIM",
+      "event": "ats.iter.start",
+      "timestamp": "2025-11-08T20:59:28.726111Z",
+      "level": "info"
+    },
+    {
+      "node_id": "05b55df7",
+      "score": 0.5125,
+      "event": "ats.iter.scored",
+      "timestamp": "2025-11-08T20:59:28.743389Z",
+      "level": "info"
+    },
+    {
+      "node_id": "05b55df7",
+      "children": [
+        "b1d3809b",
+        "ddfebd32"
+      ],
+      "event": "ats.iter.children",
+      "timestamp": "2025-11-08T20:59:28.752344Z",
+      "level": "info"
+    },
+    {
+      "node_id": "b1d3809b",
+      "stage": "TUNING",
+      "event": "ats.iter.start",
+      "timestamp": "2025-11-08T20:59:28.752436Z",
+      "level": "info"
+    },
+    {
+      "node_id": "b1d3809b",
+      "score": 0.5125,
+      "event": "ats.iter.scored",
+      "timestamp": "2025-11-08T20:59:28.760948Z",
+      "level": "info"
+    },
+    {
+      "node_id": "b1d3809b",
+      "children": [
+        "c78476dd",
+        "05b4183a"
+      ],
+      "event": "ats.iter.children",
+      "timestamp": "2025-11-08T20:59:28.769819Z",
+      "level": "info"
+    },
+    {
+      "node_id": "ddfebd32",
+      "stage": "TUNING",
+      "event": "ats.iter.start",
+      "timestamp": "2025-11-08T20:59:28.769925Z",
+      "level": "info"
+    },
+    {
+      "node_id": "ddfebd32",
+      "score": 0.5125,
+      "event": "ats.iter.scored",
+      "timestamp": "2025-11-08T20:59:28.778446Z",
+      "level": "info"
+    },
+    {
+      "node_id": "ddfebd32",
+      "children": [
+        "8ce670c1",
+        "d21b7441"
+      ],
+      "event": "ats.iter.children",
+      "timestamp": "2025-11-08T20:59:28.787769Z",
+      "level": "info"
+    },
+    {
+      "run_id": "70f8222b",
+      "out": "runs/70f8222b.json",
+      "event": "init.done",
+      "timestamp": "2025-11-08T20:59:28.788170Z",
+      "level": "info"
+    }
+  ]
+}
