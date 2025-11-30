@@ -26,7 +26,7 @@ import json as _json
 import wandb
 import time
 
-def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int = 2):
+def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int = 2, checkpoint_path: str = None):
     settings = Settings()
     dry_run = settings.OPENAI_API_KEY is None
     log = structlog.get_logger()
@@ -265,6 +265,13 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
         if tree.should_early_stop(threshold=tree.settings.EARLY_STOP_SCORE):
             log.info("ats.early_stop", best=max((n.score or 0.0) for n in tree.nodes.values()))
             break
+        
+        # --- CHECKPOINTING ---
+        if checkpoint_path:
+            from pathlib import Path
+            Path(checkpoint_path).parent.mkdir(parents=True, exist_ok=True)
+            tree.save_json(checkpoint_path)
+            log.info("ats.checkpoint.saved", path=checkpoint_path)
     
     if settings.WANDB_ON and not dry_run:
         wandb.finish()

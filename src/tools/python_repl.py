@@ -6,10 +6,18 @@ class PythonRunnerTool:
     name = "python_runner"
 
     def run_script(self, code_path: str, workdir: str | None = None, timeout: int = 180):
-        workdir = workdir or str(Path(code_path).parent)
+        # Resolve code_path to absolute path first
+        code_path_abs = Path(code_path).resolve()
+        
+        # Default workdir to parent of code_path
+        if workdir:
+            workdir_abs = Path(workdir).resolve()
+        else:
+            workdir_abs = code_path_abs.parent
+        
         proc = subprocess.run(
-            [sys.executable, code_path],
-            cwd=workdir,
+            [sys.executable, str(code_path_abs)],
+            cwd=str(workdir_abs),
             capture_output=True, text=True, timeout=timeout
         )
         return {

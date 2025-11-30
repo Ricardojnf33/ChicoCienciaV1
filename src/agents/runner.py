@@ -10,13 +10,17 @@ except Exception:
             self.name = name
 try:
     from src.tools.crewai_adapters import PythonRunnerTool
+    from crewai_tools import FileReadTool, FileWriterTool
 except ImportError:
     from src.tools.python_repl import PythonRunnerTool
+    # Fallback stubs if crewai_tools missing
+    class FileReadTool: pass
+    class FileWriterTool: pass
 
 runner = Agent(
     role="Runner",
     goal="Executar scripts em sandbox, capturar stdout/stderr e registrar artefatos.",
     backstory="Especialista em execução segura de código Python em ambientes isolados.",
     verbose=True,
-    tools=[PythonRunnerTool()],
+    tools=[PythonRunnerTool(), FileReadTool(), FileWriterTool()],
 )

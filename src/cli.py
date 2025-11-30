@@ -20,7 +20,7 @@ def init(objective: str, budget: int = 10, out_dir: str = "runs", verbose: bool 
     crew = build_crew()
     tree = AgenticTree.new(objective_yaml=objective)
     log.info("init.start", objective=objective, budget=budget, run_id=run_id)
-    run_agentic_tree(crew, tree, budget=budget)
+    run_agentic_tree(crew, tree, budget=budget, checkpoint_path=f"{out_dir}/{run_id}.json")
     tree.save_json(f"{out_dir}/{run_id}.json")
     log.info("init.done", run_id=run_id, out=f"{out_dir}/{run_id}.json")
     typer.echo("Run finalizado. Confira a pasta 'experiments/'.")
@@ -33,7 +33,7 @@ def resume(run_id: str, out_dir: str = "runs", budget: int = 5, verbose: bool = 
     tree = AgenticTree.load_json(path)
     crew = build_crew()
     log.info("resume.start", run_id=run_id, budget=budget)
-    run_agentic_tree(crew, tree, budget=budget)
+    run_agentic_tree(crew, tree, budget=budget, checkpoint_path=path)
     tree.save_json(path)
     log.info("resume.done", run_id=run_id)
 
