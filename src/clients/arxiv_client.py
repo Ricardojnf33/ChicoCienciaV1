@@ -1,6 +1,6 @@
 import time
 from typing import List, Dict, Any
-from arxiv import Search, SortOrder
+from arxiv import Search, SortOrder, SortCriterion
 
 
 class ArxivClient:
@@ -12,7 +12,7 @@ class ArxivClient:
         if self.delay_s:
             time.sleep(self.delay_s)
         results = []
-        search = Search(query=query, max_results=self.max_results, sort_by=SortOrder.Relevance)
+        search = Search(query=query, max_results=self.max_results, sort_by=SortCriterion.Relevance)
         for res in search.results():
             results.append({
                 "title": res.title,

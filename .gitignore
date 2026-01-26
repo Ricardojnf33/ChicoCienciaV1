@@ -88,3 +88,5 @@ ipython_config.py
 # Poetry
 .poetry/
 
+
+runs.db
