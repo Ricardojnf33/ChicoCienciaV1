@@ -1,0 +1,14 @@
+objective:
+  title: "Avanço para Wine Dataset: Complexidade e Regularização"
+  primary_metric: "f1_score"
+  question: "A regularização L2 e Dropout mantêm a eficácia em um espaço de features maior (Wine dataset) comparado ao Iris?"
+  datasets: ["wine"]
+  figures:
+    - "Heatmap: Confusion Matrix"
+    - "Barplot: F1-Score comparison"
+  constraints:
+    - "Reprodutibilidade (seed 42)"
+    - "Uso de F1-Score como métrica primária devido ao desbalanceamento"
+  literature_query: "logistic regression wine dataset regularization f1-score"
+  acceptance_criteria:
+    min_improvement: 0.03
