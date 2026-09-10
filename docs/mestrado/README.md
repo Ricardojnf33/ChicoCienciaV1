@@ -12,6 +12,7 @@ O objetivo desta documentação é transformar o diagnóstico do protótipo em u
 - [Desenho acadêmico](DESENHO_ACADEMICO.md)
 - [Protocolo de avaliação](PROTOCOLO_AVALIACAO.md)
 - [Plano por fases](PLANO_FASES.md)
+- [Relatório de encerramento da Fase 1](FASE_1_RELATORIO.md)
 - [Registro do processo](REGISTRO_PROCESSO.md)
 - [Modelo de registro para próximas fases](MODELO_REGISTRO_FASE.md)
 - [Decisão sobre contratos](decisoes/ADR_001_CONTRATOS.md)
@@ -20,4 +21,4 @@ O objetivo desta documentação é transformar o diagnóstico do protótipo em u
 
 ## Estado real
 
-Fase 0: diagnóstico e planejamento documentados. Fases 1 a 6: implementação e avaliação planejadas. Nenhuma nova execução live, correção de runtime ou conclusão da dissertação é atestada pela criação destes documentos. Os critérios acadêmicos formais serão alinhados ao programa e à orientação.
+Fases 0 e 1 concluídas: diagnóstico, planejamento, ambiente reproduzível, execução mock explícita e CI obrigatória estão documentados. Fases 2 a 6 permanecem planejadas. Nenhuma execução live ou conclusão da dissertação é atestada; os critérios acadêmicos formais serão alinhados ao programa e à orientação.

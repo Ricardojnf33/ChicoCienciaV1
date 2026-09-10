@@ -14,6 +14,10 @@ from src.tools.literature import LiteratureTool
 from src.clients.semantic_scholar_client import SemanticScholarClient
 from src.config.settings import Settings
 import structlog
+import pytest
+
+
+pytestmark = pytest.mark.live
 
 
 def setup_logging():
@@ -85,7 +89,7 @@ def test_rate_limiting_concurrent():
     
     total_time = time.time() - start_total
     
-    print(f"\n📊 Resultados:")
+    print("\n📊 Resultados:")
     print(f"  Total de queries: {len(queries)}")
     print(f"  Tempo total: {total_time:.2f}s")
     print(f"  Tempo esperado mínimo: {len(queries) * 1.1:.2f}s (1.1s por query)")
@@ -95,10 +99,10 @@ def test_rate_limiting_concurrent():
     if total_time >= len(queries) * 1.0:  # Mínimo 1s por query
         print("  ✅ Rate limiting funcionando: tempo total respeitou limite")
     else:
-        print(f"  ⚠️  Rate limiting pode não estar funcionando: tempo muito curto")
+        print("  ⚠️  Rate limiting pode não estar funcionando: tempo muito curto")
     
     # Mostra detalhes
-    print(f"\nDetalhes por query:")
+    print("\nDetalhes por query:")
     for idx, query, count, elapsed, error in sorted(results):
         status = "✅" if error is None else "❌"
         print(f"  {status} {idx}: '{query}' → {count} resultados, {elapsed:.2f}s")
@@ -159,7 +163,7 @@ def test_settings():
     
     settings = Settings()
     
-    print(f"\n📋 Configurações atuais:")
+    print("\n📋 Configurações atuais:")
     print(f"  SEMANTIC_SCHOLAR_RATE_LIMIT: {settings.SEMANTIC_SCHOLAR_RATE_LIMIT}s")
     print(f"  SEMANTIC_SCHOLAR_CACHE_TTL: {settings.SEMANTIC_SCHOLAR_CACHE_TTL}s ({settings.SEMANTIC_SCHOLAR_CACHE_TTL/3600:.1f}h)")
     print(f"  SEMANTIC_SCHOLAR_API_KEY: {'✅ Configurada' if settings.SEMANTIC_SCHOLAR_API_KEY else '❌ Não configurada'}")
@@ -168,7 +172,7 @@ def test_settings():
     valid_rate = 1.0 <= settings.SEMANTIC_SCHOLAR_RATE_LIMIT <= 2.0
     valid_ttl = 60 <= settings.SEMANTIC_SCHOLAR_CACHE_TTL <= 86400
     
-    print(f"\n✅ Validação:")
+    print("\n✅ Validação:")
     print(f"  Rate limit válido (1.0-2.0s): {valid_rate}")
     print(f"  Cache TTL válido (60s-24h): {valid_ttl}")
     
@@ -276,4 +280,3 @@ def main():
 
 if __name__ == "__main__":
     exit(0 if main() else 1)
-
