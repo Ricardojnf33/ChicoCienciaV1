@@ -1,15 +1,28 @@
 import typer
 from typing import Optional
+from enum import Enum
 import structlog
 import uuid
 from pathlib import Path
 import json
-from src.core.contracts import RunManifest, load_manifest, save_manifest
+from src.core.contracts import (
+    RunManifest,
+    adapt_legacy_result,
+    load_manifest,
+    save_manifest,
+    write_result,
+)
 from src.processes.ats_process import ExecutionMode, run_agentic_tree
 from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
+
+
+class LegacyReduction(str, Enum):
+    SCALAR = "scalar"
+    MAX = "max"
+    MEAN = "mean"
 
 
 def _run_paths(out_dir: str, run_id: str) -> tuple[Path, Path, Path]:
@@ -164,6 +177,30 @@ def report(run_id: str, out_dir: str = "runs", out_md: Optional[str] = None):
         out_md = f"{out_dir}/{run_id}.md"
     Path(out_md).write_text(md)
     typer.echo(f"Relatório gerado em: {out_md}")
+
+
+@app.command()
+def replay(
+    result_path: str,
+    primary_metric: str,
+    metric_path: str,
+    out_path: str = "canonical-results.json",
+    node_id: str = "legacy",
+    attempt: int = 1,
+    reduction: LegacyReduction = LegacyReduction.SCALAR,
+):
+    """Adapta um resultado histórico sem alterar o arquivo de origem."""
+    result = adapt_legacy_result(
+        result_path,
+        node_id=node_id,
+        attempt=attempt,
+        mode="replay",
+        primary_metric=primary_metric,
+        metric_path=metric_path,
+        reduction=reduction.value,
+    )
+    written = write_result(out_path, result)
+    typer.echo(f"Resultado canônico de replay: {written}")
 
 if __name__ == "__main__":
     app()

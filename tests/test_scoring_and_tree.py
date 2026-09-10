@@ -1,4 +1,5 @@
 from src.core.contracts import CanonicalResult, ExecutionEvidence, write_result
+from src.core.contracts import ContractError
 from src.core.scoring import (
     final_score,
     metric_score,
@@ -8,6 +9,8 @@ from src.core.scoring import (
 )
 from src.core.tree import AgenticTree
 from pathlib import Path
+
+import pytest
 
 
 def test_scoring_components(tmp_path):
@@ -49,3 +52,16 @@ def test_tree_persist_roundtrip(tmp_path):
     tree2 = AgenticTree.load_json(str(out))
     assert tree2.primary_metric == tree.primary_metric
     assert len(tree2.nodes) >= 1
+
+
+def test_invalid_result_does_not_promote_tree_node(tmp_path):
+    tree = AgenticTree.new(objective_yaml="objective.example.yaml")
+    root = next(iter(tree.nodes.values()))
+    invalid = tmp_path / "legacy-free-form.json"
+    invalid.write_text('{"accuracy": 0.99}')
+
+    with pytest.raises(ContractError):
+        tree.update_result(root.id, str(invalid))
+    assert root.results_path is None
+    assert root.score is None
+    assert root.id in tree.frontier

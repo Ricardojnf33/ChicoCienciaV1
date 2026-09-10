@@ -1,4 +1,6 @@
 import json
+import subprocess
+import sys
 from datetime import datetime, timezone
 
 import pytest
@@ -268,3 +270,33 @@ def test_historical_metrics_are_preserved(
         reduction=reduction,
     )
     assert adapted.metrics[metric] == pytest.approx(expected)
+
+
+def test_cli_replay_preserves_historical_source(tmp_path):
+    source = tmp_path / "legacy.json"
+    source.write_text(json.dumps({"report": {"mean_accuracy": 0.91}}))
+    original = source.read_bytes()
+    output = tmp_path / "canonical.json"
+    command = [
+        sys.executable,
+        "-m",
+        "src.cli",
+        "replay",
+        str(source),
+        "accuracy",
+        "report.mean_accuracy",
+        "--out-path",
+        str(output),
+        "--node-id",
+        "legacy-node",
+    ]
+    completed = subprocess.run(command, capture_output=True, text=True, timeout=30)
+    assert completed.returncode == 0, completed.stderr
+    assert source.read_bytes() == original
+    result = load_result(
+        output,
+        node_id="legacy-node",
+        attempt=1,
+        mode="replay",
+    )
+    assert result.metrics["accuracy"] == 0.91
