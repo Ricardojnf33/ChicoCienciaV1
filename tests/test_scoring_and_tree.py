@@ -1,12 +1,33 @@
-from src.core.scoring import metric_score, novelty_score, robustness_score, vlm_consistency_score, final_score
+from src.core.contracts import CanonicalResult, ExecutionEvidence, write_result
+from src.core.scoring import (
+    final_score,
+    metric_score,
+    novelty_score,
+    robustness_score,
+    vlm_consistency_score,
+)
 from src.core.tree import AgenticTree
 from pathlib import Path
-import json
 
 
 def test_scoring_components(tmp_path):
     rp = tmp_path / "res.json"
-    rp.write_text(json.dumps({"accuracy": 0.8}))
+    write_result(
+        rp,
+        CanonicalResult(
+            node_id="score-node",
+            attempt=1,
+            status="SUCCEEDED",
+            primary_metric="accuracy",
+            metrics={"accuracy": 0.8},
+            execution=ExecutionEvidence(
+                mode="mock",
+                synthetic=True,
+                network_used=False,
+                return_code=0,
+            ),
+        ),
+    )
     assert metric_score(str(rp), "accuracy") == 0.8
     assert 0.0 <= novelty_score(0.2) <= 1.0
     assert 0.0 <= robustness_score(3, 0.7) <= 1.0
@@ -28,4 +49,3 @@ def test_tree_persist_roundtrip(tmp_path):
     tree2 = AgenticTree.load_json(str(out))
     assert tree2.primary_metric == tree.primary_metric
     assert len(tree2.nodes) >= 1
-

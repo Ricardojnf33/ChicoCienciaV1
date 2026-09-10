@@ -13,6 +13,7 @@ from src.core.contracts import (
     RunManifest,
     adapt_legacy_result,
     artifact_record,
+    canonicalize_attempt,
     load_result,
     write_result,
 )
@@ -149,3 +150,121 @@ def test_artifact_record_rejects_missing_file(tmp_path):
 
     with pytest.raises(ValidationError):
         ArtifactRecord(name="x", path="x", sha256="invalid", size_bytes=1)
+
+
+def test_code_existence_is_not_execution_success(tmp_path):
+    attempt_dir = tmp_path / "attempt-1"
+    attempt_dir.mkdir()
+    (attempt_dir / "code.py").write_text("raise RuntimeError('boom')\n")
+    (attempt_dir / "execution.json").write_text(
+        ExecutionEvidence(
+            mode="live",
+            synthetic=False,
+            network_used=False,
+            return_code=1,
+        ).model_dump_json()
+    )
+    (attempt_dir / "raw_results.json").write_text(json.dumps({"accuracy": 0.9}))
+
+    with pytest.raises(ContractError, match="return_code"):
+        canonicalize_attempt(
+            attempt_dir,
+            node_id="node-1",
+            attempt=1,
+            mode="live",
+            primary_metric="accuracy",
+        )
+
+
+def test_missing_result_is_not_replaced_by_synthetic_data(tmp_path):
+    attempt_dir = tmp_path / "attempt-1"
+    attempt_dir.mkdir()
+    (attempt_dir / "code.py").write_text("print('no result')\n")
+    (attempt_dir / "execution.json").write_text(
+        ExecutionEvidence(
+            mode="live",
+            synthetic=False,
+            network_used=False,
+            return_code=0,
+        ).model_dump_json()
+    )
+
+    with pytest.raises(ContractError, match="ausente"):
+        canonicalize_attempt(
+            attempt_dir,
+            node_id="node-1",
+            attempt=1,
+            mode="live",
+            primary_metric="accuracy",
+        )
+
+
+def test_valid_live_attempt_becomes_canonical(tmp_path):
+    attempt_dir = tmp_path / "attempt-1"
+    attempt_dir.mkdir()
+    (attempt_dir / "code.py").write_text("print('ok')\n")
+    (attempt_dir / "execution.json").write_text(
+        ExecutionEvidence(
+            mode="live",
+            synthetic=False,
+            network_used=False,
+            return_code=0,
+        ).model_dump_json()
+    )
+    (attempt_dir / "raw_results.json").write_text(json.dumps({"accuracy": 0.87}))
+
+    result_path = canonicalize_attempt(
+        attempt_dir,
+        node_id="node-1",
+        attempt=1,
+        mode="live",
+        primary_metric="accuracy",
+    )
+    result = load_result(result_path, node_id="node-1", attempt=1, mode="live")
+    assert result.metrics["accuracy"] == 0.87
+    assert {artifact.name for artifact in result.artifacts} == {
+        "execution-evidence",
+        "generated-code",
+        "raw-result",
+    }
+
+
+@pytest.mark.parametrize(
+    ("path", "metric", "metric_path", "reduction", "expected"),
+    [
+        (
+            "experiments/c7d345b0/experiments/c7d345b0/results.json",
+            "accuracy",
+            "l2.10.mean_accuracy",
+            "scalar",
+            0.9800000000000001,
+        ),
+        (
+            "experiments/results.json",
+            "f1",
+            "average_f1_scores.logreg_l2",
+            "scalar",
+            0.9730857138960456,
+        ),
+        (
+            "experiments/d5068c16/results.json",
+            "accuracy",
+            "hypothesis_2.accuracies",
+            "max",
+            0.9777777777777777,
+        ),
+    ],
+)
+def test_historical_metrics_are_preserved(
+    path, metric, metric_path, reduction, expected
+):
+    adapted = adapt_legacy_result(
+        path,
+        node_id="historical",
+        attempt=1,
+        mode="replay",
+        primary_metric=metric,
+        metric_path=metric_path,
+        reduction=reduction,
+    )
+    assert adapted.metrics[metric] == pytest.approx(expected)

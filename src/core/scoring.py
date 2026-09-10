@@ -1,13 +1,12 @@
-import json
-from pathlib import Path
+from src.core.contracts import load_result
 
 def metric_score(results_path: str, primary_metric: str = "accuracy") -> float:
-    try:
-        data = json.loads(Path(results_path).read_text())
-        val = float(data.get(primary_metric, 0.0))
-        return max(0.0, min(1.0, val))
-    except Exception:
-        return 0.0
+    result = load_result(results_path)
+    if result.primary_metric != primary_metric:
+        raise ValueError(
+            f"Métrica primária divergente: {result.primary_metric!r}, esperada {primary_metric!r}."
+        )
+    return result.metrics[primary_metric]
 
 def novelty_score(literature_overlap: float = 0.5) -> float:
     # 0 (muito parecido) → 1 (muito novo). Recebe overlap [0..1].

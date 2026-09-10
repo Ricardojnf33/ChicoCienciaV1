@@ -167,6 +167,53 @@ def load_result(
     return result
 
 
+def canonicalize_attempt(
+    attempt_dir: str | Path,
+    *,
+    node_id: str,
+    attempt: int,
+    mode: ContractMode,
+    primary_metric: str,
+) -> Path:
+    directory = Path(attempt_dir)
+    raw_result_path = directory / "raw_results.json"
+    evidence_path = directory / "execution.json"
+    artifacts = [
+        artifact_record(raw_result_path, name="raw-result"),
+        artifact_record(evidence_path, name="execution-evidence"),
+    ]
+    if mode == "live":
+        artifacts.append(artifact_record(directory / "code.py", name="generated-code"))
+
+    try:
+        evidence = ExecutionEvidence.model_validate_json(evidence_path.read_text())
+    except Exception as exc:
+        raise ContractError(f"Evidência de execução inválida: {exc}") from exc
+    if evidence.mode != mode:
+        raise ContractError(
+            f"Modo da evidência inválido: {evidence.mode!r}, esperado {mode!r}."
+        )
+
+    adapted = adapt_legacy_result(
+        raw_result_path,
+        node_id=node_id,
+        attempt=attempt,
+        mode=mode,
+        primary_metric=primary_metric,
+    )
+    try:
+        canonical = CanonicalResult(
+            **adapted.model_dump(exclude={"execution", "artifacts"}),
+            execution=evidence,
+            artifacts=artifacts,
+        )
+    except Exception as exc:
+        raise ContractError(f"Tentativa inválida: {exc}") from exc
+    result_path = write_result(directory / "results.json", canonical)
+    load_result(result_path, node_id=node_id, attempt=attempt, mode=mode)
+    return result_path
+
+
 def _resolve_legacy_path(data: dict[str, Any], metric_path: str) -> Any:
     current: Any = data
     for part in metric_path.split("."):
