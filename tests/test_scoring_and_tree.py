@@ -1,12 +1,36 @@
-from src.core.scoring import metric_score, novelty_score, robustness_score, vlm_consistency_score, final_score
+from src.core.contracts import CanonicalResult, ExecutionEvidence, write_result
+from src.core.contracts import ContractError
+from src.core.scoring import (
+    final_score,
+    metric_score,
+    novelty_score,
+    robustness_score,
+    vlm_consistency_score,
+)
 from src.core.tree import AgenticTree
 from pathlib import Path
-import json
+
+import pytest
 
 
 def test_scoring_components(tmp_path):
     rp = tmp_path / "res.json"
-    rp.write_text(json.dumps({"accuracy": 0.8}))
+    write_result(
+        rp,
+        CanonicalResult(
+            node_id="score-node",
+            attempt=1,
+            status="SUCCEEDED",
+            primary_metric="accuracy",
+            metrics={"accuracy": 0.8},
+            execution=ExecutionEvidence(
+                mode="mock",
+                synthetic=True,
+                network_used=False,
+                return_code=0,
+            ),
+        ),
+    )
     assert metric_score(str(rp), "accuracy") == 0.8
     assert 0.0 <= novelty_score(0.2) <= 1.0
     assert 0.0 <= robustness_score(3, 0.7) <= 1.0
@@ -29,3 +53,15 @@ def test_tree_persist_roundtrip(tmp_path):
     assert tree2.primary_metric == tree.primary_metric
     assert len(tree2.nodes) >= 1
 
+
+def test_invalid_result_does_not_promote_tree_node(tmp_path):
+    tree = AgenticTree.new(objective_yaml="objective.example.yaml")
+    root = next(iter(tree.nodes.values()))
+    invalid = tmp_path / "legacy-free-form.json"
+    invalid.write_text('{"accuracy": 0.99}')
+
+    with pytest.raises(ContractError):
+        tree.update_result(root.id, str(invalid))
+    assert root.results_path is None
+    assert root.score is None
+    assert root.id in tree.frontier

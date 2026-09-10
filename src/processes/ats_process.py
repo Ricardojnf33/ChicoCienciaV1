@@ -7,6 +7,17 @@ from typing import Any
 import structlog
 
 from src.config.settings import Settings
+from src.core.contracts import (
+    AttemptRecord,
+    CanonicalResult,
+    ExecutionEvidence,
+    RunManifest,
+    canonicalize_attempt,
+    file_sha256,
+    save_manifest,
+    utc_now,
+    write_result,
+)
 from src.core.enums import ExecStatus
 from src.core.persistence import NodeRow, init_db, upsert_node
 from src.core.tree import AgenticTree
@@ -45,78 +56,108 @@ def _agent_by_role(crew: Any, role: str):
     )
 
 
-def _mock_result(tree: AgenticTree, node_id: str) -> Path:
-    result_path = tree.artifact_root / node_id / "results.json"
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    result_path.write_text(
-        json.dumps(
-            {
-                "accuracy": 0.5,
-                "_execution": {
-                    "mode": ExecutionMode.MOCK.value,
-                    "synthetic": True,
-                    "network_used": False,
-                },
-            },
-            indent=2,
-        )
+def _mock_result(
+    attempt_dir: Path,
+    *,
+    node_id: str,
+    attempt: int,
+    primary_metric: str,
+) -> Path:
+    return write_result(
+        attempt_dir / "results.json",
+        CanonicalResult(
+            node_id=node_id,
+            attempt=attempt,
+            status="SUCCEEDED",
+            primary_metric=primary_metric,
+            metrics={primary_metric: 0.5},
+            execution=ExecutionEvidence(
+                mode="mock",
+                synthetic=True,
+                network_used=False,
+                return_code=0,
+            ),
+        ),
     )
-    return result_path
 
 
-def _run_live_tasks(crew: Any, node, prompt: str, branching: int, log) -> Path:
+def _run_live_attempt(
+    crew: Any,
+    node,
+    prompt: str,
+    branching: int,
+    attempt_dir: Path,
+    attempt: int,
+) -> Path:
     from crewai import Task
 
     researcher = _agent_by_role(crew, "Researcher")
     coder = _agent_by_role(crew, "Coder")
     runner = _agent_by_role(crew, "Runner")
-    expected_dir = Path("experiments") / node.id
-    expected_code = expected_dir / "code.py"
-    expected_result = expected_dir / "results.json"
-
-    for attempt in range(3):
-        tasks = []
-        if attempt == 0:
-            tasks.append(
-                Task(
-                    agent=researcher,
-                    description=(
-                        f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}."
-                    ),
-                    expected_output="Lista de hipóteses testáveis com revisão de literatura",
-                )
+    expected_code = attempt_dir / "code.py"
+    raw_result = attempt_dir / "raw_results.json"
+    execution_evidence = attempt_dir / "execution.json"
+    tasks = []
+    if attempt == 1:
+        tasks.append(
+            Task(
+                agent=researcher,
+                description=(
+                    f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}."
+                ),
+                expected_output="Lista de hipóteses testáveis com revisão de literatura",
             )
-        tasks.extend(
-            [
-                Task(
-                    agent=coder,
-                    description=(
-                        f"Implementar o plano do nó {node.id} e salvar o código em "
-                        f"{expected_code}."
-                    ),
-                    expected_output="Caminho do arquivo Python criado",
-                ),
-                Task(
-                    agent=runner,
-                    description=(
-                        f"Executar {expected_code} e salvar as métricas em {expected_result}."
-                    ),
-                    expected_output="results.json válido e artefatos gerados",
-                ),
-            ]
         )
-        crew.tasks = tasks
-        try:
-            crew.kickoff()
-        except Exception as exc:
-            log.warning("ats.kickoff.error", error=str(exc), attempt=attempt + 1)
-        if expected_code.is_file() and expected_result.is_file():
-            return expected_result
-        log.warning("ats.self_healing.retry", node_id=node.id, attempt=attempt + 1)
-
-    raise RuntimeError(
-        f"Execução live falhou: artefatos obrigatórios ausentes para o nó {node.id}"
+    tasks.extend(
+        [
+            Task(
+                agent=coder,
+                description=(
+                    f"Implementar o plano do nó {node.id}. Salvar o código em {expected_code} "
+                    f"e a métrica primária escalar no topo de {raw_result}."
+                ),
+                expected_output="Código e raw_results.json nos caminhos declarados",
+            ),
+            Task(
+                agent=runner,
+                description=(
+                    f"Executar {expected_code}. Salvar em {execution_evidence} um JSON com "
+                    "mode='live', synthetic=false, network_used conforme observado e "
+                    "return_code inteiro do processo."
+                ),
+                expected_output="execution.json com o retorno real do processo",
+            ),
+        ]
     )
+    crew.tasks = tasks
+    crew.kickoff()
+    return canonicalize_attempt(
+        attempt_dir,
+        node_id=node.id,
+        attempt=attempt,
+        mode="live",
+        primary_metric=node.meta["primary_metric"],
+    )
+
+
+def _save_attempt(
+    manifest: RunManifest | None,
+    manifest_path: str | None,
+    record: AttemptRecord,
+) -> None:
+    if manifest is None:
+        return
+    key = (record.node_id, record.attempt)
+    for index, current in enumerate(manifest.attempts):
+        if (current.node_id, current.attempt) == key:
+            manifest.attempts[index] = record
+            break
+    else:
+        manifest.attempts.append(record)
+    validated = RunManifest.model_validate(manifest.model_dump())
+    manifest.attempts = validated.attempts
+    if manifest_path:
+        save_manifest(manifest_path, manifest)
 
 
 def run_agentic_tree(
@@ -128,6 +169,8 @@ def run_agentic_tree(
     *,
     mode: ExecutionMode = ExecutionMode.MOCK,
     sqlite_url: str | None = None,
+    manifest: RunManifest | None = None,
+    manifest_path: str | None = None,
 ) -> None:
     settings = Settings()
     mode = ExecutionMode(mode)
@@ -139,6 +182,10 @@ def run_agentic_tree(
     log = structlog.get_logger()
     log.info("ats.start", mode=mode.value, budget=budget)
     engine = init_db(sqlite_url or settings.SQLITE_URL)
+    if manifest is not None:
+        manifest.status = "RUNNING"
+        if manifest_path:
+            save_manifest(manifest_path, manifest)
 
     wandb_run = False
     if settings.WANDB_ON and mode is ExecutionMode.LIVE:
@@ -169,26 +216,101 @@ def run_agentic_tree(
             stage=node.stage.name,
         )
 
-        try:
-            if mode is ExecutionMode.MOCK:
-                result_path = _mock_result(tree, node.id)
-            else:
-                result_path = _run_live_tasks(crew, node, prompt, branching, log)
-            node.status = ExecStatus.SUCCEEDED
-            node.meta.update(
-                {
-                    "execution_mode": mode.value,
-                    "synthetic": mode is ExecutionMode.MOCK,
-                    "vlm_evaluated": False,
-                }
+        node.meta["primary_metric"] = tree.primary_metric
+        max_attempts = 1 if mode is ExecutionMode.MOCK else 3
+        result_path = None
+        for attempt in range(1, max_attempts + 1):
+            attempt_dir = tree.artifact_root / node.id / f"attempt-{attempt}"
+            attempt_dir.mkdir(parents=True, exist_ok=True)
+            started_at = utc_now()
+            _save_attempt(
+                manifest,
+                manifest_path,
+                AttemptRecord(
+                    node_id=node.id,
+                    attempt=attempt,
+                    mode=mode.value,
+                    status="RUNNING",
+                    directory=str(attempt_dir),
+                    started_at=started_at,
+                ),
             )
-            tree.update_result(node.id, str(result_path), vlm_ok=False)
-        except Exception:
-            node.status = ExecStatus.FAILED
-            upsert_node(engine, _node_row(node))
-            if checkpoint_path:
-                tree.save_json(checkpoint_path)
-            raise
+            try:
+                if mode is ExecutionMode.MOCK:
+                    result_path = _mock_result(
+                        attempt_dir,
+                        node_id=node.id,
+                        attempt=attempt,
+                        primary_metric=tree.primary_metric,
+                    )
+                else:
+                    result_path = _run_live_attempt(
+                        crew,
+                        node,
+                        prompt,
+                        branching,
+                        attempt_dir,
+                        attempt,
+                    )
+                _save_attempt(
+                    manifest,
+                    manifest_path,
+                    AttemptRecord(
+                        node_id=node.id,
+                        attempt=attempt,
+                        mode=mode.value,
+                        status="SUCCEEDED",
+                        directory=str(attempt_dir),
+                        result_path=str(result_path),
+                        result_sha256=file_sha256(result_path),
+                        started_at=started_at,
+                        finished_at=utc_now(),
+                    ),
+                )
+                break
+            except Exception as exc:
+                _save_attempt(
+                    manifest,
+                    manifest_path,
+                    AttemptRecord(
+                        node_id=node.id,
+                        attempt=attempt,
+                        mode=mode.value,
+                        status="FAILED",
+                        directory=str(attempt_dir),
+                        error=str(exc),
+                        started_at=started_at,
+                        finished_at=utc_now(),
+                    ),
+                )
+                log.warning(
+                    "ats.attempt.failed",
+                    node_id=node.id,
+                    attempt=attempt,
+                    error=str(exc),
+                )
+                if attempt == max_attempts:
+                    node.status = ExecStatus.FAILED
+                    upsert_node(engine, _node_row(node))
+                    if checkpoint_path:
+                        tree.save_json(checkpoint_path)
+                    if manifest is not None:
+                        manifest.status = "FAILED"
+                        if manifest_path:
+                            save_manifest(manifest_path, manifest)
+                    raise
+
+        if result_path is None:
+            raise RuntimeError("Tentativa terminou sem resultado validado.")
+        node.status = ExecStatus.SUCCEEDED
+        node.meta.update(
+            {
+                "execution_mode": mode.value,
+                "synthetic": mode is ExecutionMode.MOCK,
+                "vlm_evaluated": False,
+            }
+        )
+        tree.update_result(node.id, str(result_path), vlm_ok=False)
 
         score = tree.nodes[node.id].score or 0.0
         tree.backpropagate(tree.nodes[node.id], score)
@@ -225,3 +347,7 @@ def run_agentic_tree(
         import wandb
 
         wandb.finish()
+    if manifest is not None:
+        manifest.status = "SUCCEEDED"
+        if manifest_path:
+            save_manifest(manifest_path, manifest)
