@@ -11,11 +11,6 @@ except Exception:
             self.verbose = verbose
             self.tools = tools or []
             self.name = name
-try:
-    from src.tools.crewai_adapters import LiteratureTool
-except ImportError:
-    from src.tools.literature import LiteratureTool
-
 manager = Agent(
     role="Experiment Progress Manager",
     goal=("Orquestrar descoberta científica em 4 estágios; "

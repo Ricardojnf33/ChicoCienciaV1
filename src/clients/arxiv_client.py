@@ -1,6 +1,6 @@
 import time
 from typing import List, Dict, Any
-from arxiv import Search, SortOrder, SortCriterion
+from arxiv import Search, SortCriterion
 
 
 class ArxivClient:
