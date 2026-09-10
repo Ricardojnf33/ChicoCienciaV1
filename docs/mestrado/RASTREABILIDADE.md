@@ -1,10 +1,10 @@
 # Rastreabilidade entre descobertas e entregas
 
-Baseline: 423875f03e0e6d63e921df852c57d4398e31236e. Testes abaixo são especificações a implementar; não representam resultados de uma suíte já executada.
+Baseline: 423875f03e0e6d63e921df852c57d4398e31236e. A linha D01 foi implementada na Fase 1; as demais continuam como especificações até receberem evidência equivalente.
 
 | Descoberta | Requisito | Decisão | Teste de aceitação planejado | Fase |
 | --- | --- | --- | --- | --- |
-| D01 CI não executa testes | RNF01 | Ambiente e lock coerentes | Checkout limpo instala; teste propositalmente falho reprova CI | 1 |
+| D01 CI não executa testes | RNF01 | Ambiente e lock coerentes | Concluído: lock validado, instalação limpa, lint e 4 testes offline aprovados no run 34509660031; `|| true` removido | 1 |
 | D02 Métrica incompatível | RF03 | Contrato canônico | Resultado Iris adaptado preserva valor; chave errada é rejeitada | 2 |
 | D03 Arquivo tratado como sucesso | RF03 | Validar resultado e retorno | Código existente com execução falha termina FAILED | 2 |
 | D04 Fixture em modo real | RF02 | Modos separados | Ausência de resultado live nunca cria resultado sintético aceito | 2 |
@@ -20,7 +20,8 @@ Baseline: 423875f03e0e6d63e921df852c57d4398e31236e. Testes abaixo são especific
 - Histórico: números versionados dos experimentos de 2025 e janeiro de 2026.
 - Reprodução pontual: script Iris reexecutado na auditoria anterior; não é reprodução do workflow completo.
 - Proposta: requisitos, desenho e matriz de 60 runs definidos nesta documentação.
-- Pendente: implementação, pilotos, coleta principal e revisão independente.
+- Concluído: ambiente e fluxo mock da Fase 1, sem execução live.
+- Pendente: contratos da Fase 2, recuperação, workflow multiagente, pilotos, coleta principal e revisão independente.
 
 ## Regra de encerramento
 

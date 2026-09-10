@@ -24,6 +24,16 @@ Mudança: síntese autoral, plano de fases, roteiro de defesa, guia de documenta
 
 O SHA deste incremento é o commit que introduz esta versão do registro e pode ser consultado no histórico do arquivo.
 
+## Fase 1 — ambiente e execução determinística
+
+Estado: concluída em 10/09/2026. Foram publicados três incrementos:
+
+- `b187d70b9993138bea3045c597b934ffaee1f977`: ambiente Python 3.11 e lock Poetry reproduzível;
+- `39e71004e9ace20a569486095e84084e9abc6a58`: modos mock/live explícitos, correções de runtime, lint e testes;
+- `228c770c177459f0f84735783f4275b32999a8b5`: correção final do workflow.
+
+Resultado local: `poetry check --lock` válido, Ruff aprovado, 4 testes aprovados e 4 testes live desmarcados. Resultado remoto: [GitHub Actions 34509660031](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34509660031), com todos os gates aprovados. As falhas intermediárias e os limites estão preservados no [relatório da Fase 1](FASE_1_RELATORIO.md).
+
 ## Próxima ação
 
-Iniciar Fase 1 pelo ambiente reproduzível e CI. A conclusão dessa fase depende de instalação limpa e testes obrigatórios executados com sucesso. As fases de implementação 1 a 6 permanecem planejadas.
+Iniciar a Fase 2 pelo schema canônico de resultado e pelo manifesto do run. As fases 2 a 6 permanecem planejadas e não foram antecipadamente marcadas como concluídas.

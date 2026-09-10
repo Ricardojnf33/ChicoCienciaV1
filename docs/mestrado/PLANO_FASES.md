@@ -1,6 +1,6 @@
 # Plano por fases para conclusão do mestrado
 
-Status: Fase 0 documentada; implementação das Fases 1 a 6 planejada. Nenhuma dessas fases será marcada como concluída apenas pela escrita deste plano.
+Status em 10/09/2026: Fases 0 e 1 concluídas com evidências; Fases 2 a 6 planejadas. O encerramento técnico da Fase 1 está em [FASE_1_RELATORIO.md](FASE_1_RELATORIO.md).
 
 ## 6 Produto final e critérios de aceitação
 
@@ -34,6 +34,8 @@ Consolidar o diagnóstico, a matriz de rastreabilidade, o escopo e o protocolo d
 Critério de saída: todas as alegações centrais apontam para uma fonte; o backlog liga achado, requisito, teste e entrega; o status real permanece identificável. A documentação produzida nesta etapa constitui o avanço atual do projeto.
 
 ### Fase 1 Ambiente e execução determinística
+
+Estado: concluída. Evidência principal: GitHub Actions [run 34509660031](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34509660031), com instalação, lock, lint e testes aprovados.
 
 Resolver a compatibilidade de Python e dependências com instalação limpa, escolhendo e mantendo um gerenciador e lock coerentes. Corrigir o import de JSON, os stubs e a seleção explícita de modo. Retirar a supressão de erros do pytest e separar testes unitários, de integração local e live.
 
