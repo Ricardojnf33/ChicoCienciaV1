@@ -18,7 +18,11 @@ from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
 from src.config.settings import Settings
 from src.core.preflight import CheckStatus, run_preflight, write_preflight
-from src.core.campaign import build_campaign_plan, write_campaign_plan
+from src.core.campaign import (
+    build_campaign_plan,
+    load_campaign_plan,
+    write_campaign_plan,
+)
 from src.core.variants import ExperimentVariant, policy_for
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
@@ -223,6 +227,32 @@ def plan_campaign(
     typer.echo(
         f"Plano {plan.campaign_id}: {len(plan.runs)} runs; "
         f"api_calls={plan.api_calls_performed}; arquivo={path}"
+    )
+
+
+@app.command("run-b0")
+def run_b0_command(
+    campaign_plan: str,
+    run_id: str,
+    output: str,
+    allow_draft: bool = False,
+):
+    """Executa um baseline convencional; planos não congelados falham por padrão."""
+    from src.processes.baseline_process import run_b0
+
+    plan = load_campaign_plan(campaign_plan)
+    if not plan.protocol_frozen and not allow_draft:
+        raise typer.BadParameter(
+            "O protocolo ainda não está congelado; use --allow-draft apenas em teste."
+        )
+    try:
+        spec = next(run for run in plan.runs if run.run_id == run_id)
+    except StopIteration as exc:
+        raise typer.BadParameter(f"run_id ausente do plano: {run_id}") from exc
+    result = run_b0(spec, output)
+    typer.echo(
+        f"B0 {result.run_id}: {result.primary_metric}="
+        f"{result.metrics[result.primary_metric]:.6f}; LLM tokens=0; arquivo={output}"
     )
 
 @app.command()

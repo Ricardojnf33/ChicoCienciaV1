@@ -196,3 +196,7 @@ def write_campaign_plan(
 ) -> Path:
     validated = EmpiricalCampaignPlan.model_validate(plan.model_dump())
     return atomic_write_text(path, validated.model_dump_json(indent=2))
+
+
+def load_campaign_plan(path: str | Path) -> EmpiricalCampaignPlan:
+    return EmpiricalCampaignPlan.model_validate_json(Path(path).read_text())
