@@ -18,6 +18,7 @@ from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
 from src.config.settings import Settings
 from src.core.preflight import CheckStatus, run_preflight, write_preflight
+from src.core.campaign import build_campaign_plan, write_campaign_plan
 from src.core.variants import ExperimentVariant, policy_for
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
@@ -203,6 +204,26 @@ def preflight(
     typer.echo(f"Preflight {report.status.value}. Relatório: {path}")
     if report.status is CheckStatus.FAIL:
         raise typer.Exit(code=1)
+
+
+@app.command("plan-campaign")
+def plan_campaign(
+    campaign_id: str = "phase5-draft-v1",
+    objective_root: str = "objectives",
+    output: str = "phase5-campaign-plan.json",
+    randomization_seed: int = 20260911,
+):
+    """Materializa pilotos e matriz principal sem executar LLM ou experimentos."""
+    plan = build_campaign_plan(
+        campaign_id=campaign_id,
+        objective_root=objective_root,
+        randomization_seed=randomization_seed,
+    )
+    path = write_campaign_plan(output, plan)
+    typer.echo(
+        f"Plano {plan.campaign_id}: {len(plan.runs)} runs; "
+        f"api_calls={plan.api_calls_performed}; arquivo={path}"
+    )
 
 @app.command()
 def inspect(run_id: str, out_dir: str = "runs", limit: int = 20):
