@@ -136,7 +136,7 @@ class PythonRunnerTool:
             "--tmpfs",
             "/tmp:rw,noexec,nosuid,nodev,size=64m",
             "--mount",
-            f"type=bind,src={workdir},dst=/work,rw",
+            f"type=bind,src={workdir},dst=/work",
             "--workdir",
             "/work",
             "--user",

@@ -166,6 +166,9 @@ def test_sandbox_falls_back_to_hardened_container(tmp_path, monkeypatch):
     assert arguments[arguments.index("--security-opt") + 1] == (
         "no-new-privileges:true"
     )
+    assert arguments[arguments.index("--mount") + 1] == (
+        f"type=bind,src={tmp_path.resolve()},dst=/work"
+    )
     assert arguments[arguments.index("--user") + 1] == f"{os.getuid()}:{os.getgid()}"
     assert all("OPENAI_API_KEY" not in item for item in arguments)
     assert arguments[-2:] == ["runner:test", "python"]
