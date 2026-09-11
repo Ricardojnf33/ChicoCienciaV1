@@ -1,10 +1,12 @@
-import time
 import threading
-from typing import List, Dict, Any
-from semanticscholar import SemanticScholar
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from requests.exceptions import HTTPError, Timeout, RequestException
+import time
+from collections.abc import Callable
+from typing import Any
+
 import structlog
+from requests.exceptions import HTTPError, RequestException, Timeout
+from semanticscholar import SemanticScholar
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 
 class SemanticScholarClient:
@@ -16,11 +18,20 @@ class SemanticScholarClient:
     que múltiplas instâncias/threads respeitem o limite.
     """
     # Rate limiting global (class-level)
-    _last_request_time: float = 0.0
+    _last_request_time: float | None = None
     _lock: threading.Lock = threading.Lock()
     _min_interval: float = 1.1  # 1.1s para margem de segurança (default)
 
-    def __init__(self, api_key: str | None = None, timeout: int = 20, min_interval: float | None = None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        timeout: int = 20,
+        min_interval: float | None = None,
+        *,
+        client: Any | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        sleeper: Callable[[float], None] = time.sleep,
+    ):
         """
         Inicializa cliente Semantic Scholar.
         
@@ -31,8 +42,16 @@ class SemanticScholarClient:
         """
         from src.config.settings import Settings
         settings = Settings()
-        self.client = SemanticScholar(api_key=api_key, timeout=timeout)
-        self._min_interval = min_interval or settings.SEMANTIC_SCHOLAR_RATE_LIMIT
+        self.client = client or SemanticScholar(api_key=api_key, timeout=timeout)
+        self._min_interval = (
+            min_interval
+            if min_interval is not None
+            else settings.SEMANTIC_SCHOLAR_RATE_LIMIT
+        )
+        if self._min_interval < 0:
+            raise ValueError("min_interval não pode ser negativo")
+        self._clock = clock
+        self._sleeper = sleeper
         self.log = structlog.get_logger()
 
     def _rate_limit(self):
@@ -42,8 +61,13 @@ class SemanticScholarClient:
         Thread-safe: múltiplas instâncias/threads compartilham o mesmo lock,
         garantindo que apenas 1 requisição ocorra por segundo.
         """
-        with self._lock:
-            elapsed = time.time() - self._last_request_time
+        limiter = type(self)
+        with limiter._lock:
+            now = self._clock()
+            if limiter._last_request_time is None:
+                limiter._last_request_time = now
+                return
+            elapsed = now - limiter._last_request_time
             if elapsed < self._min_interval:
                 sleep_time = self._min_interval - elapsed
                 self.log.debug(
@@ -51,8 +75,13 @@ class SemanticScholarClient:
                     sleep_time=sleep_time,
                     elapsed=elapsed
                 )
-                time.sleep(sleep_time)
-            self._last_request_time = time.time()
+                self._sleeper(sleep_time)
+            limiter._last_request_time = self._clock()
+
+    @classmethod
+    def _reset_rate_limit_for_tests(cls) -> None:
+        with cls._lock:
+            cls._last_request_time = None
 
     @retry(
         stop=stop_after_attempt(3),
@@ -60,7 +89,7 @@ class SemanticScholarClient:
         retry=retry_if_exception_type((HTTPError, Timeout, RequestException)),
         reraise=True
     )
-    def search(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         """
         Busca papers no Semantic Scholar com rate limiting e retry automático.
         
@@ -98,7 +127,7 @@ class SemanticScholarClient:
             )
             raise
 
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for p in papers:
             url = None
             if p.openAccessPdf:
@@ -120,5 +149,3 @@ class SemanticScholarClient:
             results_count=len(results)
         )
         return results
-
-

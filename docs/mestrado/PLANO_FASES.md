@@ -51,6 +51,8 @@ Critério de saída: nenhum caso de artefato inválido da suíte termina como su
 
 ### Fase 3 Runner e recuperação
 
+Estado: concluída em código. Evidência principal: GitHub Actions [34553951163](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34553951163), 32 testes offline aprovados, smoke mock com duas tentativas e [relatório da Fase 3](FASE_3_RELATORIO.md). Restrição: a prova positiva do namespace deve ocorrer em host Linux compatível antes dos pilotos; neste host o runner recusou a execução.
+
 Implementar execução controlada, limites de recursos, encerramento de processos, checkpoint atômico, restauração idempotente e correção limitada. Corrigir o controle compartilhado do rate limiter e validar falhas de serviços com fixtures. Garantir que tentativas anteriores permaneçam consultáveis.
 
 Critério de saída: falha injetada e reinício preservam o estado esperado; execução concluída não é repetida; timeout e orçamento encerram o trabalho; credenciais não aparecem no ambiente do runner. Evidência: logs, testes de isolamento e roteiro de recuperação.
