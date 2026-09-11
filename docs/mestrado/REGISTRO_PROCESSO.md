@@ -66,20 +66,37 @@ Estado: concluída em 11/09/2026. Foram publicados três incrementos técnicos:
 
 Resultado: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. A CI remota [34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898) aprovou todos os gates. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
 
-## Fase 5 — captura do secret e preflight
+## Fase 5 — preparação da campanha empírica
 
-Estado: em andamento em 11/09/2026. A configuração live passou a injetar uma
-credencial mascarada explicitamente nos clientes e agentes reais. O workflow
-protegido confirmou credencial, runtime, objetivo e modelos, mas recusou o runner
-por incompatibilidade do namespace com o GitHub-hosted runner. O relatório remoto
-registrou `api_calls_performed: 0`. Localmente, Ruff e 58 testes offline passaram.
+Estado: em andamento em 11/09/2026. O secret é injetado somente no job protegido e
+permanece mascarado. O runner passou a usar fallback Docker sem rede, filesystem
+raiz somente leitura, usuário não-root e limites de recursos. A compatibilidade de
+tokenização tornou-se um gate e o modelo foi fixado no snapshot
+`gpt-4o-mini-2024-07-18`.
 
-As tentativas de diagnóstico do `bubblewrap` foram mantidas em commits separados.
-Elas não liberaram o gate e não produziram resultado científico. O detalhamento e
-os links das execuções estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
+Incrementos técnicos publicados neste ciclo:
+
+- `480106c0a461b11911c325d2a02bbf25682b0e05`: fallback de container endurecido;
+- `3fed6821ab1fbd8140019dbc8601874105393710`: correção da montagem gravável;
+- `596dcc7d065cf06787533492d9b039301440976a`: gate de tokenizador;
+- `0ab198318521d22cd24b902f615a89e8aa0f586a`: tolerância de cold start no probe;
+- `9d36f390e0972f52210e88bfb39f6f6a647409d4`: matriz de 66 runs materializada;
+- `7f5dee3e00952a898691e8fef287d93cd62214f5`: baseline B0 leakage-safe.
+
+A CI de branch [34657963619](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963619),
+a CI da PR [34657967293](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657967293)
+e o preflight protegido [34657963667](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963667)
+passaram. Localmente, Ruff e 65 testes offline passaram; quatro testes live foram
+desmarcados. O relatório remoto registrou `api_calls_performed: 0`.
+
+O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
+dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
+implementação não serão apresentados como resultado científico. O detalhamento e
+os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Implementar um backend de container identificado e sem rede, validar tokenização e
-custos sem chamada, então materializar B0 e a matriz dataset/seed. O primeiro smoke
-OpenAI continua condicionado a preflight verde e autorização explícita.
+Implementar contabilidade e kill switch de tokens/custo no caminho live e, em
+seguida, criar o workflow manual de smoke sem executá-lo. O primeiro uso da OpenAI
+continua condicionado a revisão do preflight, do teto monetário e autorização
+explícita.

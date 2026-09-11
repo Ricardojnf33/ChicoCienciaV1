@@ -29,13 +29,19 @@ poetry run python -m src.cli compare objective.example.yaml \
   --mode mock --budget 8 --branching 2 --max-depth 3 --max-branching 3
 ```
 
-O comando executa B1, A e A0 em diretórios separados e registra a política efetiva. Na Fase 5, a troca para `--mode live` ocorrerá somente após os gates de sandbox, custo e congelamento. B0 e a expansão por datasets e seeds ainda serão materializados antes dos pilotos; portanto, este comando encerra o critério operacional da Fase 4, mas não constitui a coleta empírica.
+O comando executa B1, A e A0 em diretórios separados e registra a política efetiva. Na Fase 5, a troca para `--mode live` ocorrerá somente após os gates de sandbox, custo e congelamento. A matriz de 66 especificações e o executor B0 já foram materializados, mas permanecem com `protocol_frozen: false`; portanto, testes do mecanismo não constituem coleta empírica.
+
+O baseline convencional pode ser executado por `run-b0`. Por padrão, o comando
+recusa um plano ainda não congelado; `--allow-draft` existe exclusivamente para
+testes de engenharia. Cada resultado registra hashes de dados e splits, scores de
+validação, hiperparâmetro selecionado, métricas no teste reservado e consumo LLM
+igual a zero.
 
 ### 8 2 Controle do orçamento e das condições
 
 Como limite inicial a validar no piloto, cada run terá até seis tentativas de execução de candidato, no máximo duas correções por nó, 15 minutos de duração e 40 mil tokens totais registrados. Correções também consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 terá o mesmo teto de avaliação de candidatos e registrará custo de LLM igual a zero.
 
-Os 45 runs generativos principais mais seis pilotos representam um teto de planejamento de 2,04 milhões de tokens sob essa configuração. Esse valor não é consumo medido nem orçamento monetário. O valor financeiro será calculado a partir de tokens de entrada e saída, tarifas vigentes no início da coleta, infraestrutura e margem explicitada. O teto em moeda será registrado no manifesto da campanha antes da coleta paga.
+Os 45 runs generativos principais mais seis pilotos representam um teto de planejamento de 2,04 milhões de tokens sob essa configuração. Esse valor não é consumo medido. O plano materializado limita cada run generativo a US$ 0,03 e a campanha a US$ 1,53. O snapshot de preço, consultado em 11/09/2026 na [documentação oficial do `gpt-4o-mini`](https://developers.openai.com/api/docs/models/gpt-4o-mini), registra US$ 0,15 por milhão de tokens de entrada, US$ 0,075 para entrada em cache e US$ 0,60 por milhão de tokens de saída. O teto monetário inclui margem conservadora e será revalidado imediatamente antes de qualquer coleta paga.
 
 O corpus bibliográfico será um snapshot comum, com identificadores e hashes. A ordem de execução das condições será alternada ou randomizada por dataset e seed, para reduzir efeitos de horário e instabilidade do serviço. Modelo, prompts, ferramentas e ambiente serão congelados. Uma mudança de versão do provedor exigirá nova identificação do lote.
 
