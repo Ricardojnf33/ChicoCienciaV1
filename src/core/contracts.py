@@ -35,6 +35,8 @@ class ExecutionEvidence(BaseModel):
     stdout_path: str | None = None
     stderr_path: str | None = None
     network_isolated: bool = False
+    sandbox_backend: str | None = None
+    sandbox_image_id: str | None = None
 
 
 class ArtifactRecord(BaseModel):

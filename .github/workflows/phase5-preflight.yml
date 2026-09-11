@@ -18,6 +18,7 @@ jobs:
       MODEL_TEXT: gpt-4.1-mini
       MODEL_VISION: gpt-4o-mini
       WANDB_ON: "false"
+      CHICO_RUNNER_IMAGE: chico-science-runner:phase5
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -25,6 +26,8 @@ jobs:
           python-version: "3.11"
       - name: Install runner prerequisites
         run: sudo apt-get update && sudo apt-get install --yes bubblewrap util-linux
+      - name: Build pinned experiment runner
+        run: docker build --tag "$CHICO_RUNNER_IMAGE" --file docker/runner.Dockerfile .
       - name: Install Poetry
         run: pip install poetry==2.2.1
       - name: Install dependencies

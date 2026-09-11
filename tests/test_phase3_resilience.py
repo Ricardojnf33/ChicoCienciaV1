@@ -115,8 +115,10 @@ def test_sandbox_mounts_only_runtime_and_attempt_directory(tmp_path, monkeypatch
         lambda *args, **kwargs: SimpleNamespace(returncode=0, stderr=b""),
     )
 
-    arguments = PythonRunnerTool()._sandbox_prefix(tmp_path.resolve())
+    launch = PythonRunnerTool()._sandbox_launch(tmp_path.resolve())
+    arguments = list(launch.prefix)
 
+    assert launch.backend == "bwrap"
     assert "--unshare-all" in arguments
     assert arguments[arguments.index("--cap-drop") + 1] == "ALL"
     assert arguments[arguments.index("--tmpfs") + 1] == "/tmp"
@@ -125,29 +127,50 @@ def test_sandbox_mounts_only_runtime_and_attempt_directory(tmp_path, monkeypatch
     assert ("--ro-bind", "/") not in mount_pairs
 
 
-def test_sandbox_uses_privileged_launcher_but_drops_identity(tmp_path, monkeypatch):
-    executables = {"bwrap": "/usr/bin/bwrap", "sudo": "/usr/bin/sudo"}
+def test_sandbox_falls_back_to_hardened_container(tmp_path, monkeypatch):
+    executables = {"bwrap": "/usr/bin/bwrap", "docker": "/usr/bin/docker"}
     monkeypatch.setattr(
         "src.tools.python_repl.shutil.which", lambda name: executables.get(name)
     )
     probes = iter(
         [
-            SimpleNamespace(returncode=1, stderr=b"unprivileged namespace denied"),
-            SimpleNamespace(returncode=0, stderr=b""),
+            SimpleNamespace(
+                returncode=1, stderr=b"unprivileged namespace denied", stdout=b""
+            ),
+            SimpleNamespace(returncode=0, stderr=b"", stdout=b"sha256:image-test\n"),
+            SimpleNamespace(returncode=0, stderr=b"", stdout=b""),
         ]
     )
+    calls = []
+
+    def run_probe(*args, **kwargs):
+        calls.append((args, kwargs))
+        return next(probes)
+
     monkeypatch.setattr(
-        "src.tools.python_repl.subprocess.run", lambda *args, **kwargs: next(probes)
+        "src.tools.python_repl.subprocess.run", run_probe
     )
+    monkeypatch.setenv("OPENAI_API_KEY", "must-not-reach-probe")
 
-    arguments = PythonRunnerTool()._sandbox_prefix(tmp_path.resolve())
+    launch = PythonRunnerTool(runner_image="runner:test")._sandbox_launch(
+        tmp_path.resolve()
+    )
+    arguments = list(launch.prefix)
 
-    assert arguments[:3] == ["/usr/bin/sudo", "--non-interactive", "/usr/bin/bwrap"]
-    assert "--unshare-net" in arguments
-    assert "--unshare-all" not in arguments
-    assert arguments[arguments.index("--uid") + 1] == str(os.getuid())
-    assert arguments[arguments.index("--gid") + 1] == str(os.getgid())
+    assert launch.backend == "docker"
+    assert launch.image_id == "sha256:image-test"
+    assert arguments[:2] == ["/usr/bin/docker", "run"]
+    assert arguments[arguments.index("--network") + 1] == "none"
+    assert "--read-only" in arguments
     assert arguments[arguments.index("--cap-drop") + 1] == "ALL"
+    assert arguments[arguments.index("--security-opt") + 1] == (
+        "no-new-privileges:true"
+    )
+    assert arguments[arguments.index("--user") + 1] == f"{os.getuid()}:{os.getgid()}"
+    assert all("OPENAI_API_KEY" not in item for item in arguments)
+    assert arguments[-2:] == ["runner:test", "python"]
+    assert "1.1.1.1" in calls[2][0][0][-1]
+    assert all("OPENAI_API_KEY" not in call[1]["env"] for call in calls)
 
 
 class FakeClock:
