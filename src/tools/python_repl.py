@@ -70,6 +70,7 @@ class PythonRunnerTool:
             # bubblewrap drops back to the runner identity before Python starts.
             arguments.extend(
                 [
+                    "--unshare-user",
                     "--unshare-pid",
                     "--unshare-net",
                     "--unshare-ipc",
