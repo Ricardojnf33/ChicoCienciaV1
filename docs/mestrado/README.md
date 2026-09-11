@@ -15,6 +15,7 @@ O objetivo desta documentação é transformar o diagnóstico do protótipo em u
 - [Relatório de encerramento da Fase 1](FASE_1_RELATORIO.md)
 - [Relatório de encerramento da Fase 2](FASE_2_RELATORIO.md)
 - [Relatório de encerramento da Fase 3](FASE_3_RELATORIO.md)
+- [Relatório de encerramento da Fase 4](FASE_4_RELATORIO.md)
 - [Runbook de execução e recuperação](RUNBOOK_RECUPERACAO.md)
 - [Registro do processo](REGISTRO_PROCESSO.md)
 - [Modelo de registro para próximas fases](MODELO_REGISTRO_FASE.md)
@@ -24,4 +25,4 @@ O objetivo desta documentação é transformar o diagnóstico do protótipo em u
 
 ## Estado real
 
-Fases 0 a 3 concluídas em código: diagnóstico, ambiente reproduzível, execução mock, CI, contratos, manifesto, replay, validação de artefatos, runner fail-closed e recuperação idempotente estão documentados. A prova positiva do namespace em host compatível é um gate pré-piloto. Fases 4 a 6 permanecem planejadas. Nenhuma execução live ou conclusão da dissertação é atestada; os critérios acadêmicos formais serão alinhados ao programa e à orientação.
+Fases 0 a 4 concluídas localmente: diagnóstico, ambiente reproduzível, execução mock, CI, contratos, manifesto, replay, validação de artefatos, runner fail-closed, recuperação idempotente, busca estruturada, avaliação explícita e comparação B1/A/A0 estão documentados. A prova positiva do namespace em host compatível é um gate pré-piloto. Fases 5 e 6 permanecem planejadas. Nenhuma execução live ou conclusão da dissertação é atestada; os critérios acadêmicos formais serão alinhados ao programa e à orientação.

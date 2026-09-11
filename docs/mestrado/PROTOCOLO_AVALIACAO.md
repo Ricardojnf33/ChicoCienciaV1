@@ -20,6 +20,17 @@ Os datasets propostos são Iris, Wine e Digits. As seeds de divisão serão 11, 
 
 Antes da coleta principal, farei seis runs piloto, dois por condição generativa, distribuídos entre Iris e Wine. Eles servirão para estimar viabilidade e ajustar limites. Seus dados serão excluídos da comparação principal. O protocolo será congelado em commit após o piloto. Qualquer ajuste posterior será registrado como desvio; não se escolherá uma configuração em função de favorecer A.
 
+### 8 1 1 Execução automatizada das condições generativas
+
+A Fase 4 implementou um manifesto comparativo que fixa o hash do objetivo e aplica a mesma configuração às três condições generativas. O smoke reproduzível, ainda sem LLM, é iniciado por:
+
+```bash
+poetry run python -m src.cli compare objective.example.yaml \
+  --mode mock --budget 8 --branching 2 --max-depth 3 --max-branching 3
+```
+
+O comando executa B1, A e A0 em diretórios separados e registra a política efetiva. Na Fase 5, a troca para `--mode live` ocorrerá somente após os gates de sandbox, custo e congelamento. B0 e a expansão por datasets e seeds ainda serão materializados antes dos pilotos; portanto, este comando encerra o critério operacional da Fase 4, mas não constitui a coleta empírica.
+
 ### 8 2 Controle do orçamento e das condições
 
 Como limite inicial a validar no piloto, cada run terá até seis tentativas de execução de candidato, no máximo duas correções por nó, 15 minutos de duração e 40 mil tokens totais registrados. Correções também consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 terá o mesmo teto de avaliação de candidatos e registrará custo de LLM igual a zero.

@@ -56,6 +56,16 @@ Estado: concluída em 11/09/2026, com restrição operacional documentada. Foram
 
 Resultado local: lock válido, Ruff aprovado, 32 testes aprovados e 4 testes live desmarcados. O smoke mock com orçamento 2 terminou com duas tentativas aprovadas. O host negou namespaces; o live foi recusado como projetado. A CI remota [34553951163](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34553951163) aprovou todos os gates e repetiu 32 aprovações e 4 desmarcações. Detalhes e limites estão no [relatório da Fase 3](FASE_3_RELATORIO.md) e no [runbook](RUNBOOK_RECUPERACAO.md).
 
+## Fase 4 — busca estruturada e avaliação dos agentes
+
+Estado local: concluída em 11/09/2026. Foram registrados três incrementos técnicos locais:
+
+- `5b5b35f31c4a94efc719fa5eef057b86aef5134a`: hipóteses e planos estruturados, expansão distinta e limites de busca;
+- `ed0e629fceb6283414dbe389e10a9ba99f33c6c1`: contratos de Reviewer/VLM, estados verificáveis e variantes B1/A/A0;
+- `a43cf001e46982748b006f3117a7773e97831e6f`: execução comparativa automatizada das três condições.
+
+Resultado local: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
+
 ## Próxima ação
 
-Iniciar a Fase 4 por hipóteses estruturadas, decisões distintas por filho e limites explícitos de profundidade e ramificação. Em seguida, integrar estados verificáveis de Reviewer/VLM e as variantes B1, A e A0. As Fases 4 a 6 permanecem planejadas.
+Preparar a Fase 5 sem iniciar chamadas pagas: validar o sandbox em host compatível, adicionar B0 e a matriz dataset/seed ao manifesto, registrar orçamento financeiro e congelar configurações antes dos seis pilotos. As Fases 5 e 6 permanecem planejadas.
