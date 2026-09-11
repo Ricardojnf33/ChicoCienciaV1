@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from src.core.contracts import RunManifest
+from src.core.contracts import ComparisonManifest, RunManifest, load_manifest
 from src.core.evaluation import (
     CriterionState,
     EvaluationDecision,
@@ -15,6 +15,7 @@ from src.core.tree import AgenticTree
 from src.core.variants import ExperimentVariant, policy_for
 from src.processes import ats_process
 from src.processes.ats_process import ExecutionMode, run_agentic_tree
+from src.processes.comparison_process import run_variant_comparison
 
 
 def _run_fixture(tmp_path: Path, variant: ExperimentVariant, *, max_depth: int = 4):
@@ -249,3 +250,25 @@ def test_search_stops_cleanly_after_reaching_depth_limit(tmp_path):
     assert len({record.node_id for record in manifest.attempts}) == 3
     assert tree.frontier == []
     assert all(node.meta.get("terminal_reason") == "max_depth" for node in tree.nodes.values() if node.depth == 1)
+
+
+def test_comparison_runner_executes_the_three_conditions_without_manual_changes(tmp_path):
+    comparison, path = run_variant_comparison(
+        "objective.example.yaml",
+        str(tmp_path),
+        budget=1,
+        branching=2,
+        max_depth=3,
+        max_branching=3,
+        mode=ExecutionMode.MOCK,
+        campaign_id="protocol-smoke",
+    )
+
+    persisted = ComparisonManifest.model_validate_json(path.read_text())
+    assert comparison.status == persisted.status == "SUCCEEDED"
+    assert [run.variant for run in persisted.runs] == ["B1", "A", "A0"]
+    manifests = [load_manifest(run.manifest_path) for run in persisted.runs]
+    assert {manifest.budget for manifest in manifests} == {1}
+    assert {manifest.branching for manifest in manifests} == {2}
+    assert [manifest.effective_branching for manifest in manifests] == [1, 2, 2]
+    assert [manifest.automatic_correction for manifest in manifests] == [True, True, False]

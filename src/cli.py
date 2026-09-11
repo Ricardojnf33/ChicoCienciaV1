@@ -13,6 +13,7 @@ from src.core.contracts import (
     write_result,
 )
 from src.processes.ats_process import ExecutionMode, run_agentic_tree
+from src.processes.comparison_process import run_variant_comparison
 from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
 from src.core.variants import ExperimentVariant, policy_for
@@ -146,6 +147,37 @@ def resume(
     )
     tree.save_json(str(tree_path))
     log.info("resume.done", run_id=run_id)
+
+
+@app.command()
+def compare(
+    objective: str,
+    out_dir: str = "runs/comparisons",
+    budget: int = 8,
+    mode: ExecutionMode = ExecutionMode.MOCK,
+    branching: int = 2,
+    max_depth: int = 3,
+    max_branching: int = 3,
+):
+    """Executa B1, A e A0 com objetivo, ferramentas e limites compartilhados."""
+    crew_factory = None
+    if mode is ExecutionMode.LIVE:
+        from src.crews.ai_scientist_v2 import build_crew
+
+        crew_factory = build_crew
+    comparison, path = run_variant_comparison(
+        objective,
+        out_dir,
+        budget=budget,
+        branching=branching,
+        max_depth=max_depth,
+        max_branching=max_branching,
+        mode=mode,
+        crew_factory=crew_factory,
+    )
+    typer.echo(
+        f"Comparação {comparison.campaign_id} concluída. Manifesto: {path}"
+    )
 
 @app.command()
 def inspect(run_id: str, out_dir: str = "runs", limit: int = 20):

@@ -146,12 +146,60 @@ class RunManifest(BaseModel):
         return self
 
 
+class ComparisonRunRecord(BaseModel):
+    run_id: str = Field(min_length=1)
+    variant: VariantName
+    status: ContractStatus = "PENDING"
+    run_directory: str = Field(min_length=1)
+    tree_path: str = Field(min_length=1)
+    manifest_path: str = Field(min_length=1)
+    error: str | None = None
+
+    @model_validator(mode="after")
+    def validate_failure(self):
+        if self.status == "FAILED" and not self.error:
+            raise ValueError("Run comparativo FAILED requer erro explícito.")
+        return self
+
+
+class ComparisonManifest(BaseModel):
+    schema_version: Literal["1.0"] = "1.0"
+    campaign_id: str = Field(min_length=1)
+    objective_path: str = Field(min_length=1)
+    objective_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    mode: Literal["mock", "live"]
+    budget: int = Field(ge=1)
+    branching: int = Field(ge=1)
+    max_depth: int = Field(ge=0)
+    max_branching: int = Field(ge=1)
+    status: ContractStatus = "PENDING"
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+    runs: list[ComparisonRunRecord]
+
+    @model_validator(mode="after")
+    def validate_design(self):
+        variants = [run.variant for run in self.runs]
+        if sorted(variants) != ["A", "A0", "B1"]:
+            raise ValueError("Comparação exige exatamente um run de B1, A e A0.")
+        run_ids = [run.run_id for run in self.runs]
+        if len(run_ids) != len(set(run_ids)):
+            raise ValueError("Runs comparativos devem ter identidades distintas.")
+        return self
+
+
 def file_sha256(path: str | Path) -> str:
     digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
         for chunk in iter(lambda: stream.read(65536), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def save_comparison_manifest(path: str | Path, manifest: ComparisonManifest) -> Path:
+    manifest.updated_at = utc_now()
+    validated = ComparisonManifest.model_validate(manifest.model_dump())
+    return atomic_write_text(path, validated.model_dump_json(indent=2))
 
 
 def artifact_record(path: str | Path, *, name: str | None = None) -> ArtifactRecord:
