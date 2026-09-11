@@ -218,9 +218,21 @@ class AgenticTree:
         self.frontier.extend(child_ids)
         return child_ids
 
-    def update_result(self, node_id: str, results_path: str, vlm_ok: bool = True):
+    def update_result(
+        self,
+        node_id: str,
+        results_path: str,
+        *,
+        reviewer_decision: str = "NOT_EVALUATED",
+        vlm_decision: str = "NOT_EVALUATED",
+    ):
         n = self.nodes[node_id]
-        score = final_score(results_path, self.primary_metric, vlm_ok=vlm_ok)
+        score = final_score(
+            results_path,
+            self.primary_metric,
+            reviewer_decision=reviewer_decision,
+            vlm_decision=vlm_decision,
+        )
         n.results_path = results_path
         n.score = score
         if node_id in self.frontier:
