@@ -123,6 +123,7 @@ class PythonRunnerTool:
             return arguments
 
         sudo = shutil.which("sudo")
+        privileged_probe = None
         if sudo:
             privileged_arguments = self._sandbox_arguments(
                 workdir, privileged_launcher=True
@@ -133,9 +134,16 @@ class PythonRunnerTool:
                 return privileged_prefix
 
         if probe.returncode != 0:
-            detail = probe.stderr.decode(errors="replace").strip()[-300:]
+            direct_detail = probe.stderr.decode(errors="replace").strip()[-300:]
+            privileged_detail = (
+                privileged_probe.stderr.decode(errors="replace").strip()[-300:]
+                if privileged_probe is not None
+                else "sudo indisponível"
+            )
             raise SandboxUnavailableError(
-                f"isolamento de rede indisponível no host: {detail or probe.returncode}"
+                "isolamento de rede indisponível no host; "
+                f"direto={direct_detail or probe.returncode}; "
+                f"privilegiado={privileged_detail or privileged_probe.returncode}"
             )
         return arguments
 
