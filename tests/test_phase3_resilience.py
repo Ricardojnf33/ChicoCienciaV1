@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from pathlib import Path
 from types import SimpleNamespace
@@ -122,6 +123,31 @@ def test_sandbox_mounts_only_runtime_and_attempt_directory(tmp_path, monkeypatch
     assert arguments[arguments.index("--bind") + 1] == str(tmp_path.resolve())
     mount_pairs = list(zip(arguments, arguments[1:]))
     assert ("--ro-bind", "/") not in mount_pairs
+
+
+def test_sandbox_uses_privileged_launcher_but_drops_identity(tmp_path, monkeypatch):
+    executables = {"bwrap": "/usr/bin/bwrap", "sudo": "/usr/bin/sudo"}
+    monkeypatch.setattr(
+        "src.tools.python_repl.shutil.which", lambda name: executables.get(name)
+    )
+    probes = iter(
+        [
+            SimpleNamespace(returncode=1, stderr=b"unprivileged namespace denied"),
+            SimpleNamespace(returncode=0, stderr=b""),
+        ]
+    )
+    monkeypatch.setattr(
+        "src.tools.python_repl.subprocess.run", lambda *args, **kwargs: next(probes)
+    )
+
+    arguments = PythonRunnerTool()._sandbox_prefix(tmp_path.resolve())
+
+    assert arguments[:3] == ["/usr/bin/sudo", "--non-interactive", "/usr/bin/bwrap"]
+    assert "--unshare-net" in arguments
+    assert "--unshare-all" not in arguments
+    assert arguments[arguments.index("--uid") + 1] == str(os.getuid())
+    assert arguments[arguments.index("--gid") + 1] == str(os.getgid())
+    assert arguments[arguments.index("--cap-drop") + 1] == "ALL"
 
 
 class FakeClock:

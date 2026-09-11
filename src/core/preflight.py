@@ -105,7 +105,8 @@ def run_preflight(
             result = runner.preflight(directory)
         return (
             "Runner sem nomes sensíveis; limites disponíveis; "
-            f"isolamento obrigatório={result['network_isolation_required']}."
+            f"isolamento obrigatório={result['network_isolation_required']}; "
+            f"backend={result['sandbox_backend']}."
         )
 
     check("credential", credential_check)

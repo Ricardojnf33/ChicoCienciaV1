@@ -46,7 +46,9 @@ class PythonRunnerTool:
         )
         return environment
 
-    def _sandbox_prefix(self, workdir: Path) -> list[str]:
+    def _sandbox_arguments(
+        self, workdir: Path, *, privileged_launcher: bool
+    ) -> list[str]:
         executable = shutil.which("bwrap")
         if not executable:
             raise SandboxUnavailableError("bubblewrap não está instalado")
@@ -61,10 +63,27 @@ class PythonRunnerTool:
         arguments = [
             executable,
             "--die-with-parent",
-            "--unshare-all",
-            "--cap-drop",
-            "ALL",
         ]
+        if privileged_launcher:
+            # GitHub-hosted runners permit passwordless sudo but can reject
+            # unprivileged network namespaces. Root creates the namespaces and
+            # bubblewrap drops back to the runner identity before Python starts.
+            arguments.extend(
+                [
+                    "--unshare-pid",
+                    "--unshare-net",
+                    "--unshare-ipc",
+                    "--unshare-uts",
+                    "--unshare-cgroup-try",
+                    "--gid",
+                    str(os.getgid()),
+                    "--uid",
+                    str(os.getuid()),
+                ]
+            )
+        else:
+            arguments.append("--unshare-all")
+        arguments.extend(["--cap-drop", "ALL"])
         for source in sorted(readonly_paths, key=lambda path: (len(path.parts), str(path))):
             if source.exists() and not source.is_relative_to(workdir):
                 arguments.extend(["--ro-bind", str(source), str(source)])
@@ -86,12 +105,33 @@ class PythonRunnerTool:
                 str(workdir),
             ]
         )
-        probe = subprocess.run(
+        return arguments
+
+    @staticmethod
+    def _probe_sandbox(arguments: list[str]) -> subprocess.CompletedProcess:
+        return subprocess.run(
             [*arguments, sys.executable, "-c", "pass"],
             capture_output=True,
             timeout=5,
             check=False,
         )
+
+    def _sandbox_prefix(self, workdir: Path) -> list[str]:
+        arguments = self._sandbox_arguments(workdir, privileged_launcher=False)
+        probe = self._probe_sandbox(arguments)
+        if probe.returncode == 0:
+            return arguments
+
+        sudo = shutil.which("sudo")
+        if sudo:
+            privileged_arguments = self._sandbox_arguments(
+                workdir, privileged_launcher=True
+            )
+            privileged_prefix = [sudo, "--non-interactive", *privileged_arguments]
+            privileged_probe = self._probe_sandbox(privileged_prefix)
+            if privileged_probe.returncode == 0:
+                return privileged_prefix
+
         if probe.returncode != 0:
             detail = probe.stderr.decode(errors="replace").strip()[-300:]
             raise SandboxUnavailableError(
@@ -119,7 +159,12 @@ class PythonRunnerTool:
         workdir_path.mkdir(parents=True, exist_ok=True)
         self._limit_prefix()
         if self.require_network_isolation:
-            self._sandbox_prefix(workdir_path)
+            sandbox_prefix = self._sandbox_prefix(workdir_path)
+            sandbox_backend = (
+                "sudo-bwrap" if Path(sandbox_prefix[0]).name == "sudo" else "bwrap"
+            )
+        else:
+            sandbox_backend = "disabled"
         sanitized_keys = set(self._sanitized_environment())
         sensitive_keys = {
             key
@@ -135,6 +180,7 @@ class PythonRunnerTool:
         return {
             "network_isolation_required": self.require_network_isolation,
             "network_isolation_available": self.require_network_isolation,
+            "sandbox_backend": sandbox_backend,
             "resource_limits_available": True,
             "forwarded_sensitive_environment_names": forwarded_sensitive,
         }
