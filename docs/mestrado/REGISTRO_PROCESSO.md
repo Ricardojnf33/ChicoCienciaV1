@@ -44,6 +44,18 @@ Estado: concluída em 10/09/2026. Foram publicados três incrementos técnicos:
 
 Resultado local: Ruff aprovado, 22 testes aprovados e 4 testes live desmarcados. A execução mock manual produziu manifesto, árvore, SQLite e artefatos por nó/tentativa. Os detalhes, valores históricos preservados e limites estão no [relatório da Fase 2](FASE_2_RELATORIO.md).
 
+## Fase 3 — runner controlado e recuperação
+
+Estado: concluída em 11/09/2026, com restrição operacional documentada. Foram publicados cinco incrementos técnicos:
+
+- `17f7f5b`: execução controlada, evidência direta e reconciliação;
+- `e78e7ec`: checkpoint atômico e rate limiter realmente compartilhado;
+- `75f9cfc`: falhas externas e de recursos injetadas;
+- `fec00c9`: separação entre decisão e execução, reconstrução SQLite e orçamento de tentativas;
+- `a6099c8`: filesystem mínimo no sandbox.
+
+Resultado local: lock válido, Ruff aprovado, 32 testes aprovados e 4 testes live desmarcados. O smoke mock com orçamento 2 terminou com duas tentativas aprovadas. O host negou namespaces; o live foi recusado como projetado. Detalhes e limites estão no [relatório da Fase 3](FASE_3_RELATORIO.md) e no [runbook](RUNBOOK_RECUPERACAO.md).
+
 ## Próxima ação
 
-Iniciar a Fase 3 pelo runner com captura direta de evidência, isolamento de credenciais, timeout e encerramento de subprocessos. Depois, implementar checkpoint atômico e retomada idempotente. As Fases 3 a 6 permanecem planejadas.
+Iniciar a Fase 4 por hipóteses estruturadas, decisões distintas por filho e limites explícitos de profundidade e ramificação. Em seguida, integrar estados verificáveis de Reviewer/VLM e as variantes B1, A e A0. As Fases 4 a 6 permanecem planejadas.

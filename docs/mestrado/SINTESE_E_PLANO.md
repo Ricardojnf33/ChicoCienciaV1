@@ -235,6 +235,8 @@ Critério de saída: nenhum caso de artefato inválido da suíte termina como su
 
 ### Fase 3 Runner e recuperação
 
+Estado em 11/09/2026: concluída em código, com 32 testes offline e smoke mock aprovados. O live falha fechado quando o host não permite o namespace; a prova positiva em host compatível é requisito pré-piloto. Ver [relatório](FASE_3_RELATORIO.md) e [runbook](RUNBOOK_RECUPERACAO.md).
+
 Implementar execução controlada, limites de recursos, encerramento de processos, checkpoint atômico, restauração idempotente e correção limitada. Corrigir o controle compartilhado do rate limiter e validar falhas de serviços com fixtures. Garantir que tentativas anteriores permaneçam consultáveis.
 
 Critério de saída: falha injetada e reinício preservam o estado esperado; execução concluída não é repetida; timeout e orçamento encerram o trabalho; credenciais não aparecem no ambiente do runner. Evidência: logs, testes de isolamento e roteiro de recuperação.
