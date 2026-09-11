@@ -380,8 +380,8 @@ def run_agentic_tree(
     effective_branching = policy.effective_branching(branching)
     if mode is ExecutionMode.LIVE and crew is None:
         raise ValueError("O modo live requer uma Crew configurada.")
-    if mode is ExecutionMode.LIVE and not (settings.OPENAI_API_KEY or "").strip():
-        raise ValueError("O modo live requer OPENAI_API_KEY não vazia.")
+    if mode is ExecutionMode.LIVE:
+        settings.require_openai_api_key()
 
     log = structlog.get_logger()
     if manifest is not None and manifest.variant != variant.value:

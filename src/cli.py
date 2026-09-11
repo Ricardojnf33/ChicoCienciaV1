@@ -16,6 +16,7 @@ from src.processes.ats_process import ExecutionMode, run_agentic_tree
 from src.processes.comparison_process import run_variant_comparison
 from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
+from src.config.settings import Settings
 from src.core.variants import ExperimentVariant, policy_for
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
@@ -59,7 +60,7 @@ def init(
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew = build_crew()
+        crew = build_crew(Settings())
     artifact_root = run_dir / "artifacts"
     policy = policy_for(variant)
     effective_branching = policy.effective_branching(branching)
@@ -131,7 +132,7 @@ def resume(
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew = build_crew()
+        crew = build_crew(Settings())
     log.info("resume.start", run_id=run_id, budget=budget)
     run_agentic_tree(
         crew,
@@ -164,7 +165,12 @@ def compare(
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew_factory = build_crew
+        settings = Settings()
+
+        def configured_crew_factory():
+            return build_crew(settings)
+
+        crew_factory = configured_crew_factory
     comparison, path = run_variant_comparison(
         objective,
         out_dir,
