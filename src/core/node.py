@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from .enums import NodeType, ExecStatus, Stage
+from .research import ExperimentPlan, HypothesisSpec
 
 @dataclass
 class Node:
@@ -10,6 +11,9 @@ class Node:
     stage: Stage
     prompt: str
     plan: str | None = None
+    depth: int = 0
+    hypothesis: HypothesisSpec | None = None
+    experiment_plan: ExperimentPlan | None = None
     code_path: str | None = None
     results_path: str | None = None
     figs_paths: List[str] = field(default_factory=list)
