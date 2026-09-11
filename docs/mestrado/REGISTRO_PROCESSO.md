@@ -66,6 +66,20 @@ Estado: concluída em 11/09/2026. Foram publicados três incrementos técnicos:
 
 Resultado: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. A CI remota [34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898) aprovou todos os gates. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
 
+## Fase 5 — captura do secret e preflight
+
+Estado: em andamento em 11/09/2026. A configuração live passou a injetar uma
+credencial mascarada explicitamente nos clientes e agentes reais. O workflow
+protegido confirmou credencial, runtime, objetivo e modelos, mas recusou o runner
+por incompatibilidade do namespace com o GitHub-hosted runner. O relatório remoto
+registrou `api_calls_performed: 0`. Localmente, Ruff e 58 testes offline passaram.
+
+As tentativas de diagnóstico do `bubblewrap` foram mantidas em commits separados.
+Elas não liberaram o gate e não produziram resultado científico. O detalhamento e
+os links das execuções estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
+
 ## Próxima ação
 
-Preparar a Fase 5 sem iniciar chamadas pagas: validar o sandbox em host compatível, adicionar B0 e a matriz dataset/seed ao manifesto, registrar orçamento financeiro e congelar configurações antes dos seis pilotos. As Fases 5 e 6 permanecem planejadas.
+Implementar um backend de container identificado e sem rede, validar tokenização e
+custos sem chamada, então materializar B0 e a matriz dataset/seed. O primeiro smoke
+OpenAI continua condicionado a preflight verde e autorização explícita.
