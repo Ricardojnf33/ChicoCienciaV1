@@ -11,7 +11,9 @@ class Settings(BaseSettings):
 
     OPENAI_API_KEY: SecretStr | None = None
     SEMANTIC_SCHOLAR_API_KEY: str | None = None
-    MODEL_TEXT: str = "gpt-4.1-mini"
+    # CrewAI 0.51.1 pins tiktoken <0.8; gpt-4o-mini is mapped to o200k_base
+    # by that frozen dependency, unlike gpt-4.1-mini.
+    MODEL_TEXT: str = "gpt-4o-mini"
     MODEL_VISION: str = "gpt-4o-mini"
 
     MAX_BRANCHING: int = 3

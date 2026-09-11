@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Callable
 
 from pydantic import BaseModel, Field
+from tiktoken.model import encoding_name_for_model
 
 from src.config.settings import Settings
 from src.core.atomic_io import atomic_write_text
@@ -95,8 +96,11 @@ def run_preflight(
     def model_check() -> str:
         if not settings.MODEL_TEXT.strip() or not settings.MODEL_VISION.strip():
             raise ValueError("Modelo textual ou visual vazio.")
+        text_encoding = encoding_name_for_model(settings.MODEL_TEXT)
+        vision_encoding = encoding_name_for_model(settings.MODEL_VISION)
         return (
-            f"Modelo textual={settings.MODEL_TEXT}; modelo visual={settings.MODEL_VISION}."
+            f"Modelo textual={settings.MODEL_TEXT} ({text_encoding}); "
+            f"modelo visual={settings.MODEL_VISION} ({vision_encoding})."
         )
 
     def runner_check() -> str:

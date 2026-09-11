@@ -33,6 +33,23 @@ def test_preflight_records_missing_secret_as_failure():
     assert "OPENAI_API_KEY" in credential.detail
 
 
+def test_preflight_rejects_model_without_frozen_tokenizer_mapping():
+    report = run_preflight(
+        settings=Settings(
+            OPENAI_API_KEY="sk-test-model-gate",
+            MODEL_TEXT="gpt-4.1-mini",
+            _env_file=None,
+        ),
+        objective_path="objective.example.yaml",
+        require_sandbox=False,
+    )
+
+    model_check = next(item for item in report.checks if item.name == "models")
+    assert report.status is CheckStatus.FAIL
+    assert model_check.status is CheckStatus.FAIL
+    assert "tokeniser" in model_check.detail
+
+
 def test_preflight_redacts_secret_from_downstream_failure():
     secret = "sk-test-redaction-sentinel"
 

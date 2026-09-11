@@ -15,7 +15,7 @@ jobs:
     environment: phase5-pilot
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      MODEL_TEXT: gpt-4.1-mini
+      MODEL_TEXT: gpt-4o-mini
       MODEL_VISION: gpt-4o-mini
       WANDB_ON: "false"
       CHICO_RUNNER_IMAGE: chico-science-runner:phase5
