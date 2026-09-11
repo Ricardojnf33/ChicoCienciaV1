@@ -59,6 +59,8 @@ Critério de saída: falha injetada e reinício preservam o estado esperado; exe
 
 ### Fase 4 Busca e avaliação dos agentes
 
+Estado: concluída. Evidência principal: GitHub Actions [34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898), 50 testes offline aprovados, smoke comparativo B1/A/A0 e [relatório da Fase 4](FASE_4_RELATORIO.md).
+
 Estruturar hipóteses e planos, conectar filhos a decisões distintas, limitar profundidade e ramificação e testar seleção e propagação. Integrar resultados do Reviewer como dados verificáveis; representar VLM como não avaliado quando não houver avaliação confiável. Implementar B1, A e A0 com as mesmas ferramentas e limites.
 
 Critério de saída: a execução mock cobre o ciclo completo com transições válidas; as variantes diferem apenas nos fatores planejados; o protocolo pode ser executado sem mudanças manuais durante o run.

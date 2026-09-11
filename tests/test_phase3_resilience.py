@@ -21,6 +21,7 @@ from src.core.contracts import (
 from src.core.enums import ExecStatus
 from src.core.persistence import get_node, init_db
 from src.core.tree import AgenticTree
+from src.core.variants import ExperimentVariant
 from src.processes.ats_process import ExecutionMode, run_agentic_tree
 from src.tools.python_repl import PythonRunnerTool, SandboxUnavailableError
 
@@ -243,6 +244,8 @@ def test_resume_stops_when_attempt_budget_is_exhausted(tmp_path):
         run_id="exhausted-test",
         objective_path="objective.example.yaml",
         primary_metric=tree.primary_metric,
+        variant="A0",
+        automatic_correction=False,
         attempts=[
             AttemptRecord(
                 node_id=node.id,
@@ -268,6 +271,7 @@ def test_resume_stops_when_attempt_budget_is_exhausted(tmp_path):
             sqlite_url=f"sqlite:///{tmp_path / 'run.db'}",
             manifest=manifest,
             manifest_path=str(manifest_path),
+            variant=ExperimentVariant.A0,
         )
 
     assert tree.nodes[node.id].status is ExecStatus.FAILED

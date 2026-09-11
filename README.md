@@ -20,6 +20,9 @@ The project combines CrewAI-style agent orchestration with an `AgenticTree` that
 
 - Specialized agent definitions for management, research, coding, review, data stewardship, ethics, and visual critique.
 - Tree selection using a UCT-style policy, node expansion, score propagation, and early stopping.
+- Structured hypothesis and experiment-plan contracts with distinct, bounded expansion.
+- Comparable B1, A, and A0 policies plus a single-command comparison manifest.
+- Reviewer and VLM evidence contracts with explicit `NOT_EVALUATED` state.
 - CLI commands for `init`, `resume`, `inspect`, and `report`.
 - Atomic JSON checkpoints, durable attempt manifests, and a reconstructible SQLite projection.
 - ArXiv and Semantic Scholar clients with fallback behavior.
@@ -39,6 +42,7 @@ The project combines CrewAI-style agent orchestration with an `AgenticTree` that
 | CLI `resume` and `inspect` | Implemented |
 | External literature clients | Implemented with fallbacks; availability depends on external services |
 | Live multi-agent experiment | Fail-closed runner implemented; compatible sandbox host and end-to-end scientific validation still required |
+| Agent evaluation | Explicit and hashed; mock runs remain `NOT_EVALUATED` |
 | Scientific validity | Not validated |
 | Production readiness | Not production-ready |
 
@@ -46,7 +50,7 @@ The project combines CrewAI-style agent orchestration with an `AgenticTree` that
 
 - When `OPENAI_API_KEY` is absent, the workflow creates a synthetic `results.json` with an example accuracy value. These values are orchestration fixtures, not experimental findings.
 - Live mode rejects missing, invalid or hash-divergent evidence and never substitutes a synthetic result.
-- Visual-critic consistency is currently passed into scoring as a default value; it is not yet a fully verified evaluation signal.
+- Reviewer/VLM decisions affect scoring only when represented by their explicit contracts; mock runs record `NOT_EVALUATED` and are not approvals.
 - Generated Python runs only when Bubblewrap can isolate network and filesystem. This narrows risk but is not an absolute security guarantee against hostile code or kernel vulnerabilities.
 - Reports are lightweight templates and should not be treated as scientific papers.
 - No benchmark currently demonstrates scientific novelty, reproducibility, or superiority over a conventional workflow.
@@ -102,16 +106,17 @@ The command creates a run checkpoint and synthetic artifacts that can be used to
 poetry run python -m src.cli resume <run_id> --budget 3
 poetry run python -m src.cli inspect <run_id>
 poetry run python -m src.cli report <run_id>
+poetry run python -m src.cli compare objective.example.yaml --mode mock --budget 8
 ```
 
 ## Development priorities
 
-1. Structure hypotheses, decisions and review evidence across the complete mock cycle.
-2. Implement comparable B1, A and A0 workflow variants.
+1. Run the sandbox preflight and smoke test on a compatible Linux host.
+2. Materialize B0 and the dataset/seed campaign matrix.
 3. Validate literature provenance and attach citations to generated claims.
-4. Run the sandbox preflight and smoke test on a compatible Linux host.
-5. Execute pilots before freezing the empirical protocol.
-6. Evaluate the system against a conventional non-agentic research workflow.
+4. Approve token and monetary caps before any LLM-backed pilot.
+5. Execute six pilots before freezing the empirical protocol.
+6. Collect the main comparison and prepare the independent reproduction.
 
 ## License
 
