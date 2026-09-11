@@ -3,6 +3,8 @@ import time
 from pathlib import Path
 
 import pytest
+from requests.exceptions import Timeout
+from tenacity import wait_none
 
 from src.clients.semantic_scholar_client import SemanticScholarClient
 from src.core import atomic_io
@@ -81,6 +83,18 @@ def test_runner_timeout_terminates_process_group(tmp_path):
     assert sentinel.exists() is False
 
 
+def test_runner_enforces_file_size_budget(tmp_path):
+    script = tmp_path / "code.py"
+    script.write_text("open('oversized.bin', 'wb').write(b'x' * 2 * 1024 * 1024)\n")
+
+    result = PythonRunnerTool(
+        require_network_isolation=False, output_mb=1
+    ).run_script(str(script), workdir=str(tmp_path), timeout=5)
+
+    assert result["returncode"] != 0
+    assert (tmp_path / "oversized.bin").stat().st_size <= 1024 * 1024
+
+
 def test_runner_fails_closed_without_os_sandbox(tmp_path, monkeypatch):
     script = tmp_path / "code.py"
     script.write_text("raise SystemExit(0)\n")
@@ -117,6 +131,26 @@ def test_rate_limit_is_shared_across_instances_without_real_wait():
     second._rate_limit()
 
     assert fake.sleeps == [pytest.approx(1.25)]
+
+
+class AlwaysTimeoutClient:
+    def __init__(self):
+        self.calls = 0
+
+    def search_paper(self, **kwargs):
+        self.calls += 1
+        raise Timeout("fixture timeout")
+
+
+def test_external_timeout_fixture_exhausts_three_retries_without_real_wait():
+    dependency = AlwaysTimeoutClient()
+    SemanticScholarClient._reset_rate_limit_for_tests()
+    client = SemanticScholarClient(client=dependency, min_interval=0)
+
+    with pytest.raises(Timeout, match="fixture timeout"):
+        client.search.retry_with(wait=wait_none())(client, "fault injection")
+
+    assert dependency.calls == 3
 
 
 def test_resume_reconciles_success_once_without_reexecution(tmp_path):
