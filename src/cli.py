@@ -17,6 +17,7 @@ from src.processes.comparison_process import run_variant_comparison
 from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
 from src.config.settings import Settings
+from src.core.preflight import CheckStatus, run_preflight, write_preflight
 from src.core.variants import ExperimentVariant, policy_for
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
@@ -184,6 +185,24 @@ def compare(
     typer.echo(
         f"Comparação {comparison.campaign_id} concluída. Manifesto: {path}"
     )
+
+
+@app.command()
+def preflight(
+    objective: str = "objective.example.yaml",
+    output: str = "phase5-preflight.json",
+    require_sandbox: bool = True,
+):
+    """Valida credencial e runtime sem chamar a API OpenAI."""
+    report = run_preflight(
+        settings=Settings(),
+        objective_path=objective,
+        require_sandbox=require_sandbox,
+    )
+    path = write_preflight(output, report)
+    typer.echo(f"Preflight {report.status.value}. Relatório: {path}")
+    if report.status is CheckStatus.FAIL:
+        raise typer.Exit(code=1)
 
 @app.command()
 def inspect(run_id: str, out_dir: str = "runs", limit: int = 20):

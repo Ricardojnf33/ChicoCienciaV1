@@ -1,0 +1,42 @@
+name: Phase 5 preflight
+
+on:
+  push:
+    branches: [feat/mestrado-fase-5]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: phase5-pilot
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      MODEL_TEXT: gpt-4.1-mini
+      MODEL_VISION: gpt-4o-mini
+      WANDB_ON: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install runner prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes bubblewrap util-linux
+      - name: Install Poetry
+        run: pip install poetry==2.2.1
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Validate lock
+        run: poetry check --lock
+      - name: Run preflight without OpenAI call
+        run: poetry run python -m src.cli preflight --output phase5-preflight.json
+      - name: Preserve preflight report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase5-preflight
+          path: phase5-preflight.json
+          if-no-files-found: error

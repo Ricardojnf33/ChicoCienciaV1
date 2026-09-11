@@ -113,6 +113,32 @@ class PythonRunnerTool:
             "--",
         ]
 
+    def preflight(self, workdir: str | Path) -> dict[str, object]:
+        """Validate runner boundaries without executing generated project code."""
+        workdir_path = Path(workdir).resolve()
+        workdir_path.mkdir(parents=True, exist_ok=True)
+        self._limit_prefix()
+        if self.require_network_isolation:
+            self._sandbox_prefix(workdir_path)
+        sanitized_keys = set(self._sanitized_environment())
+        sensitive_keys = {
+            key
+            for key in os.environ
+            if any(marker in key.upper() for marker in ("KEY", "TOKEN", "SECRET", "PASSWORD"))
+        }
+        forwarded_sensitive = sorted(sanitized_keys & sensitive_keys)
+        if forwarded_sensitive:
+            raise RuntimeError(
+                "O ambiente sanitizado encaminharia nomes sensíveis: "
+                + ", ".join(forwarded_sensitive)
+            )
+        return {
+            "network_isolation_required": self.require_network_isolation,
+            "network_isolation_available": self.require_network_isolation,
+            "resource_limits_available": True,
+            "forwarded_sensitive_environment_names": forwarded_sensitive,
+        }
+
     @staticmethod
     def _terminate_process_group(process: subprocess.Popen, grace_seconds: float = 1.0) -> None:
         try:
