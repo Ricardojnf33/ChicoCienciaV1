@@ -33,11 +33,11 @@ Manifesto, resultado e árvore usam gravação temporária, `fsync` e troca atô
 
 | Incremento | Commit | Resultado |
 | --- | --- | --- |
-| Runner e recuperação | `17f7f5b` | Evidência direta, limites, timeout, gravação atômica e reconciliação de sucesso durável |
-| Persistência e rate limiter | `e78e7ec` | Checkpoint atômico, relógio monotônico e estado global entre instâncias |
-| Falhas determinísticas | `75f9cfc` | Fixtures de timeout externo e orçamento de recursos sem serviço real |
-| Separação de responsabilidades | `fec00c9` | Coder sem execução, Runner fora da equipe decisória, reconstrução SQLite e orçamento de tentativas |
-| Fronteira do sandbox | `a6099c8` | Raiz do host removida da visão do processo; montagem restrita ao runtime e à tentativa |
+| Runner e recuperação | `22a2613100d4978bda6be4d39cb0883e721072dd` | Evidência direta, limites, timeout, gravação atômica e reconciliação de sucesso durável |
+| Persistência e rate limiter | `dd91c247cab154b3a9cf31f95ba2d9cd2854cd99` | Checkpoint atômico, relógio monotônico e estado global entre instâncias |
+| Falhas determinísticas | `3db700c30b74345c525ff6efe75f3f6f00c3c493` | Fixtures de timeout externo e orçamento de recursos sem serviço real |
+| Separação de responsabilidades | `b8e9365a621fc719ebcf6922bfe9698d788b44f9` | Coder sem execução, Runner fora da equipe decisória, reconstrução SQLite e orçamento de tentativas |
+| Fronteira do sandbox | `73d9a7a2349db84ce4ceed6a1e4f32665f3eae26` | Raiz do host removida da visão do processo; montagem restrita ao runtime e à tentativa |
 
 ## Verificação
 
@@ -58,6 +58,8 @@ Ambiente local: CPython 3.11.16, Poetry 2.2.1 e Ruff 0.6.9.
 | Duas instâncias Semantic Scholar | intervalo compartilhado de 1,25 s comprovado com relógio falso, sem espera real |
 | Timeout Semantic Scholar | exatamente três chamadas pela fixture e exceção final preservada |
 | Sandbox indisponível | execução recusada antes do código gerado |
+
+A validação remota ocorreu no GitHub Actions [run 34553951163](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34553951163). Checkout, Python 3.11, Poetry 2.2.1, instalação limpa, lock, Ruff e testes passaram. O log remoto registrou 32 testes aprovados e 4 desmarcados em 4,70 s.
 
 O host desta sessão possui `bubblewrap`, mas nega a criação do namespace. Esse resultado não foi convertido em bypass: o teste de fail-closed confirma a recusa. A prova positiva de uma chamada live dentro do namespace deve ser executada em host compatível e sem consumo de LLM antes da coleta da Fase 5.
 

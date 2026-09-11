@@ -235,7 +235,7 @@ Critério de saída: nenhum caso de artefato inválido da suíte termina como su
 
 ### Fase 3 Runner e recuperação
 
-Estado em 11/09/2026: concluída em código, com 32 testes offline e smoke mock aprovados. O live falha fechado quando o host não permite o namespace; a prova positiva em host compatível é requisito pré-piloto. Ver [relatório](FASE_3_RELATORIO.md) e [runbook](RUNBOOK_RECUPERACAO.md).
+Estado em 11/09/2026: concluída em código, com 32 testes offline, smoke mock e GitHub Actions [34553951163](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34553951163) aprovados. O live falha fechado quando o host não permite o namespace; a prova positiva em host compatível é requisito pré-piloto. Ver [relatório](FASE_3_RELATORIO.md) e [runbook](RUNBOOK_RECUPERACAO.md).
 
 Implementar execução controlada, limites de recursos, encerramento de processos, checkpoint atômico, restauração idempotente e correção limitada. Corrigir o controle compartilhado do rate limiter e validar falhas de serviços com fixtures. Garantir que tentativas anteriores permaneçam consultáveis.
 
