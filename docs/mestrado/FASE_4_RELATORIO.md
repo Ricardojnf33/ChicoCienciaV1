@@ -1,6 +1,6 @@
 # Fase 4 — busca estruturada e avaliação dos agentes
 
-Estado: concluída localmente em 11 de setembro de 2026; validação remota da branch registrada após a publicação no GitHub.
+Estado: concluída em 11 de setembro de 2026, com validação local e remota aprovadas.
 
 ## Identificação e entrada
 
@@ -34,9 +34,9 @@ O comando `compare` materializa um manifesto de campanha, fixa o SHA-256 do obje
 
 | Incremento | Commit | Resultado |
 | --- | --- | --- |
-| Busca estruturada | `5b5b35f31c4a94efc719fa5eef057b86aef5134a` | Hipóteses e planos identificáveis, decisões distintas, limites persistidos e fronteira sem ressurreição |
-| Avaliação e variantes | `ed0e629fceb6283414dbe389e10a9ba99f33c6c1` | Reviewer/VLM verificáveis, estado `NOT_EVALUATED`, políticas B1/A/A0 e correção diferenciada |
-| Protocolo executável | `a43cf001e46982748b006f3117a7773e97831e6f` | Um comando executa as três condições com objetivo e limites compartilhados |
+| Busca estruturada | `b5ade243c5976e0985aaf5d6c55350d3e1c86262` | Hipóteses e planos identificáveis, decisões distintas, limites persistidos e fronteira sem ressurreição |
+| Avaliação e variantes | `703f54290bfc34d3b8a2c6c3dc81a38454511f00` | Reviewer/VLM verificáveis, estado `NOT_EVALUATED`, políticas B1/A/A0 e correção diferenciada |
+| Protocolo executável | `9718c585f38ee035604056d03cf9e56652cb123c` | Um comando executa as três condições com objetivo e limites compartilhados |
 
 ## Verificação
 
@@ -54,6 +54,8 @@ Ambiente local: CPython 3.11.16, Poetry 2.2.1, Ruff 0.6.9 e pytest 8.4.2.
 | Falha recuperável em B1 e A | primeira tentativa `FAILED`, segunda `SUCCEEDED` |
 | Mesma falha em A0 | uma tentativa `FAILED`, sem correção automática |
 | Campanha mock B1/A/A0 | as três condições terminaram `SUCCEEDED` sem mudança manual |
+
+A validação independente ocorreu no GitHub Actions [run 34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898). Instalação limpa, lock, Ruff e pytest terminaram com sucesso no commit documental remoto `594a95c72f9d5143ab6af79e8496cf7de8953ef0`.
 
 O smoke completo usou `objective.example.yaml`, orçamento 8, ramificação 2 e profundidade 3. O objetivo teve SHA-256 `f2baaaa18b43e7002897e61774766fd96ec7962c8dbc9b82763f09689e34f11e`.
 
@@ -87,6 +89,6 @@ A avaliação visual permanecerá `NOT_EVALUATED` até existir figura válida e 
 
 ## Saída e continuidade
 
-Os critérios locais da Fase 4 foram satisfeitos: o mock percorre transições válidas; as condições variam somente topologia e correção conforme o desenho; e a comparação executa sem edição manual durante a campanha. A confirmação definitiva da fase requer CI verde na branch publicada.
+Os critérios da Fase 4 foram satisfeitos localmente e repetidos pela CI: o mock percorre transições válidas; as condições variam somente topologia e correção conforme o desenho; e a comparação executa sem edição manual durante a campanha.
 
 Próxima ação: preparar a Fase 5 sem iniciar consumo pago — executar o preflight do sandbox em host compatível, materializar os objetivos Iris/Wine/Digits, registrar seeds e orçamento no manifesto da campanha e aprovar o gate antes dos seis pilotos com LLM.

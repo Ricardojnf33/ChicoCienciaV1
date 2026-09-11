@@ -58,13 +58,13 @@ Resultado local: lock válido, Ruff aprovado, 32 testes aprovados e 4 testes liv
 
 ## Fase 4 — busca estruturada e avaliação dos agentes
 
-Estado local: concluída em 11/09/2026. Foram registrados três incrementos técnicos locais:
+Estado: concluída em 11/09/2026. Foram publicados três incrementos técnicos:
 
-- `5b5b35f31c4a94efc719fa5eef057b86aef5134a`: hipóteses e planos estruturados, expansão distinta e limites de busca;
-- `ed0e629fceb6283414dbe389e10a9ba99f33c6c1`: contratos de Reviewer/VLM, estados verificáveis e variantes B1/A/A0;
-- `a43cf001e46982748b006f3117a7773e97831e6f`: execução comparativa automatizada das três condições.
+- `b5ade243c5976e0985aaf5d6c55350d3e1c86262`: hipóteses e planos estruturados, expansão distinta e limites de busca;
+- `703f54290bfc34d3b8a2c6c3dc81a38454511f00`: contratos de Reviewer/VLM, estados verificáveis e variantes B1/A/A0;
+- `9718c585f38ee035604056d03cf9e56652cb123c`: execução comparativa automatizada das três condições.
 
-Resultado local: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
+Resultado: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. A CI remota [34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898) aprovou todos os gates. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
 
 ## Próxima ação
 
