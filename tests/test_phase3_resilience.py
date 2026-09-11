@@ -1,6 +1,7 @@
 import json
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from requests.exceptions import Timeout
@@ -103,6 +104,23 @@ def test_runner_fails_closed_without_os_sandbox(tmp_path, monkeypatch):
 
     with pytest.raises(SandboxUnavailableError, match="bubblewrap"):
         PythonRunnerTool().run_script(str(script), workdir=str(tmp_path))
+
+
+def test_sandbox_mounts_only_runtime_and_attempt_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.tools.python_repl.shutil.which", lambda name: "/usr/bin/bwrap")
+    monkeypatch.setattr(
+        "src.tools.python_repl.subprocess.run",
+        lambda *args, **kwargs: SimpleNamespace(returncode=0, stderr=b""),
+    )
+
+    arguments = PythonRunnerTool()._sandbox_prefix(tmp_path.resolve())
+
+    assert "--unshare-all" in arguments
+    assert arguments[arguments.index("--cap-drop") + 1] == "ALL"
+    assert arguments[arguments.index("--tmpfs") + 1] == "/tmp"
+    assert arguments[arguments.index("--bind") + 1] == str(tmp_path.resolve())
+    mount_pairs = list(zip(arguments, arguments[1:]))
+    assert ("--ro-bind", "/") not in mount_pairs
 
 
 class FakeClock:

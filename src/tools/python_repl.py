@@ -50,16 +50,44 @@ class PythonRunnerTool:
         executable = shutil.which("bwrap")
         if not executable:
             raise SandboxUnavailableError("bubblewrap não está instalado")
-        probe = subprocess.run(
+        readonly_paths = {
+            Path("/bin"),
+            Path("/lib"),
+            Path("/lib64"),
+            Path("/usr"),
+            Path(sys.base_prefix).resolve(),
+            Path(sys.prefix).resolve(),
+        }
+        arguments = [
+            executable,
+            "--die-with-parent",
+            "--unshare-all",
+            "--cap-drop",
+            "ALL",
+        ]
+        for source in sorted(readonly_paths, key=lambda path: (len(path.parts), str(path))):
+            if source.exists() and not source.is_relative_to(workdir):
+                arguments.extend(["--ro-bind", str(source), str(source)])
+        loader_cache = Path("/etc/ld.so.cache")
+        if loader_cache.is_file():
+            arguments.extend(["--ro-bind", str(loader_cache), str(loader_cache)])
+        arguments.extend(
             [
-                executable,
-                "--die-with-parent",
-                "--unshare-all",
-                "--cap-drop", "ALL",
-                "--ro-bind", "/", "/",
-                "--dev-bind", "/dev", "/dev",
-                "/bin/true",
-            ],
+                "--dev",
+                "/dev",
+                "--proc",
+                "/proc",
+                "--tmpfs",
+                "/tmp",
+                "--bind",
+                str(workdir),
+                str(workdir),
+                "--chdir",
+                str(workdir),
+            ]
+        )
+        probe = subprocess.run(
+            [*arguments, sys.executable, "-c", "pass"],
             capture_output=True,
             timeout=5,
             check=False,
@@ -69,16 +97,7 @@ class PythonRunnerTool:
             raise SandboxUnavailableError(
                 f"isolamento de rede indisponível no host: {detail or probe.returncode}"
             )
-        return [
-            executable,
-            "--die-with-parent",
-            "--unshare-all",
-            "--cap-drop", "ALL",
-            "--ro-bind", "/", "/",
-            "--dev-bind", "/dev", "/dev",
-            "--bind", str(workdir), str(workdir),
-            "--chdir", str(workdir),
-        ]
+        return arguments
 
     def _limit_prefix(self) -> list[str]:
         executable = shutil.which("prlimit")
