@@ -151,11 +151,13 @@ class PythonRunnerTool:
             "python",
         ]
 
-    def _run_probe(self, command: list[str]) -> subprocess.CompletedProcess:
+    def _run_probe(
+        self, command: list[str], *, timeout: int = 30
+    ) -> subprocess.CompletedProcess:
         return subprocess.run(
             command,
             capture_output=True,
-            timeout=5,
+            timeout=timeout,
             check=False,
             env=self._sanitized_environment(),
         )
