@@ -76,10 +76,6 @@ class PythonRunnerTool:
                     "--unshare-ipc",
                     "--unshare-uts",
                     "--unshare-cgroup-try",
-                    "--gid",
-                    str(os.getgid()),
-                    "--uid",
-                    str(os.getuid()),
                 ]
             )
         else:
@@ -106,6 +102,10 @@ class PythonRunnerTool:
                 str(workdir),
             ]
         )
+        if privileged_launcher:
+            arguments.extend(
+                ["--gid", str(os.getgid()), "--uid", str(os.getuid())]
+            )
         return arguments
 
     @staticmethod
