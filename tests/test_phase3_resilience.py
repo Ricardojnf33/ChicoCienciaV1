@@ -18,6 +18,7 @@ from src.core.contracts import (
     write_result,
 )
 from src.core.enums import ExecStatus
+from src.core.persistence import get_node, init_db
 from src.core.tree import AgenticTree
 from src.processes.ats_process import ExecutionMode, run_agentic_tree
 from src.tools.python_repl import PythonRunnerTool, SandboxUnavailableError
@@ -210,3 +211,47 @@ def test_resume_reconciles_success_once_without_reexecution(tmp_path):
     assert len([item for item in tree.nodes.values() if item.parent_id == node.id]) == 1
     assert len(manifest.attempts) == 1
     load_result(node.results_path, node_id=node.id, attempt=1, mode="mock")
+    projection = init_db(f"sqlite:///{tmp_path / 'run.db'}")
+    assert get_node(projection, node.id).status == "SUCCEEDED"
+
+
+def test_resume_stops_when_attempt_budget_is_exhausted(tmp_path):
+    tree = AgenticTree.new(
+        objective_yaml="objective.example.yaml",
+        artifact_root=str(tmp_path / "artifacts"),
+    )
+    node = tree.nodes[tree.frontier[0]]
+    manifest = RunManifest(
+        run_id="exhausted-test",
+        objective_path="objective.example.yaml",
+        primary_metric=tree.primary_metric,
+        attempts=[
+            AttemptRecord(
+                node_id=node.id,
+                attempt=1,
+                mode="mock",
+                status="FAILED",
+                directory=str(tree.artifact_root / node.id / "attempt-1"),
+                error="injected failure",
+                finished_at="2026-09-11T00:00:00Z",
+            )
+        ],
+    )
+    checkpoint = tmp_path / "tree.json"
+    manifest_path = tmp_path / "manifest.json"
+
+    with pytest.raises(RuntimeError, match="esgotou o limite"):
+        run_agentic_tree(
+            None,
+            tree,
+            budget=1,
+            checkpoint_path=str(checkpoint),
+            mode=ExecutionMode.MOCK,
+            sqlite_url=f"sqlite:///{tmp_path / 'run.db'}",
+            manifest=manifest,
+            manifest_path=str(manifest_path),
+        )
+
+    assert tree.nodes[node.id].status is ExecStatus.FAILED
+    assert checkpoint.is_file()
+    assert RunManifest.model_validate_json(manifest_path.read_text()).status == "FAILED"

@@ -275,6 +275,8 @@ def run_agentic_tree(
     log = structlog.get_logger()
     log.info("ats.start", mode=mode.value, budget=budget)
     engine = init_db(sqlite_url or settings.SQLITE_URL)
+    for persisted_node in tree.nodes.values():
+        upsert_node(engine, _node_row(persisted_node))
     reconciled = reconcile_completed_attempts(
         tree,
         manifest,
@@ -323,6 +325,14 @@ def run_agentic_tree(
         result_path = None
         first_attempt = _next_attempt(manifest, node.id)
         if first_attempt > max_attempts:
+            node.status = ExecStatus.FAILED
+            upsert_node(engine, _node_row(node))
+            if checkpoint_path:
+                tree.save_json(checkpoint_path)
+            if manifest is not None:
+                manifest.status = "FAILED"
+                if manifest_path:
+                    save_manifest(manifest_path, manifest)
             raise RuntimeError(
                 f"Nó {node.id} esgotou o limite de {max_attempts} tentativas."
             )
