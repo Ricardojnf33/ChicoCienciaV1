@@ -103,6 +103,32 @@ def run_preflight(
             f"modelo visual={settings.MODEL_VISION} ({vision_encoding})."
         )
 
+    def budget_check() -> str:
+        values = (
+            settings.LLM_TOKEN_LIMIT,
+            settings.LLM_COST_LIMIT_USD,
+            settings.LLM_MAX_OUTPUT_TOKENS,
+            settings.LLM_INPUT_PER_MILLION_USD,
+            settings.LLM_CACHED_INPUT_PER_MILLION_USD,
+            settings.LLM_OUTPUT_PER_MILLION_USD,
+        )
+        if any(value <= 0 for value in values):
+            raise ValueError("Limites e preços de LLM devem ser positivos.")
+        if settings.LLM_MAX_OUTPUT_TOKENS > settings.LLM_TOKEN_LIMIT:
+            raise ValueError("Reserva de saída supera o teto de tokens do run.")
+        minimum_call_cost = (
+            settings.LLM_MAX_OUTPUT_TOKENS
+            * settings.LLM_OUTPUT_PER_MILLION_USD
+            / 1_000_000
+        )
+        if minimum_call_cost > settings.LLM_COST_LIMIT_USD:
+            raise ValueError("Uma única reserva de saída supera o teto monetário do run.")
+        return (
+            f"Teto por run={settings.LLM_TOKEN_LIMIT} tokens/"
+            f"US${settings.LLM_COST_LIMIT_USD:.8f}; "
+            f"saída máxima por chamada={settings.LLM_MAX_OUTPUT_TOKENS} tokens."
+        )
+
     def runner_check() -> str:
         runner = runner_factory(require_network_isolation=require_sandbox)
         with tempfile.TemporaryDirectory(prefix="chico-preflight-") as directory:
@@ -118,6 +144,7 @@ def run_preflight(
     check("runtime", runtime_check)
     check("objective", objective_check)
     check("models", model_check)
+    check("budget", budget_check)
     check("runner", runner_check)
     status = (
         CheckStatus.PASS

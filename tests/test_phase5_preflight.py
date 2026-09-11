@@ -71,3 +71,20 @@ def test_preflight_redacts_secret_from_downstream_failure():
     assert report.status is CheckStatus.FAIL
     assert secret not in serialized
     assert "**********" in serialized
+
+
+def test_preflight_rejects_budget_that_cannot_fit_one_output_reservation():
+    report = run_preflight(
+        settings=Settings(
+            OPENAI_API_KEY="sk-test-budget-gate",
+            LLM_COST_LIMIT_USD=0.000001,
+            _env_file=None,
+        ),
+        objective_path="objective.example.yaml",
+        require_sandbox=False,
+    )
+
+    budget = next(item for item in report.checks if item.name == "budget")
+    assert report.status is CheckStatus.FAIL
+    assert budget.status is CheckStatus.FAIL
+    assert "teto monetário" in budget.detail

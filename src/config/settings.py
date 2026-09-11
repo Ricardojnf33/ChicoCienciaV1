@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     # by that frozen dependency, unlike gpt-4.1-mini.
     MODEL_TEXT: str = "gpt-4o-mini-2024-07-18"
     MODEL_VISION: str = "gpt-4o-mini-2024-07-18"
+    LLM_TOKEN_LIMIT: int = 40_000
+    LLM_COST_LIMIT_USD: float = 0.03
+    LLM_MAX_OUTPUT_TOKENS: int = 2_048
+    LLM_INPUT_PER_MILLION_USD: float = 0.15
+    LLM_CACHED_INPUT_PER_MILLION_USD: float = 0.075
+    LLM_OUTPUT_PER_MILLION_USD: float = 0.60
 
     MAX_BRANCHING: int = 3
     MAX_DEPTH: int = 4

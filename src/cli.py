@@ -63,10 +63,11 @@ def init(
     run_dir, tree_path, manifest_path = _run_paths(out_dir, run_id)
     run_dir.mkdir(parents=True, exist_ok=True)
     crew = None
+    settings = Settings()
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew = build_crew(Settings())
+        crew = build_crew(settings, budget_path=run_dir / "llm-budget.json")
     artifact_root = run_dir / "artifacts"
     policy = policy_for(variant)
     effective_branching = policy.effective_branching(branching)
@@ -138,7 +139,7 @@ def resume(
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew = build_crew(Settings())
+        crew = build_crew(Settings(), budget_path=run_dir / "llm-budget.json")
     log.info("resume.start", run_id=run_id, budget=budget)
     run_agentic_tree(
         crew,
@@ -173,8 +174,8 @@ def compare(
 
         settings = Settings()
 
-        def configured_crew_factory():
-            return build_crew(settings)
+        def configured_crew_factory(budget_path: Path):
+            return build_crew(settings, budget_path=budget_path)
 
         crew_factory = configured_crew_factory
     comparison, path = run_variant_comparison(

@@ -128,6 +128,20 @@ class RunManifest(BaseModel):
     effective_branching: int = Field(default=2, ge=1)
     max_depth: int = Field(default=4, ge=0)
     automatic_correction: bool = True
+    llm_model: str | None = None
+    llm_budget_path: str | None = None
+    llm_token_limit: int = Field(default=0, ge=0)
+    llm_cost_limit_usd: float = Field(default=0, ge=0)
+    llm_input_tokens: int = Field(default=0, ge=0)
+    llm_cached_input_tokens: int = Field(default=0, ge=0)
+    llm_output_tokens: int = Field(default=0, ge=0)
+    llm_total_tokens: int = Field(default=0, ge=0)
+    llm_cost_usd: float = Field(default=0, ge=0)
+    llm_started_calls: int = Field(default=0, ge=0)
+    llm_completed_calls: int = Field(default=0, ge=0)
+    llm_failed_calls: int = Field(default=0, ge=0)
+    llm_rejected_calls: int = Field(default=0, ge=0)
+    llm_stop_reason: str | None = None
     status: ContractStatus = "PENDING"
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
@@ -145,6 +159,16 @@ class RunManifest(BaseModel):
             raise ValueError("B1 exige sequência fixa com effective_branching=1.")
         if self.variant != "B1" and self.effective_branching != self.branching:
             raise ValueError("A e A0 devem preservar o branching solicitado.")
+        if self.llm_total_tokens != self.llm_input_tokens + self.llm_output_tokens:
+            raise ValueError("Total LLM deve ser entrada + saída.")
+        if self.llm_cached_input_tokens > self.llm_input_tokens:
+            raise ValueError("Entrada em cache não pode superar a entrada LLM.")
+        if (self.llm_token_limit == 0) != (self.llm_cost_limit_usd == 0):
+            raise ValueError("Limites de tokens e custo devem ser ativados juntos.")
+        if not self.llm_token_limit and (
+            self.llm_total_tokens or self.llm_cost_usd or self.llm_started_calls
+        ):
+            raise ValueError("Uso LLM requer orçamento declarado.")
         return self
 
 

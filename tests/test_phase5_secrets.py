@@ -43,7 +43,7 @@ def test_crew_receives_key_explicitly_without_exporting_it(monkeypatch):
     )
 
     from crewai import Agent, Crew
-    from src.crews.ai_scientist_v2 import build_crew
+    from src.crews.ai_scientist_v2 import budget_for_crew, build_crew
 
     crew = build_crew(settings)
 
@@ -56,6 +56,10 @@ def test_crew_receives_key_explicitly_without_exporting_it(monkeypatch):
         "gpt-4.1-mini",
         "gpt-4o-mini",
     ]
+    budget = budget_for_crew(crew).snapshot()
+    assert budget.token_limit == 40_000
+    assert budget.cost_limit_usd == 0.03
+    assert all(agent.llm.max_tokens == 2_048 for agent in crew.agents)
     assert "OPENAI_API_KEY" not in os.environ
 
 
