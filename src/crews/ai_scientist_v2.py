@@ -12,37 +12,56 @@ from src.config.settings import Settings
 from src.core.llm_budget import BudgetCallbackHandler, LLMBudgetLedger
 
 
+def build_budget_ledger(
+    settings: Settings,
+    *,
+    budget_path: str | Path | None = None,
+) -> LLMBudgetLedger:
+    return LLMBudgetLedger(
+        model=settings.MODEL_TEXT,
+        token_limit=settings.LLM_TOKEN_LIMIT,
+        cost_limit_usd=settings.LLM_COST_LIMIT_USD,
+        max_output_tokens_per_call=settings.LLM_MAX_OUTPUT_TOKENS,
+        input_per_million_usd=settings.LLM_INPUT_PER_MILLION_USD,
+        cached_input_per_million_usd=settings.LLM_CACHED_INPUT_PER_MILLION_USD,
+        output_per_million_usd=settings.LLM_OUTPUT_PER_MILLION_USD,
+        journal_path=budget_path,
+    )
+
+
+def build_budgeted_llm(
+    settings: Settings,
+    *,
+    model: str,
+    ledger: LLMBudgetLedger,
+) -> ChatOpenAI:
+    return ChatOpenAI(
+        model=model,
+        api_key=settings.require_openai_api_key(),
+        temperature=0,
+        max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
+        max_retries=0,
+        callbacks=[BudgetCallbackHandler(ledger, model=model)],
+    )
+
+
 def build_crew(
     settings: Settings | None = None,
     *,
     budget_path: str | Path | None = None,
 ) -> Crew:
     resolved = settings or Settings()
-    api_key = resolved.require_openai_api_key()
-    ledger = LLMBudgetLedger(
+    resolved.require_openai_api_key()
+    ledger = build_budget_ledger(resolved, budget_path=budget_path)
+    text_llm = build_budgeted_llm(
+        resolved,
         model=resolved.MODEL_TEXT,
-        token_limit=resolved.LLM_TOKEN_LIMIT,
-        cost_limit_usd=resolved.LLM_COST_LIMIT_USD,
-        max_output_tokens_per_call=resolved.LLM_MAX_OUTPUT_TOKENS,
-        input_per_million_usd=resolved.LLM_INPUT_PER_MILLION_USD,
-        cached_input_per_million_usd=resolved.LLM_CACHED_INPUT_PER_MILLION_USD,
-        output_per_million_usd=resolved.LLM_OUTPUT_PER_MILLION_USD,
-        journal_path=budget_path,
+        ledger=ledger,
     )
-    budget_callback = BudgetCallbackHandler(ledger)
-    text_llm = ChatOpenAI(
-        model=resolved.MODEL_TEXT,
-        api_key=api_key,
-        temperature=0,
-        max_tokens=resolved.LLM_MAX_OUTPUT_TOKENS,
-        callbacks=[budget_callback],
-    )
-    vision_llm = ChatOpenAI(
+    vision_llm = build_budgeted_llm(
+        resolved,
         model=resolved.MODEL_VISION,
-        api_key=api_key,
-        temperature=0,
-        max_tokens=resolved.LLM_MAX_OUTPUT_TOKENS,
-        callbacks=[budget_callback],
+        ledger=ledger,
     )
     manager = build_manager(text_llm)
     agents = [

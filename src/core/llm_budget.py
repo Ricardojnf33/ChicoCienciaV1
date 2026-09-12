@@ -308,9 +308,9 @@ class LLMBudgetLedger:
 class BudgetCallbackHandler(BaseCallbackHandler):
     raise_error = True
 
-    def __init__(self, ledger: LLMBudgetLedger):
+    def __init__(self, ledger: LLMBudgetLedger, *, model: str | None = None):
         self.ledger = ledger
-        self.encoding = tiktoken.encoding_for_model(ledger.model)
+        self.encoding = tiktoken.encoding_for_model(model or ledger.model)
 
     def _message_tokens(self, messages: list[list[Any]]) -> int:
         tokens = 2

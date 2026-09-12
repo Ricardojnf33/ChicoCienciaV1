@@ -211,6 +211,27 @@ def preflight(
         raise typer.Exit(code=1)
 
 
+@app.command("smoke-openai")
+def smoke_openai(
+    authorization: str,
+    output: str = "phase5-smoke.json",
+    budget_output: str = "phase5-smoke-budget.json",
+):
+    """Executa uma única chamada protegida; requer autorização literal explícita."""
+    from src.core.live_smoke import run_openai_smoke
+
+    report = run_openai_smoke(
+        settings=Settings(),
+        authorization=authorization,
+        output_path=output,
+        budget_path=budget_output,
+    )
+    typer.echo(
+        f"Smoke {report.status}; chamadas={report.api_calls_started}; "
+        f"tokens={report.total_tokens}; custo=US${report.cost_usd:.8f}."
+    )
+
+
 @app.command("plan-campaign")
 def plan_campaign(
     campaign_id: str = "phase5-draft-v1",
