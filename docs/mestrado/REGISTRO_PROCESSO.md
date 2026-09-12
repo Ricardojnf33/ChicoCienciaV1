@@ -103,8 +103,13 @@ ONNX Runtime foram desativadas nos workflows.
 
 Foi identificado um gate de plataforma: `workflow_dispatch` só fica disponível
 quando o arquivo existe na branch padrão. O job foi adicionalmente limitado à ref
-`feat/mestrado-fase-5`. Uma PR separada deve levar apenas esse dispatcher inerte à
-`main`; mesclá-la habilita o botão, mas não dispara a chamada.
+`feat/mestrado-fase-5`. A PR #8 foi aberta separadamente e contém somente esse
+dispatcher inerte. Seu CI
+[34720268555](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34720268555)
+falhou em `Install deps`, antes de lint e testes, porque a `main` ainda referencia
+`crewai-tools (^0.4.0)`. O dispatcher não foi executado e nenhuma chamada ocorreu.
+Para preservar o escopo auditável da PR #8, a correção de dependências não foi
+misturada nela.
 
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
@@ -113,8 +118,10 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Revisar e mesclar a PR separada do dispatcher na branch padrão. Depois, apresentar
-o gate final ao responsável. Não selecionar a branch da Fase 5 nem despachar o
-workflow sem autorização explícita para uma chamada e teto de US$ 0,001. Em caso
-de autorização, executar uma vez, auditar os três artefatos e interromper antes
-dos pilotos para nova decisão.
+Revisar e integrar a pilha de PRs #2, #3, #4, #5 e #6, nessa ordem, para que a
+`main` receba o runtime já validado. Em seguida, revalidar e mesclar a PR #8 do
+dispatcher. Essas mesclagens exigem decisão do responsável e não foram realizadas
+automaticamente. Não selecionar a branch da Fase 5 nem despachar o workflow sem
+autorização explícita para uma chamada e teto de US$ 0,001. Em caso de autorização,
+executar uma vez, auditar os três artefatos e interromper antes dos pilotos para
+nova decisão.

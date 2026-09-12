@@ -115,19 +115,29 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Mesclar a PR inerte do dispatcher na `main`, porque o GitHub só habilita
-   `workflow_dispatch` quando o arquivo existe na branch padrão. Essa PR não contém
-   o código live e seu job recusa qualquer ref diferente da branch da Fase 5.
-2. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
+1. Integrar, na ordem, a pilha de PRs #2 a #6 ou atualizar a `main` por procedimento
+   equivalente revisado. A PR #8 demonstrou que a `main` atual não resolve
+   `crewai-tools (^0.4.0)`: o run
+   [34720268555](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34720268555)
+   falhou em `Install deps`, antes de lint ou testes. A PR #8 altera somente o
+   dispatcher; portanto, corrigir dependências dentro dela ampliaria indevidamente
+   seu escopo de segurança.
+2. Revalidar e mesclar a PR #8 inerte do dispatcher na `main`, porque o GitHub só
+   habilita `workflow_dispatch` quando o arquivo existe na branch padrão. Essa PR
+   não contém o código live e seu job recusa qualquer ref diferente da branch da
+   Fase 5.
+3. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
    ao responsável; obter autorização explícita antes de despachar o workflow.
-3. Se autorizado, selecionar `feat/mestrado-fase-5`, executar o smoke uma vez e
+4. Se autorizado, selecionar `feat/mestrado-fase-5`, executar o smoke uma vez e
    inspecionar resposta, redaction, tokens, custo, journal e ausência de retentativa.
-4. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
-5. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+5. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
+6. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-6. Executar B0 e a matriz principal apenas depois do congelamento.
+7. Executar B0 e a matriz principal apenas depois do congelamento.
 
-O próximo passo é revisar e mesclar apenas o dispatcher inerte; isso habilita o
-controle manual, mas não executa a chamada. A presença do secret, o preflight verde
+O próximo passo é revisar a integração da pilha #2 a #6 que leva à `main` as
+correções de runtime já validadas. Nenhuma PR foi mesclada automaticamente neste
+checkpoint. Depois dessa integração, a PR #8 deve ser revalidada e poderá habilitar
+o controle manual sem executar a chamada. A presença do secret, o preflight verde
 e a existência do workflow não autorizam consumo. A primeira chamada real continua
 proibida até autorização explícita do responsável.
