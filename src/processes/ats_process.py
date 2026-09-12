@@ -43,6 +43,35 @@ class ExecutionMode(str, Enum):
 ReviewProvider = Callable[[Any, Path, int], tuple[EvaluationRecord, EvaluationRecord]]
 
 
+def _sync_llm_budget(
+    manifest: RunManifest | None,
+    manifest_path: str | None,
+    crew: Any,
+) -> None:
+    if manifest is None or crew is None:
+        return
+    from src.crews.ai_scientist_v2 import budget_for_crew
+
+    ledger = budget_for_crew(crew)
+    snapshot = ledger.snapshot()
+    manifest.llm_model = snapshot.model
+    manifest.llm_budget_path = str(ledger.journal_path) if ledger.journal_path else None
+    manifest.llm_token_limit = snapshot.token_limit
+    manifest.llm_cost_limit_usd = snapshot.cost_limit_usd
+    manifest.llm_input_tokens = snapshot.input_tokens
+    manifest.llm_cached_input_tokens = snapshot.cached_input_tokens
+    manifest.llm_output_tokens = snapshot.output_tokens
+    manifest.llm_total_tokens = snapshot.total_tokens
+    manifest.llm_cost_usd = snapshot.cost_usd
+    manifest.llm_started_calls = snapshot.started_calls
+    manifest.llm_completed_calls = snapshot.completed_calls
+    manifest.llm_failed_calls = snapshot.failed_calls
+    manifest.llm_rejected_calls = snapshot.rejected_calls
+    manifest.llm_stop_reason = snapshot.stop_reason
+    if manifest_path:
+        save_manifest(manifest_path, manifest)
+
+
 def _node_row(node) -> NodeRow:
     persisted_meta = {
         **node.meta,
@@ -380,8 +409,8 @@ def run_agentic_tree(
     effective_branching = policy.effective_branching(branching)
     if mode is ExecutionMode.LIVE and crew is None:
         raise ValueError("O modo live requer uma Crew configurada.")
-    if mode is ExecutionMode.LIVE and not (settings.OPENAI_API_KEY or "").strip():
-        raise ValueError("O modo live requer OPENAI_API_KEY não vazia.")
+    if mode is ExecutionMode.LIVE:
+        settings.require_openai_api_key()
 
     log = structlog.get_logger()
     if manifest is not None and manifest.variant != variant.value:
@@ -407,6 +436,8 @@ def run_agentic_tree(
     if reconciled and checkpoint_path:
         tree.save_json(checkpoint_path)
         log.info("ats.resume.reconciled", attempts=reconciled, path=checkpoint_path)
+    if mode is ExecutionMode.LIVE:
+        _sync_llm_budget(manifest, manifest_path, crew)
     if manifest is not None:
         manifest.status = "RUNNING"
         if manifest_path:
@@ -494,6 +525,7 @@ def run_agentic_tree(
                         attempt_dir,
                         attempt,
                     )
+                    _sync_llm_budget(manifest, manifest_path, crew)
                 reviewer, reviewer_path, vlm, vlm_path = _materialize_evaluations(
                     node,
                     Path(result_path),
@@ -526,6 +558,8 @@ def run_agentic_tree(
                 )
                 break
             except Exception as exc:
+                if mode is ExecutionMode.LIVE:
+                    _sync_llm_budget(manifest, manifest_path, crew)
                 _save_attempt(
                     manifest,
                     manifest_path,
@@ -595,6 +629,8 @@ def run_agentic_tree(
 
         wandb.finish()
     if manifest is not None:
+        if mode is ExecutionMode.LIVE:
+            _sync_llm_budget(manifest, manifest_path, crew)
         manifest.status = "SUCCEEDED"
         if manifest_path:
             save_manifest(manifest_path, manifest)

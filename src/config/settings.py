@@ -1,27 +1,48 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
-    OPENAI_API_KEY: str | None = None
-    SEMANTIC_SCHOLAR_API_KEY: str | None = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
-    MODEL_TEXT: str = os.getenv("MODEL_TEXT", "gpt-4.1-mini")
-    MODEL_VISION: str = os.getenv("MODEL_VISION", "gpt-4o-mini")
+    OPENAI_API_KEY: SecretStr | None = None
+    SEMANTIC_SCHOLAR_API_KEY: str | None = None
+    # CrewAI 0.51.1 pins tiktoken <0.8; gpt-4o-mini is mapped to o200k_base
+    # by that frozen dependency, unlike gpt-4.1-mini.
+    MODEL_TEXT: str = "gpt-4o-mini-2024-07-18"
+    MODEL_VISION: str = "gpt-4o-mini-2024-07-18"
+    LLM_TOKEN_LIMIT: int = 40_000
+    LLM_COST_LIMIT_USD: float = 0.03
+    LLM_MAX_OUTPUT_TOKENS: int = 2_048
+    LLM_INPUT_PER_MILLION_USD: float = 0.15
+    LLM_CACHED_INPUT_PER_MILLION_USD: float = 0.075
+    LLM_OUTPUT_PER_MILLION_USD: float = 0.60
 
-    MAX_BRANCHING: int = int(os.getenv("MAX_BRANCHING", 3))
-    MAX_DEPTH: int = int(os.getenv("MAX_DEPTH", 4))
-    EARLY_STOP_SCORE: float = float(os.getenv("EARLY_STOP_SCORE", 0.72))
-    UCT_C: float = float(os.getenv("UCT_C", 1.414))
+    MAX_BRANCHING: int = 3
+    MAX_DEPTH: int = 4
+    EARLY_STOP_SCORE: float = 0.72
+    UCT_C: float = 1.414
 
-    DATA_ROOT: str = os.getenv("DATA_ROOT", "./data")
-    ARTIFACT_ROOT: str = os.getenv("ARTIFACT_ROOT", "./experiments")
-    SQLITE_URL: str = os.getenv("SQLITE_URL", "sqlite:///runs.db")
+    DATA_ROOT: str = "./data"
+    ARTIFACT_ROOT: str = "./experiments"
+    SQLITE_URL: str = "sqlite:///runs.db"
 
-    HUMAN_IN_LOOP: bool = os.getenv("HUMAN_IN_LOOP", "false").lower() == "true"
-    WANDB_ON: bool = os.getenv("WANDB_ON", "false").lower() == "true"
-    WANDB_PROJECT: str = os.getenv("WANDB_PROJECT", "ChicoCienciaV1")
+    HUMAN_IN_LOOP: bool = False
+    WANDB_ON: bool = False
+    WANDB_PROJECT: str = "ChicoCienciaV1"
 
     # Semantic Scholar rate limiting
-    SEMANTIC_SCHOLAR_RATE_LIMIT: float = float(os.getenv("SEMANTIC_SCHOLAR_RATE_LIMIT", "1.1"))
-    SEMANTIC_SCHOLAR_CACHE_TTL: int = int(os.getenv("SEMANTIC_SCHOLAR_CACHE_TTL", "3600"))
+    SEMANTIC_SCHOLAR_RATE_LIMIT: float = 1.1
+    SEMANTIC_SCHOLAR_CACHE_TTL: int = 3600
+
+    def require_openai_api_key(self) -> str:
+        if self.OPENAI_API_KEY is None:
+            raise ValueError("OPENAI_API_KEY não configurada.")
+        value = self.OPENAI_API_KEY.get_secret_value().strip()
+        if not value:
+            raise ValueError("OPENAI_API_KEY não configurada.")
+        return value

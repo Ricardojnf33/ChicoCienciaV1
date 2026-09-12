@@ -66,6 +66,62 @@ Estado: concluída em 11/09/2026. Foram publicados três incrementos técnicos:
 
 Resultado: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. A CI remota [34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898) aprovou todos os gates. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
 
+## Fase 5 — preparação da campanha empírica
+
+Estado: em andamento em 11/09/2026. O secret é injetado somente no job protegido e
+permanece mascarado. O runner passou a usar fallback Docker sem rede, filesystem
+raiz somente leitura, usuário não-root e limites de recursos. A compatibilidade de
+tokenização tornou-se um gate e o modelo foi fixado no snapshot
+`gpt-4o-mini-2024-07-18`.
+
+Incrementos técnicos publicados neste ciclo:
+
+- `480106c0a461b11911c325d2a02bbf25682b0e05`: fallback de container endurecido;
+- `3fed6821ab1fbd8140019dbc8601874105393710`: correção da montagem gravável;
+- `596dcc7d065cf06787533492d9b039301440976a`: gate de tokenizador;
+- `0ab198318521d22cd24b902f615a89e8aa0f586a`: tolerância de cold start no probe;
+- `9d36f390e0972f52210e88bfb39f6f6a647409d4`: matriz de 66 runs materializada;
+- `7f5dee3e00952a898691e8fef287d93cd62214f5`: baseline B0 leakage-safe;
+- `8da58f95b0d727f2e4e5a788c6b707966688f922`: kill switch e journal de LLM;
+- `eb86b567b4add0404d924a6650dc770afb4f89cf`: smoke manual de uma chamada.
+
+A CI de branch [34657963619](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963619),
+a CI da PR [34657967293](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657967293)
+e o preflight protegido [34657963667](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963667)
+passaram. Após os dois gates seguintes, a CI de branch
+[34719631682](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631682),
+a CI da PR [34719633915](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719633915)
+e o preflight [34719631681](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631681)
+também passaram. Localmente, Ruff e 75 testes offline passaram; quatro testes live
+foram desmarcados. O relatório remoto registrou `api_calls_performed: 0`.
+
+O ledger agora reserva tokens/custo antes do transporte, persiste cada chamada,
+interrompe na ausência de metadados e sincroniza totais com o manifesto. O cliente
+não faz retentativas internas. O workflow manual limita o primeiro smoke a uma
+chamada, 512 tokens, 16 tokens de saída e US$ 0,001. Telemetrias OpenTelemetry e
+ONNX Runtime foram desativadas nos workflows.
+
+Foi identificado um gate de plataforma: `workflow_dispatch` só fica disponível
+quando o arquivo existe na branch padrão. O job foi adicionalmente limitado à ref
+`feat/mestrado-fase-5`. A PR #8 foi aberta separadamente e contém somente esse
+dispatcher inerte. Seu CI
+[34720268555](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34720268555)
+falhou em `Install deps`, antes de lint e testes, porque a `main` ainda referencia
+`crewai-tools (^0.4.0)`. O dispatcher não foi executado e nenhuma chamada ocorreu.
+Para preservar o escopo auditável da PR #8, a correção de dependências não foi
+misturada nela.
+
+O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
+dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
+implementação não serão apresentados como resultado científico. O detalhamento e
+os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
+
 ## Próxima ação
 
-Preparar a Fase 5 sem iniciar chamadas pagas: validar o sandbox em host compatível, adicionar B0 e a matriz dataset/seed ao manifesto, registrar orçamento financeiro e congelar configurações antes dos seis pilotos. As Fases 5 e 6 permanecem planejadas.
+Revisar e integrar a pilha de PRs #2, #3, #4, #5 e #6, nessa ordem, para que a
+`main` receba o runtime já validado. Em seguida, revalidar e mesclar a PR #8 do
+dispatcher. Essas mesclagens exigem decisão do responsável e não foram realizadas
+automaticamente. Não selecionar a branch da Fase 5 nem despachar o workflow sem
+autorização explícita para uma chamada e teto de US$ 0,001. Em caso de autorização,
+executar uma vez, auditar os três artefatos e interromper antes dos pilotos para
+nova decisão.

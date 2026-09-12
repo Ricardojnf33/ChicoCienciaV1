@@ -16,6 +16,13 @@ from src.processes.ats_process import ExecutionMode, run_agentic_tree
 from src.processes.comparison_process import run_variant_comparison
 from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
+from src.config.settings import Settings
+from src.core.preflight import CheckStatus, run_preflight, write_preflight
+from src.core.campaign import (
+    build_campaign_plan,
+    load_campaign_plan,
+    write_campaign_plan,
+)
 from src.core.variants import ExperimentVariant, policy_for
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
@@ -56,10 +63,11 @@ def init(
     run_dir, tree_path, manifest_path = _run_paths(out_dir, run_id)
     run_dir.mkdir(parents=True, exist_ok=True)
     crew = None
+    settings = Settings()
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew = build_crew()
+        crew = build_crew(settings, budget_path=run_dir / "llm-budget.json")
     artifact_root = run_dir / "artifacts"
     policy = policy_for(variant)
     effective_branching = policy.effective_branching(branching)
@@ -131,7 +139,7 @@ def resume(
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew = build_crew()
+        crew = build_crew(Settings(), budget_path=run_dir / "llm-budget.json")
     log.info("resume.start", run_id=run_id, budget=budget)
     run_agentic_tree(
         crew,
@@ -164,7 +172,12 @@ def compare(
     if mode is ExecutionMode.LIVE:
         from src.crews.ai_scientist_v2 import build_crew
 
-        crew_factory = build_crew
+        settings = Settings()
+
+        def configured_crew_factory(budget_path: Path):
+            return build_crew(settings, budget_path=budget_path)
+
+        crew_factory = configured_crew_factory
     comparison, path = run_variant_comparison(
         objective,
         out_dir,
@@ -177,6 +190,91 @@ def compare(
     )
     typer.echo(
         f"Comparação {comparison.campaign_id} concluída. Manifesto: {path}"
+    )
+
+
+@app.command()
+def preflight(
+    objective: str = "objective.example.yaml",
+    output: str = "phase5-preflight.json",
+    require_sandbox: bool = True,
+):
+    """Valida credencial e runtime sem chamar a API OpenAI."""
+    report = run_preflight(
+        settings=Settings(),
+        objective_path=objective,
+        require_sandbox=require_sandbox,
+    )
+    path = write_preflight(output, report)
+    typer.echo(f"Preflight {report.status.value}. Relatório: {path}")
+    if report.status is CheckStatus.FAIL:
+        raise typer.Exit(code=1)
+
+
+@app.command("smoke-openai")
+def smoke_openai(
+    authorization: str,
+    output: str = "phase5-smoke.json",
+    budget_output: str = "phase5-smoke-budget.json",
+):
+    """Executa uma única chamada protegida; requer autorização literal explícita."""
+    from src.core.live_smoke import run_openai_smoke
+
+    report = run_openai_smoke(
+        settings=Settings(),
+        authorization=authorization,
+        output_path=output,
+        budget_path=budget_output,
+    )
+    typer.echo(
+        f"Smoke {report.status}; chamadas={report.api_calls_started}; "
+        f"tokens={report.total_tokens}; custo=US${report.cost_usd:.8f}."
+    )
+
+
+@app.command("plan-campaign")
+def plan_campaign(
+    campaign_id: str = "phase5-draft-v1",
+    objective_root: str = "objectives",
+    output: str = "phase5-campaign-plan.json",
+    randomization_seed: int = 20260911,
+):
+    """Materializa pilotos e matriz principal sem executar LLM ou experimentos."""
+    plan = build_campaign_plan(
+        campaign_id=campaign_id,
+        objective_root=objective_root,
+        randomization_seed=randomization_seed,
+    )
+    path = write_campaign_plan(output, plan)
+    typer.echo(
+        f"Plano {plan.campaign_id}: {len(plan.runs)} runs; "
+        f"api_calls={plan.api_calls_performed}; arquivo={path}"
+    )
+
+
+@app.command("run-b0")
+def run_b0_command(
+    campaign_plan: str,
+    run_id: str,
+    output: str,
+    allow_draft: bool = False,
+):
+    """Executa um baseline convencional; planos não congelados falham por padrão."""
+    from src.processes.baseline_process import run_b0
+
+    plan = load_campaign_plan(campaign_plan)
+    if not plan.protocol_frozen and not allow_draft:
+        raise typer.BadParameter(
+            "O protocolo ainda não está congelado; use --allow-draft apenas em teste."
+        )
+    try:
+        spec = next(run for run in plan.runs if run.run_id == run_id)
+    except StopIteration as exc:
+        raise typer.BadParameter(f"run_id ausente do plano: {run_id}") from exc
+    result = run_b0(spec, output)
+    typer.echo(
+        f"B0 {result.run_id}: {result.primary_metric}="
+        f"{result.metrics[result.primary_metric]:.6f}; LLM tokens=0; arquivo={output}"
     )
 
 @app.command()

@@ -1,5 +1,8 @@
 name: CI
 on: [push, pull_request]
+env:
+  OTEL_SDK_DISABLED: "true"
+  ORT_DISABLE_TELEMETRY: "1"
 jobs:
   lint-test:
     runs-on: ubuntu-latest
