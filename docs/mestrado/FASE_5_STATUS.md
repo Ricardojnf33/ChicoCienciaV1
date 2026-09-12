@@ -1,9 +1,11 @@
 # Fase 5 — status da preparação empírica
 
-Estado: em andamento em 11 de setembro de 2026. O preflight protegido está verde,
-a matriz da campanha foi materializada e o baseline B0 foi implementado e testado.
-O protocolo permanece em rascunho (`protocol_frozen: false`), a coleta principal
-não começou e nenhuma chamada à API da OpenAI foi realizada.
+Estado: em andamento, atualizado em 12 de setembro de 2026. O preflight protegido
+está verde, a matriz da campanha foi materializada, o baseline B0 foi implementado
+e o kill switch de tokens/custo está ativo no caminho live. Um workflow manual de
+uma chamada foi preparado, mas não executado. O protocolo permanece em rascunho
+(`protocol_frozen: false`), a coleta não começou e nenhuma chamada à API da OpenAI
+foi realizada.
 
 ## Resultado deste incremento
 
@@ -30,28 +32,45 @@ de cinco folds apenas sobre os 80% de treino e avalia o teste uma única vez.
 Hashes do dataset e dos índices de treino/teste, scores de validação, parâmetro
 selecionado, métricas, duração e contadores de LLM são gravados no resultado.
 
+Cada chamada live reserva, antes do transporte, os tokens estimados de entrada e a
+saída máxima. A chamada é recusada se a projeção ultrapassar 40.000 tokens ou
+US$ 0,03 no run. A resposta substitui a reserva pelo uso informado pelo provedor;
+ausência de metadados cobra a reserva integral e bloqueia novas chamadas. O journal
+por chamada e os totais no manifesto permitem retomada auditável. Retentativas
+internas do cliente foram desativadas (`max_retries=0`); recuperações pertencem ao
+orquestrador e, portanto, permanecem visíveis.
+
+O workflow `Phase 5 one-call smoke` aceita somente despacho manual, usa o
+environment `phase5-pilot`, exige a frase `I_AUTHORIZE_ONE_OPENAI_CALL` e reduz os
+limites para 512 tokens, 16 tokens de saída e US$ 0,001. Ele executará primeiro o
+preflight zero-call e só então uma invocação. A resposta não é armazenada; apenas
+seu hash, aderência ao sentinel, tokens, custo e contagens serão preservados.
+
 ## Evidência reproduzível
 
-No commit remoto `7f5dee3e00952a898691e8fef287d93cd62214f5`, os três
+No commit remoto `eb86b567b4add0404d924a6650dc770afb4f89cf`, os três
 workflows terminaram com sucesso:
 
 | Verificação | Execução | Resultado |
 | --- | --- | --- |
-| CI da branch | [34657963619](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963619) | PASS |
-| CI da pull request | [34657967293](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657967293) | PASS |
-| Preflight protegido | [34657963667](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963667) | PASS |
+| CI da branch | [34719631682](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631682) | PASS |
+| CI da pull request | [34719633915](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719633915) | PASS |
+| Preflight protegido | [34719631681](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631681) | PASS |
 
-O artefato `phase5-preflight`, ID `10285864187` e digest
-`sha256:47c22c06c95d3bf0cdc15b6245d3a78c0d97950f48b4bd453bdf559345897a73`,
-registra todos os gates como PASS e `api_calls_performed: 0`. O runtime observado
-foi Python 3.11.16, CrewAI 0.51.1 e setuptools 80.10.2. O runner usou o backend
-Docker e a imagem `sha256:2474eadc82cc0ea9460a1348432bf1df584a42a173c2bdd2f69af6601343154c`.
+O artefato `phase5-preflight`, ID `10305807446` e digest
+`sha256:65350e03ae1a6fa15496e9bcd77849d86cd3ae138d1725981f1dec6b9b361b7f`,
+registra credential, runtime, objective, models, budget e runner como PASS, além de
+`api_calls_performed: 0`. O runtime observado foi Python 3.11.16, CrewAI 0.51.1 e
+setuptools 80.10.2. O runner usou backend Docker e a imagem
+`sha256:fdf396b11a76a89680a64179d35b3fefc6b6e7241742ec57decaa99a95bbf41a`.
 
-Localmente, Ruff passou e `pytest -q` registrou 65 testes aprovados e quatro testes
-live desmarcados. Os novos testes exercitam os três datasets e confirmam uma única
-avaliação do teste reservado, custo/tokens LLM iguais a zero e rejeição de uma
-especificação generativa pelo executor B0. Nenhum dos 15 resultados B0 principais
-foi coletado: os testes são validação do mecanismo, não amostra científica.
+Localmente, com telemetrias OpenTelemetry e ONNX Runtime explicitamente
+desativadas, Ruff passou e `pytest -q` registrou 75 testes aprovados e quatro testes
+live desmarcados. Além da B0, os testes cobrem reserva e rejeição pré-transporte,
+contabilização por chamada, timeout, metadados ausentes, retomada do journal,
+sincronização com manifesto, autorização do smoke e recusa de mais de uma chamada.
+Nenhum resultado principal foi coletado: são testes do mecanismo, não amostra
+científica.
 
 ## Identidade e limites da campanha
 
@@ -94,16 +113,15 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Aplicar os limites de tokens e custo como kill switch no caminho live, com
-   contabilidade por chamada e por run testada sem rede.
-2. Criar um workflow de smoke de uma única chamada, manual, protegido pelo
-   environment `phase5-pilot`, sem executá-lo durante a implementação.
-3. Congelar prompts, versões, protocolo e plano por commit após revisão explícita.
-4. Apresentar o preflight final e o custo máximo ao responsável e obter autorização
-   explícita para a primeira chamada real.
-5. Se o smoke passar, executar os seis pilotos; analisar artefatos, custo, redaction
-   e desvios antes de decidir pelo congelamento e pela coleta principal.
+1. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
+   ao responsável; obter autorização explícita antes de despachar o workflow.
+2. Se autorizado, executar o smoke uma vez e inspecionar resposta, redaction,
+   tokens, custo, journal e ausência de retentativa automática.
+3. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
+4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+   protocolo e plano por commit.
+5. Executar B0 e a matriz principal apenas depois do congelamento.
 
-O próximo incremento técnico é o gate 1. A presença do secret e o preflight verde
-não autorizam consumo. A primeira chamada real continua proibida até autorização
-explícita do responsável.
+O próximo passo é um gate humano, não uma ação automática. A presença do secret,
+o preflight verde e a existência do workflow não autorizam consumo. A primeira
+chamada real continua proibida até autorização explícita do responsável.

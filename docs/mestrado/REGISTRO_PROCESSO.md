@@ -81,13 +81,25 @@ Incrementos técnicos publicados neste ciclo:
 - `596dcc7d065cf06787533492d9b039301440976a`: gate de tokenizador;
 - `0ab198318521d22cd24b902f615a89e8aa0f586a`: tolerância de cold start no probe;
 - `9d36f390e0972f52210e88bfb39f6f6a647409d4`: matriz de 66 runs materializada;
-- `7f5dee3e00952a898691e8fef287d93cd62214f5`: baseline B0 leakage-safe.
+- `7f5dee3e00952a898691e8fef287d93cd62214f5`: baseline B0 leakage-safe;
+- `8da58f95b0d727f2e4e5a788c6b707966688f922`: kill switch e journal de LLM;
+- `eb86b567b4add0404d924a6650dc770afb4f89cf`: smoke manual de uma chamada.
 
 A CI de branch [34657963619](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963619),
 a CI da PR [34657967293](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657967293)
 e o preflight protegido [34657963667](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963667)
-passaram. Localmente, Ruff e 65 testes offline passaram; quatro testes live foram
-desmarcados. O relatório remoto registrou `api_calls_performed: 0`.
+passaram. Após os dois gates seguintes, a CI de branch
+[34719631682](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631682),
+a CI da PR [34719633915](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719633915)
+e o preflight [34719631681](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631681)
+também passaram. Localmente, Ruff e 75 testes offline passaram; quatro testes live
+foram desmarcados. O relatório remoto registrou `api_calls_performed: 0`.
+
+O ledger agora reserva tokens/custo antes do transporte, persiste cada chamada,
+interrompe na ausência de metadados e sincroniza totais com o manifesto. O cliente
+não faz retentativas internas. O workflow manual limita o primeiro smoke a uma
+chamada, 512 tokens, 16 tokens de saída e US$ 0,001. Telemetrias OpenTelemetry e
+ONNX Runtime foram desativadas nos workflows.
 
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
@@ -96,7 +108,7 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Implementar contabilidade e kill switch de tokens/custo no caminho live e, em
-seguida, criar o workflow manual de smoke sem executá-lo. O primeiro uso da OpenAI
-continua condicionado a revisão do preflight, do teto monetário e autorização
-explícita.
+Apresentar o gate final ao responsável. Não despachar o workflow sem autorização
+explícita para uma chamada e teto de US$ 0,001. Em caso de autorização, executar
+uma vez, auditar os três artefatos e interromper antes dos pilotos para nova
+decisão.

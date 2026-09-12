@@ -37,6 +37,21 @@ testes de engenharia. Cada resultado registra hashes de dados e splits, scores d
 validação, hiperparâmetro selecionado, métricas no teste reservado e consumo LLM
 igual a zero.
 
+### 8 1 2 Gate de uma chamada
+
+Antes dos pilotos, um smoke operacional poderá realizar exatamente uma chamada ao
+snapshot textual. Ele não integra a amostra, não mede qualidade científica e não
+autoriza execuções subsequentes. O workflow só aceita despacho manual no
+environment `phase5-pilot`, exige a frase `I_AUTHORIZE_ONE_OPENAI_CALL`, desativa
+retentativas internas e aplica limites reduzidos de 512 tokens, 16 tokens de saída
+e US$ 0,001.
+
+O smoke será considerado aprovado somente se o preflight zero-call passar, houver
+uma chamada iniciada e concluída, o sentinel esperado for recebido, usage e custo
+forem persistidos e nenhuma credencial ou resposta aparecer nos artefatos. Falha
+de qualquer gate encerra a execução sem repetição automática. A simples presença
+da chave no GitHub Environment não constitui autorização.
+
 ### 8 2 Controle do orçamento e das condições
 
 Como limite inicial a validar no piloto, cada run terá até seis tentativas de execução de candidato, no máximo duas correções por nó, 15 minutos de duração e 40 mil tokens totais registrados. Correções também consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 terá o mesmo teto de avaliação de candidatos e registrará custo de LLM igual a zero.
