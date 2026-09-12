@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from pathlib import Path
 
 import pytest
 
@@ -86,3 +87,15 @@ def test_smoke_fails_if_factory_attempts_more_than_one_call(tmp_path):
         )
 
     assert '"api_calls_started": 2' in output.read_text()
+
+
+def test_smoke_workflow_is_manual_and_restricted_to_phase_branch():
+    workflow = (
+        Path(__file__).parents[1]
+        / ".github/workflows/phase5-one-call-smoke.yml"
+    ).read_text()
+
+    assert "workflow_dispatch:" in workflow
+    assert "push:" not in workflow
+    assert "if: github.ref == 'refs/heads/feat/mestrado-fase-5'" in workflow
+    assert "environment: phase5-pilot" in workflow

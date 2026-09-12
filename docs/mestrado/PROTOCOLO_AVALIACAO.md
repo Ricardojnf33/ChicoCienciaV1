@@ -52,6 +52,12 @@ forem persistidos e nenhuma credencial ou resposta aparecer nos artefatos. Falha
 de qualquer gate encerra a execução sem repetição automática. A simples presença
 da chave no GitHub Environment não constitui autorização.
 
+Por restrição do GitHub Actions, o arquivo do dispatcher precisa existir na branch
+padrão para que o acionamento manual seja habilitado. A cópia de ativação contém
+um gate de ref: somente `feat/mestrado-fase-5` pode executar o job. Portanto, a
+mesclagem isolada do dispatcher não realiza chamada e um despacho acidental na
+`main` é recusado antes do acesso ao environment.
+
 ### 8 2 Controle do orçamento e das condições
 
 Como limite inicial a validar no piloto, cada run terá até seis tentativas de execução de candidato, no máximo duas correções por nó, 15 minutos de duração e 40 mil tokens totais registrados. Correções também consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 terá o mesmo teto de avaliação de candidatos e registrará custo de LLM igual a zero.

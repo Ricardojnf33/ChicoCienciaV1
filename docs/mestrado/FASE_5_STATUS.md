@@ -45,6 +45,8 @@ environment `phase5-pilot`, exige a frase `I_AUTHORIZE_ONE_OPENAI_CALL` e reduz 
 limites para 512 tokens, 16 tokens de saída e US$ 0,001. Ele executará primeiro o
 preflight zero-call e só então uma invocação. A resposta não é armazenada; apenas
 seu hash, aderência ao sentinel, tokens, custo e contagens serão preservados.
+O job também exige `refs/heads/feat/mestrado-fase-5`, de modo que um despacho na
+branch padrão seja recusado antes de carregar o secret.
 
 ## Evidência reproduzível
 
@@ -113,15 +115,19 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
+1. Mesclar a PR inerte do dispatcher na `main`, porque o GitHub só habilita
+   `workflow_dispatch` quando o arquivo existe na branch padrão. Essa PR não contém
+   o código live e seu job recusa qualquer ref diferente da branch da Fase 5.
+2. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
    ao responsável; obter autorização explícita antes de despachar o workflow.
-2. Se autorizado, executar o smoke uma vez e inspecionar resposta, redaction,
-   tokens, custo, journal e ausência de retentativa automática.
-3. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
-4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+3. Se autorizado, selecionar `feat/mestrado-fase-5`, executar o smoke uma vez e
+   inspecionar resposta, redaction, tokens, custo, journal e ausência de retentativa.
+4. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
+5. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-5. Executar B0 e a matriz principal apenas depois do congelamento.
+6. Executar B0 e a matriz principal apenas depois do congelamento.
 
-O próximo passo é um gate humano, não uma ação automática. A presença do secret,
-o preflight verde e a existência do workflow não autorizam consumo. A primeira
-chamada real continua proibida até autorização explícita do responsável.
+O próximo passo é revisar e mesclar apenas o dispatcher inerte; isso habilita o
+controle manual, mas não executa a chamada. A presença do secret, o preflight verde
+e a existência do workflow não autorizam consumo. A primeira chamada real continua
+proibida até autorização explícita do responsável.

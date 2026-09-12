@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   smoke:
+    if: github.ref == 'refs/heads/feat/mestrado-fase-5'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: phase5-pilot

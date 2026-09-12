@@ -101,6 +101,11 @@ não faz retentativas internas. O workflow manual limita o primeiro smoke a uma
 chamada, 512 tokens, 16 tokens de saída e US$ 0,001. Telemetrias OpenTelemetry e
 ONNX Runtime foram desativadas nos workflows.
 
+Foi identificado um gate de plataforma: `workflow_dispatch` só fica disponível
+quando o arquivo existe na branch padrão. O job foi adicionalmente limitado à ref
+`feat/mestrado-fase-5`. Uma PR separada deve levar apenas esse dispatcher inerte à
+`main`; mesclá-la habilita o botão, mas não dispara a chamada.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -108,7 +113,8 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Apresentar o gate final ao responsável. Não despachar o workflow sem autorização
-explícita para uma chamada e teto de US$ 0,001. Em caso de autorização, executar
-uma vez, auditar os três artefatos e interromper antes dos pilotos para nova
-decisão.
+Revisar e mesclar a PR separada do dispatcher na branch padrão. Depois, apresentar
+o gate final ao responsável. Não selecionar a branch da Fase 5 nem despachar o
+workflow sem autorização explícita para uma chamada e teto de US$ 0,001. Em caso
+de autorização, executar uma vez, auditar os três artefatos e interromper antes
+dos pilotos para nova decisão.
