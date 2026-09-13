@@ -2,6 +2,7 @@ import json
 import time
 from enum import Enum
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any
 
 import structlog
@@ -20,8 +21,16 @@ from src.core.contracts import (
     write_result,
 )
 from src.core.enums import ExecStatus
+from src.core.evaluation import (
+    EvaluationDecision,
+    EvaluationRecord,
+    load_evaluation,
+    not_evaluated_record,
+    write_evaluation,
+)
 from src.core.persistence import NodeRow, init_db, upsert_node
 from src.core.tree import AgenticTree
+from src.core.variants import ExperimentVariant, policy_for
 from src.prompts.stages import build_prompt, next_stage
 from src.tools.python_repl import PythonRunnerTool
 
@@ -31,7 +40,18 @@ class ExecutionMode(str, Enum):
     LIVE = "live"
 
 
+ReviewProvider = Callable[[Any, Path, int], tuple[EvaluationRecord, EvaluationRecord]]
+
+
 def _node_row(node) -> NodeRow:
+    persisted_meta = {
+        **node.meta,
+        "depth": node.depth,
+        "hypothesis": node.hypothesis.model_dump() if node.hypothesis else None,
+        "experiment_plan": (
+            node.experiment_plan.model_dump() if node.experiment_plan else None
+        ),
+    }
     return NodeRow(
         id=node.id,
         parent_id=node.parent_id,
@@ -46,7 +66,7 @@ def _node_row(node) -> NodeRow:
         visits=node.visits,
         value_sum=node.value_sum,
         status=node.status.name,
-        meta=json.dumps(node.meta) if node.meta else None,
+        meta=json.dumps(persisted_meta),
     )
 
 
@@ -163,6 +183,60 @@ def _save_attempt(
         save_manifest(manifest_path, manifest)
 
 
+def _materialize_evaluations(
+    node,
+    result_path: Path,
+    attempt_dir: Path,
+    attempt: int,
+    *,
+    mode: ExecutionMode,
+    review_provider: ReviewProvider | None,
+) -> tuple[EvaluationRecord, Path, EvaluationRecord, Path]:
+    if review_provider is None:
+        reviewer = not_evaluated_record(
+            node_id=node.id,
+            attempt=attempt,
+            evaluator="reviewer",
+            rationale="Nenhum Reviewer confiável foi executado nesta tentativa.",
+            synthetic=mode is ExecutionMode.MOCK,
+        )
+        vlm = not_evaluated_record(
+            node_id=node.id,
+            attempt=attempt,
+            evaluator="vlm",
+            rationale="Nenhuma avaliação visual confiável foi executada.",
+            synthetic=mode is ExecutionMode.MOCK,
+        )
+    else:
+        reviewer, vlm = review_provider(node, result_path, attempt)
+    expected = ((reviewer, "reviewer"), (vlm, "vlm"))
+    for record, evaluator in expected:
+        if (
+            record.node_id != node.id
+            or record.attempt != attempt
+            or record.evaluator != evaluator
+        ):
+            raise ValueError(f"Identidade inválida na avaliação {evaluator}.")
+    if vlm.evaluated and not node.figs_paths:
+        raise ValueError("VLM não pode avaliar uma tentativa sem figura declarada.")
+
+    reviewer_path = write_evaluation(attempt_dir / "review.json", reviewer)
+    vlm_path = write_evaluation(attempt_dir / "vlm_review.json", vlm)
+    reviewer = load_evaluation(
+        reviewer_path,
+        node_id=node.id,
+        attempt=attempt,
+        evaluator="reviewer",
+    )
+    vlm = load_evaluation(
+        vlm_path,
+        node_id=node.id,
+        attempt=attempt,
+        evaluator="vlm",
+    )
+    return reviewer, reviewer_path, vlm, vlm_path
+
+
 def _successful_attempts(manifest: RunManifest | None) -> list[AttemptRecord]:
     if manifest is None:
         return []
@@ -199,6 +273,28 @@ def _finalize_success(
         attempt=record.attempt,
         mode=record.mode,
     )
+    reviewer_decision = record.reviewer_decision or EvaluationDecision.NOT_EVALUATED.value
+    vlm_decision = record.vlm_decision or EvaluationDecision.NOT_EVALUATED.value
+    reviewer_evaluated = reviewer_decision != EvaluationDecision.NOT_EVALUATED.value
+    vlm_evaluated = vlm_decision != EvaluationDecision.NOT_EVALUATED.value
+    if record.reviewer_path and record.reviewer_sha256:
+        if file_sha256(record.reviewer_path) != record.reviewer_sha256:
+            raise ValueError(f"Hash do Reviewer divergente em {record.node_id}/{record.attempt}.")
+        load_evaluation(
+            record.reviewer_path,
+            node_id=record.node_id,
+            attempt=record.attempt,
+            evaluator="reviewer",
+        )
+    if record.vlm_path and record.vlm_sha256:
+        if file_sha256(record.vlm_path) != record.vlm_sha256:
+            raise ValueError(f"Hash do VLM divergente em {record.node_id}/{record.attempt}.")
+        load_evaluation(
+            record.vlm_path,
+            node_id=record.node_id,
+            attempt=record.attempt,
+            evaluator="vlm",
+        )
     marker = f"{record.node_id}:{record.attempt}:{record.result_sha256}"
     already_applied = (
         node.status is ExecStatus.SUCCEEDED
@@ -210,14 +306,24 @@ def _finalize_success(
         {
             "execution_mode": record.mode,
             "synthetic": result.execution.synthetic,
-            "vlm_evaluated": False,
+            "reviewer_evaluated": reviewer_evaluated,
+            "vlm_evaluated": vlm_evaluated,
+            "reviewer_decision": reviewer_decision,
+            "vlm_decision": vlm_decision,
+            "reviewer_path": record.reviewer_path,
+            "vlm_path": record.vlm_path,
             "finalized_attempt": marker,
         }
     )
     if node.id in tree.frontier:
         tree.frontier.remove(node.id)
     if not already_applied and node.meta.get("backpropagated_attempt") != marker:
-        tree.update_result(node.id, record.result_path, vlm_ok=False)
+        tree.update_result(
+            node.id,
+            record.result_path,
+            reviewer_decision=reviewer_decision,
+            vlm_decision=vlm_decision,
+        )
         score = tree.nodes[node.id].score or 0.0
         tree.backpropagate(tree.nodes[node.id], score)
         node.meta["backpropagated_attempt"] = marker
@@ -264,23 +370,38 @@ def run_agentic_tree(
     sqlite_url: str | None = None,
     manifest: RunManifest | None = None,
     manifest_path: str | None = None,
+    variant: ExperimentVariant = ExperimentVariant.A,
+    review_provider: ReviewProvider | None = None,
 ) -> None:
     settings = Settings()
     mode = ExecutionMode(mode)
+    variant = ExperimentVariant(variant)
+    policy = policy_for(variant)
+    effective_branching = policy.effective_branching(branching)
     if mode is ExecutionMode.LIVE and crew is None:
         raise ValueError("O modo live requer uma Crew configurada.")
     if mode is ExecutionMode.LIVE and not (settings.OPENAI_API_KEY or "").strip():
         raise ValueError("O modo live requer OPENAI_API_KEY não vazia.")
 
     log = structlog.get_logger()
-    log.info("ats.start", mode=mode.value, budget=budget)
+    if manifest is not None and manifest.variant != variant.value:
+        raise ValueError(
+            f"Variante do manifesto é {manifest.variant}, mas a execução solicitou {variant.value}."
+        )
+    log.info(
+        "ats.start",
+        mode=mode.value,
+        variant=variant.value,
+        budget=budget,
+        branching=effective_branching,
+    )
     engine = init_db(sqlite_url or settings.SQLITE_URL)
     for persisted_node in tree.nodes.values():
         upsert_node(engine, _node_row(persisted_node))
     reconciled = reconcile_completed_attempts(
         tree,
         manifest,
-        branching=branching,
+        branching=effective_branching,
         engine=engine,
     )
     if reconciled and checkpoint_path:
@@ -308,6 +429,9 @@ def run_agentic_tree(
         wandb_run = True
 
     for iteration in range(budget):
+        if not tree.frontier:
+            log.info("ats.search.exhausted", iteration=iteration)
+            break
         iteration_start = time.time()
         node = tree.select()
         node.status = ExecStatus.RUNNING
@@ -321,7 +445,7 @@ def run_agentic_tree(
         )
 
         node.meta["primary_metric"] = tree.primary_metric
-        max_attempts = 1 if mode is ExecutionMode.MOCK else 3
+        max_attempts = policy.max_attempts_per_node
         result_path = None
         first_attempt = _next_attempt(manifest, node.id)
         if first_attempt > max_attempts:
@@ -370,6 +494,14 @@ def run_agentic_tree(
                         attempt_dir,
                         attempt,
                     )
+                reviewer, reviewer_path, vlm, vlm_path = _materialize_evaluations(
+                    node,
+                    Path(result_path),
+                    attempt_dir,
+                    attempt,
+                    mode=mode,
+                    review_provider=review_provider,
+                )
                 successful_record = AttemptRecord(
                     node_id=node.id,
                     attempt=attempt,
@@ -378,6 +510,12 @@ def run_agentic_tree(
                     directory=str(attempt_dir),
                     result_path=str(result_path),
                     result_sha256=file_sha256(result_path),
+                    reviewer_path=str(reviewer_path),
+                    reviewer_sha256=file_sha256(reviewer_path),
+                    reviewer_decision=reviewer.decision.value,
+                    vlm_path=str(vlm_path),
+                    vlm_sha256=file_sha256(vlm_path),
+                    vlm_decision=vlm.decision.value,
                     started_at=started_at,
                     finished_at=utc_now(),
                 )
@@ -423,7 +561,12 @@ def run_agentic_tree(
             raise RuntimeError("Tentativa terminou sem resultado validado.")
         if successful_record is None:
             raise RuntimeError("Tentativa concluída sem registro durável.")
-        _finalize_success(tree, successful_record, branching=branching, engine=engine)
+        _finalize_success(
+            tree,
+            successful_record,
+            branching=effective_branching,
+            engine=engine,
+        )
         score = tree.nodes[node.id].score or 0.0
 
         if checkpoint_path:
