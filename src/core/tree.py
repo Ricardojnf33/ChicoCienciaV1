@@ -7,6 +7,7 @@ from .node import Node
 from .enums import NodeType, Stage, ExecStatus
 from .scoring import final_score
 from src.config.settings import Settings
+from src.core.atomic_io import atomic_write_text
 
 class AgenticTree:
     def __init__(self, objective: dict, primary_metric: str, artifact_root: str):
@@ -115,8 +116,7 @@ class AgenticTree:
         }
 
     def save_json(self, path: str) -> None:
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(json.dumps(self.to_dict(), indent=2, ensure_ascii=False))
+        atomic_write_text(path, json.dumps(self.to_dict(), indent=2, ensure_ascii=False))
 
     @classmethod
     def from_dict(cls, data: dict) -> "AgenticTree":

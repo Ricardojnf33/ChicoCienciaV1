@@ -14,6 +14,7 @@ from src.core.contracts import (
     RunManifest,
     canonicalize_attempt,
     file_sha256,
+    load_result,
     save_manifest,
     utc_now,
     write_result,
@@ -22,6 +23,7 @@ from src.core.enums import ExecStatus
 from src.core.persistence import NodeRow, init_db, upsert_node
 from src.core.tree import AgenticTree
 from src.prompts.stages import build_prompt, next_stage
+from src.tools.python_repl import PythonRunnerTool
 
 
 class ExecutionMode(str, Enum):
@@ -93,10 +95,8 @@ def _run_live_attempt(
 
     researcher = _agent_by_role(crew, "Researcher")
     coder = _agent_by_role(crew, "Coder")
-    runner = _agent_by_role(crew, "Runner")
     expected_code = attempt_dir / "code.py"
     raw_result = attempt_dir / "raw_results.json"
-    execution_evidence = attempt_dir / "execution.json"
     tasks = []
     if attempt == 1:
         tasks.append(
@@ -118,19 +118,22 @@ def _run_live_attempt(
                 ),
                 expected_output="Código e raw_results.json nos caminhos declarados",
             ),
-            Task(
-                agent=runner,
-                description=(
-                    f"Executar {expected_code}. Salvar em {execution_evidence} um JSON com "
-                    "mode='live', synthetic=false, network_used conforme observado e "
-                    "return_code inteiro do processo."
-                ),
-                expected_output="execution.json com o retorno real do processo",
-            ),
         ]
     )
     crew.tasks = tasks
     crew.kickoff()
+    runner_result = PythonRunnerTool().run_script(
+        str(expected_code),
+        workdir=str(attempt_dir),
+        timeout=180,
+        evidence_path=str(attempt_dir / "execution.json"),
+    )
+    if runner_result["returncode"] != 0:
+        raise RuntimeError(
+            "Execução controlada falhou "
+            f"(return_code={runner_result['returncode']}, "
+            f"timed_out={runner_result['timed_out']}): {runner_result['stderr']}"
+        )
     return canonicalize_attempt(
         attempt_dir,
         node_id=node.id,
@@ -160,6 +163,96 @@ def _save_attempt(
         save_manifest(manifest_path, manifest)
 
 
+def _successful_attempts(manifest: RunManifest | None) -> list[AttemptRecord]:
+    if manifest is None:
+        return []
+    return sorted(
+        (record for record in manifest.attempts if record.status == "SUCCEEDED"),
+        key=lambda record: (record.finished_at or record.started_at, record.node_id),
+    )
+
+
+def _next_attempt(manifest: RunManifest | None, node_id: str) -> int:
+    attempts = [
+        record.attempt
+        for record in (manifest.attempts if manifest else [])
+        if record.node_id == node_id
+    ]
+    return max(attempts, default=0) + 1
+
+
+def _finalize_success(
+    tree: AgenticTree,
+    record: AttemptRecord,
+    *,
+    branching: int,
+    engine,
+) -> None:
+    node = tree.nodes[record.node_id]
+    if not record.result_path or not record.result_sha256:
+        raise ValueError("Tentativa concluída sem caminho ou hash do resultado.")
+    if file_sha256(record.result_path) != record.result_sha256:
+        raise ValueError(f"Hash divergente ao retomar {record.node_id}/{record.attempt}.")
+    result = load_result(
+        record.result_path,
+        node_id=record.node_id,
+        attempt=record.attempt,
+        mode=record.mode,
+    )
+    marker = f"{record.node_id}:{record.attempt}:{record.result_sha256}"
+    already_applied = (
+        node.status is ExecStatus.SUCCEEDED
+        and node.results_path == record.result_path
+        and node.visits > 0
+    )
+    node.status = ExecStatus.SUCCEEDED
+    node.meta.update(
+        {
+            "execution_mode": record.mode,
+            "synthetic": result.execution.synthetic,
+            "vlm_evaluated": False,
+            "finalized_attempt": marker,
+        }
+    )
+    if node.id in tree.frontier:
+        tree.frontier.remove(node.id)
+    if not already_applied and node.meta.get("backpropagated_attempt") != marker:
+        tree.update_result(node.id, record.result_path, vlm_ok=False)
+        score = tree.nodes[node.id].score or 0.0
+        tree.backpropagate(tree.nodes[node.id], score)
+        node.meta["backpropagated_attempt"] = marker
+    upsert_node(engine, _node_row(node))
+
+    children = [child for child in tree.nodes.values() if child.parent_id == node.id]
+    if not children and branching > 0:
+        child_ids = tree.expand(node, k=branching)
+        children = [tree.nodes[child_id] for child_id in child_ids]
+    for child in children:
+        if child.stage == node.stage:
+            child.stage = next_stage(child.stage)
+        upsert_node(engine, _node_row(child))
+
+
+def reconcile_completed_attempts(
+    tree: AgenticTree,
+    manifest: RunManifest | None,
+    *,
+    branching: int,
+    engine,
+) -> int:
+    """Apply durable successful attempts once after a crash or interrupted checkpoint."""
+    reconciled = 0
+    for record in _successful_attempts(manifest):
+        if record.node_id not in tree.nodes:
+            raise ValueError(f"Manifesto referencia nó ausente: {record.node_id}")
+        before = tree.nodes[record.node_id].meta.get("finalized_attempt")
+        _finalize_success(tree, record, branching=branching, engine=engine)
+        after = tree.nodes[record.node_id].meta.get("finalized_attempt")
+        if before != after:
+            reconciled += 1
+    return reconciled
+
+
 def run_agentic_tree(
     crew: Any,
     tree: AgenticTree,
@@ -182,6 +275,17 @@ def run_agentic_tree(
     log = structlog.get_logger()
     log.info("ats.start", mode=mode.value, budget=budget)
     engine = init_db(sqlite_url or settings.SQLITE_URL)
+    for persisted_node in tree.nodes.values():
+        upsert_node(engine, _node_row(persisted_node))
+    reconciled = reconcile_completed_attempts(
+        tree,
+        manifest,
+        branching=branching,
+        engine=engine,
+    )
+    if reconciled and checkpoint_path:
+        tree.save_json(checkpoint_path)
+        log.info("ats.resume.reconciled", attempts=reconciled, path=checkpoint_path)
     if manifest is not None:
         manifest.status = "RUNNING"
         if manifest_path:
@@ -219,7 +323,21 @@ def run_agentic_tree(
         node.meta["primary_metric"] = tree.primary_metric
         max_attempts = 1 if mode is ExecutionMode.MOCK else 3
         result_path = None
-        for attempt in range(1, max_attempts + 1):
+        first_attempt = _next_attempt(manifest, node.id)
+        if first_attempt > max_attempts:
+            node.status = ExecStatus.FAILED
+            upsert_node(engine, _node_row(node))
+            if checkpoint_path:
+                tree.save_json(checkpoint_path)
+            if manifest is not None:
+                manifest.status = "FAILED"
+                if manifest_path:
+                    save_manifest(manifest_path, manifest)
+            raise RuntimeError(
+                f"Nó {node.id} esgotou o limite de {max_attempts} tentativas."
+            )
+        successful_record = None
+        for attempt in range(first_attempt, max_attempts + 1):
             attempt_dir = tree.artifact_root / node.id / f"attempt-{attempt}"
             attempt_dir.mkdir(parents=True, exist_ok=True)
             started_at = utc_now()
@@ -252,20 +370,21 @@ def run_agentic_tree(
                         attempt_dir,
                         attempt,
                     )
+                successful_record = AttemptRecord(
+                    node_id=node.id,
+                    attempt=attempt,
+                    mode=mode.value,
+                    status="SUCCEEDED",
+                    directory=str(attempt_dir),
+                    result_path=str(result_path),
+                    result_sha256=file_sha256(result_path),
+                    started_at=started_at,
+                    finished_at=utc_now(),
+                )
                 _save_attempt(
                     manifest,
                     manifest_path,
-                    AttemptRecord(
-                        node_id=node.id,
-                        attempt=attempt,
-                        mode=mode.value,
-                        status="SUCCEEDED",
-                        directory=str(attempt_dir),
-                        result_path=str(result_path),
-                        result_sha256=file_sha256(result_path),
-                        started_at=started_at,
-                        finished_at=utc_now(),
-                    ),
+                    successful_record,
                 )
                 break
             except Exception as exc:
@@ -302,25 +421,10 @@ def run_agentic_tree(
 
         if result_path is None:
             raise RuntimeError("Tentativa terminou sem resultado validado.")
-        node.status = ExecStatus.SUCCEEDED
-        node.meta.update(
-            {
-                "execution_mode": mode.value,
-                "synthetic": mode is ExecutionMode.MOCK,
-                "vlm_evaluated": False,
-            }
-        )
-        tree.update_result(node.id, str(result_path), vlm_ok=False)
-
+        if successful_record is None:
+            raise RuntimeError("Tentativa concluída sem registro durável.")
+        _finalize_success(tree, successful_record, branching=branching, engine=engine)
         score = tree.nodes[node.id].score or 0.0
-        tree.backpropagate(tree.nodes[node.id], score)
-        upsert_node(engine, _node_row(tree.nodes[node.id]))
-
-        child_ids = tree.expand(tree.nodes[node.id], k=branching)
-        for child_id in child_ids:
-            child = tree.nodes[child_id]
-            child.stage = next_stage(child.stage)
-            upsert_node(engine, _node_row(child))
 
         if checkpoint_path:
             tree.save_json(checkpoint_path)

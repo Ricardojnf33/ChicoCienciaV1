@@ -1,6 +1,6 @@
 # Documentação do mestrado sobre Chico Ciência
 
-Autor: Ricardo Fernandes. Data: 10/09/2026.
+Autor: Ricardo Fernandes. Atualizado em 11/09/2026.
 
 O objetivo desta documentação é transformar o diagnóstico do protótipo em um plano executável de conclusão do mestrado em Engenharia de Software. A contribuição proposta é a confiabilidade e a rastreabilidade da orquestração científica com agentes.
 
@@ -14,6 +14,8 @@ O objetivo desta documentação é transformar o diagnóstico do protótipo em u
 - [Plano por fases](PLANO_FASES.md)
 - [Relatório de encerramento da Fase 1](FASE_1_RELATORIO.md)
 - [Relatório de encerramento da Fase 2](FASE_2_RELATORIO.md)
+- [Relatório de encerramento da Fase 3](FASE_3_RELATORIO.md)
+- [Runbook de execução e recuperação](RUNBOOK_RECUPERACAO.md)
 - [Registro do processo](REGISTRO_PROCESSO.md)
 - [Modelo de registro para próximas fases](MODELO_REGISTRO_FASE.md)
 - [Decisão sobre contratos](decisoes/ADR_001_CONTRATOS.md)
@@ -22,4 +24,4 @@ O objetivo desta documentação é transformar o diagnóstico do protótipo em u
 
 ## Estado real
 
-Fases 0, 1 e 2 concluídas: diagnóstico, ambiente reproduzível, execução mock, CI, contratos, manifesto, replay e validação de artefatos estão documentados. Fases 3 a 6 permanecem planejadas. Nenhuma execução live ou conclusão da dissertação é atestada; os critérios acadêmicos formais serão alinhados ao programa e à orientação.
+Fases 0 a 3 concluídas em código: diagnóstico, ambiente reproduzível, execução mock, CI, contratos, manifesto, replay, validação de artefatos, runner fail-closed e recuperação idempotente estão documentados. A prova positiva do namespace em host compatível é um gate pré-piloto. Fases 4 a 6 permanecem planejadas. Nenhuma execução live ou conclusão da dissertação é atestada; os critérios acadêmicos formais serão alinhados ao programa e à orientação.

@@ -18,14 +18,15 @@ The project combines CrewAI-style agent orchestration with an `AgenticTree` that
 
 ## What is implemented
 
-- Specialized agent definitions for management, research, coding, execution, review, data stewardship, ethics, and visual critique.
+- Specialized agent definitions for management, research, coding, review, data stewardship, ethics, and visual critique.
 - Tree selection using a UCT-style policy, node expansion, score propagation, and early stopping.
 - CLI commands for `init`, `resume`, `inspect`, and `report`.
-- JSON checkpoints and partial SQLite persistence.
+- Atomic JSON checkpoints, durable attempt manifests, and a reconstructible SQLite projection.
 - ArXiv and Semantic Scholar clients with fallback behavior.
 - Experiment artifact directories containing code, JSON results, figures, and reports.
 - Dry-run execution that exercises orchestration without an OpenAI API key.
-- Test modules covering dry-run behavior, scoring, tree persistence, and rate limiting.
+- A fail-closed live runner with network namespace, restricted filesystem, resource limits, sanitized environment, process-group timeout, and independent evidence.
+- Test modules covering dry-run behavior, contracts, recovery, runner boundaries, scoring, tree persistence, and global rate limiting.
 - Optional Weights & Biases instrumentation for non-dry runs.
 
 ## Current validation status
@@ -34,22 +35,22 @@ The project combines CrewAI-style agent orchestration with an `AgenticTree` that
 |---|---|
 | Python source syntax | Compiles successfully |
 | Dry-run path | Implemented; generates synthetic experiment results |
-| Tree persistence | Implemented in JSON; SQLite integration is partial |
+| Tree persistence | Atomic JSON plus idempotent recovery; SQLite is rebuilt as a projection |
 | CLI `resume` and `inspect` | Implemented |
 | External literature clients | Implemented with fallbacks; availability depends on external services |
-| Live multi-agent experiment | Experimental; not established as reproducible end to end |
+| Live multi-agent experiment | Fail-closed runner implemented; compatible sandbox host and end-to-end scientific validation still required |
 | Scientific validity | Not validated |
 | Production readiness | Not production-ready |
 
 ## Important limitations
 
 - When `OPENAI_API_KEY` is absent, the workflow creates a synthetic `results.json` with an example accuracy value. These values are orchestration fixtures, not experimental findings.
-- In the current real-mode path, a missing result artifact can also trigger a synthetic fallback. A completed run therefore does not by itself prove that a real experiment was executed successfully.
+- Live mode rejects missing, invalid or hash-divergent evidence and never substitutes a synthetic result.
 - Visual-critic consistency is currently passed into scoring as a default value; it is not yet a fully verified evaluation signal.
-- Generated Python execution is prototype-level and is not a hardened sandbox for untrusted code.
+- Generated Python runs only when Bubblewrap can isolate network and filesystem. This narrows risk but is not an absolute security guarantee against hostile code or kernel vulnerabilities.
 - Reports are lightweight templates and should not be treated as scientific papers.
 - No benchmark currently demonstrates scientific novelty, reproducibility, or superiority over a conventional workflow.
-- Automated tests exist, but no CI workflow currently publishes their status on each commit.
+- No live LLM experiment or positive sandbox run has yet been recorded for Phase 3; this development host denies user namespaces and the runner correctly fails closed.
 
 ## Repository structure
 
@@ -71,8 +72,9 @@ tests/          Automated test modules
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.11 (the lock currently excludes 3.12+)
 - Poetry
+- Linux `bwrap` and `prlimit` for live generated-code execution
 - Optional API keys for live external integrations
 
 ## Installation
@@ -104,15 +106,13 @@ poetry run python -m src.cli report <run_id>
 
 ## Development priorities
 
-1. Separate synthetic fixtures from real experiment results at the schema level.
-2. Fail closed when a live run does not produce the expected artifacts.
-3. Add hardened isolation for generated code.
-4. Add end-to-end tests and CI with a deterministic mock-LLM path.
-5. Validate literature provenance and attach citations to each generated claim.
-6. Implement reproducible evaluation datasets, baselines, ablations, and run manifests.
-7. Evaluate the system against a conventional non-agentic research workflow.
+1. Structure hypotheses, decisions and review evidence across the complete mock cycle.
+2. Implement comparable B1, A and A0 workflow variants.
+3. Validate literature provenance and attach citations to generated claims.
+4. Run the sandbox preflight and smoke test on a compatible Linux host.
+5. Execute pilots before freezing the empirical protocol.
+6. Evaluate the system against a conventional non-agentic research workflow.
 
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
-

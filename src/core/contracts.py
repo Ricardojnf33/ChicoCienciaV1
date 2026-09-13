@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from src.core.atomic_io import atomic_write_text
 
 ContractMode = Literal["mock", "live", "replay"]
 ContractStatus = Literal["PENDING", "RUNNING", "SUCCEEDED", "FAILED"]
@@ -25,6 +26,11 @@ class ExecutionEvidence(BaseModel):
     synthetic: bool
     network_used: bool
     return_code: int
+    timed_out: bool = False
+    duration_seconds: float = Field(default=0.0, ge=0.0)
+    stdout_path: str | None = None
+    stderr_path: str | None = None
+    network_isolated: bool = False
 
 
 class ArtifactRecord(BaseModel):
@@ -57,6 +63,8 @@ class CanonicalResult(BaseModel):
             raise ValueError("A métrica primária deve estar no intervalo [0, 1].")
         if self.execution.return_code != 0:
             raise ValueError("Resultado SUCCEEDED requer return_code igual a zero.")
+        if self.execution.timed_out:
+            raise ValueError("Resultado SUCCEEDED não pode ter excedido o timeout.")
         if self.execution.mode == "mock" and not self.execution.synthetic:
             raise ValueError("Resultado mock deve ser marcado como sintético.")
         if self.execution.mode == "live" and self.execution.synthetic:
@@ -127,9 +135,7 @@ def artifact_record(path: str | Path, *, name: str | None = None) -> ArtifactRec
 
 def write_result(path: str | Path, result: CanonicalResult) -> Path:
     result_path = Path(path)
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    result_path.write_text(result.model_dump_json(indent=2))
-    return result_path
+    return atomic_write_text(result_path, result.model_dump_json(indent=2))
 
 
 def load_result(
@@ -193,6 +199,12 @@ def canonicalize_attempt(
         raise ContractError(
             f"Modo da evidência inválido: {evidence.mode!r}, esperado {mode!r}."
         )
+    for name, artifact_path in (
+        ("stdout", evidence.stdout_path),
+        ("stderr", evidence.stderr_path),
+    ):
+        if artifact_path:
+            artifacts.append(artifact_record(artifact_path, name=name))
 
     adapted = adapt_legacy_result(
         raw_result_path,
@@ -281,10 +293,8 @@ def adapt_legacy_result(
 
 def save_manifest(path: str | Path, manifest: RunManifest) -> Path:
     manifest_path = Path(path)
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest.updated_at = utc_now()
-    manifest_path.write_text(manifest.model_dump_json(indent=2))
-    return manifest_path
+    return atomic_write_text(manifest_path, manifest.model_dump_json(indent=2))
 
 
 def load_manifest(path: str | Path) -> RunManifest:

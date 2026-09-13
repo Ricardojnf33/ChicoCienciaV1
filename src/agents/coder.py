@@ -9,17 +9,16 @@ except Exception:
             self.tools = tools or []
             self.name = name
 try:
-    from src.tools.crewai_adapters import DatasetTool, PythonRunnerTool, PlotTool
+    from src.tools.crewai_adapters import DatasetTool, PlotTool
 except ImportError:
     from src.tools.datasets import DatasetTool
-    from src.tools.python_repl import PythonRunnerTool
     from src.tools.plotting import PlotTool
 
 coder = Agent(
     role="Coder",
-    goal=("Converter planos em código executável reprodutível, sem copiar templates humanos; "
-          "salvar results.json e figuras."),
+    goal=("Converter planos em código reprodutível sem executá-lo; salvar code.py e "
+          "raw_results.json apenas quando o executor controlado rodar o script."),
     backstory="Desenvolvedor Python experiente em ciência de dados, focado em código limpo e reprodutível.",
     verbose=True,
-    tools=[DatasetTool(), PythonRunnerTool(), PlotTool()],
+    tools=[DatasetTool(), PlotTool()],
 )
