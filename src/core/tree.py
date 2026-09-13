@@ -67,8 +67,9 @@ class AgenticTree:
 
     def update_result(self, node_id: str, results_path: str, vlm_ok: bool = True):
         n = self.nodes[node_id]
+        score = final_score(results_path, self.primary_metric, vlm_ok=vlm_ok)
         n.results_path = results_path
-        n.score = final_score(results_path, self.primary_metric, vlm_ok=vlm_ok)
+        n.score = score
         if node_id in self.frontier:
             self.frontier.remove(node_id)
 

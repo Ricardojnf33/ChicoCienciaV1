@@ -34,6 +34,16 @@ Estado: concluída em 10/09/2026. Foram publicados três incrementos:
 
 Resultado local: `poetry check --lock` válido, Ruff aprovado, 4 testes aprovados e 4 testes live desmarcados. Resultado remoto: [GitHub Actions 34509660031](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34509660031), com todos os gates aprovados. As falhas intermediárias e os limites estão preservados no [relatório da Fase 1](FASE_1_RELATORIO.md).
 
+## Fase 2 — contratos, estados e artefatos
+
+Estado: concluída em 10/09/2026. Foram publicados três incrementos técnicos:
+
+- `763f0e7512e6219799b6663444db3093170257d6`: contratos canônicos e adaptador legado;
+- `c1c57e5a5bb17b0569e32e604937452b56fef614`: integração do manifesto e validação das tentativas;
+- `d51dc7ce8bcb2da67aa92df196e71230dba9f5cc`: replay controlado e promoção somente após validação.
+
+Resultado local: Ruff aprovado, 22 testes aprovados e 4 testes live desmarcados. A execução mock manual produziu manifesto, árvore, SQLite e artefatos por nó/tentativa. Os detalhes, valores históricos preservados e limites estão no [relatório da Fase 2](FASE_2_RELATORIO.md).
+
 ## Próxima ação
 
-Iniciar a Fase 2 pelo schema canônico de resultado e pelo manifesto do run. As fases 2 a 6 permanecem planejadas e não foram antecipadamente marcadas como concluídas.
+Iniciar a Fase 3 pelo runner com captura direta de evidência, isolamento de credenciais, timeout e encerramento de subprocessos. Depois, implementar checkpoint atômico e retomada idempotente. As Fases 3 a 6 permanecem planejadas.

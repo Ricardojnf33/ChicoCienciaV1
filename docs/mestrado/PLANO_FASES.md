@@ -1,6 +1,6 @@
 # Plano por fases para conclusão do mestrado
 
-Status em 10/09/2026: Fases 0 e 1 concluídas com evidências; Fases 2 a 6 planejadas. O encerramento técnico da Fase 1 está em [FASE_1_RELATORIO.md](FASE_1_RELATORIO.md).
+Status em 10/09/2026: Fases 0, 1 e 2 concluídas com evidências; Fases 3 a 6 planejadas. Os encerramentos técnicos estão em [FASE_1_RELATORIO.md](FASE_1_RELATORIO.md) e [FASE_2_RELATORIO.md](FASE_2_RELATORIO.md).
 
 ## 6 Produto final e critérios de aceitação
 
@@ -25,7 +25,7 @@ O encerramento acadêmico exige que o experimento seja realizado e analisado; n�
 
 ## 9 Plano de implementação por fases
 
-As fases abaixo são unidades de implementação futura. A documentação desta entrega organiza o trabalho, mas não marca as correções ou a avaliação como concluídas.
+As fases abaixo são unidades sequenciais de implementação. O estado e as evidências de cada fase são registrados individualmente; escrever o plano não basta para concluir uma etapa.
 
 ### Fase 0 Baseline e decisões
 
@@ -42,6 +42,8 @@ Resolver a compatibilidade de Python e dependências com instalação limpa, esc
 Critério de saída: a CI instala, executa o lint no escopo definido e roda testes obrigatórios; o fluxo mock termina sem chave nem acesso à rede. Evidência: log da CI, lock, comandos e teste negativo que demonstra reprovação quando há erro.
 
 ### Fase 2 Contratos e estados
+
+Estado: concluída. Evidência principal: schemas canônicos, 22 testes offline aprovados e GitHub Actions [run 34543573124](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34543573124).
 
 Introduzir esquema de resultado e manifesto, adaptar métricas, validar artefatos e separar score de busca de resultado observado. Substituir sucesso por existência de arquivo por sucesso verificado. Criar diretório por run, nó e tentativa. Implementar estados explícitos e preservar resultados históricos sem misturá-los à nova coleta.
 
