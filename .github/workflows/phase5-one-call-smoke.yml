@@ -1,0 +1,67 @@
+name: Phase 5 one-call smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      authorization:
+        description: "Type I_AUTHORIZE_ONE_OPENAI_CALL after reviewing the Phase 5 preflight"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase5-one-call-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.ref == 'refs/heads/feat/mestrado-fase-5'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: phase5-pilot
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      MODEL_TEXT: gpt-4o-mini-2024-07-18
+      MODEL_VISION: gpt-4o-mini-2024-07-18
+      LLM_TOKEN_LIMIT: "512"
+      LLM_COST_LIMIT_USD: "0.001"
+      LLM_MAX_OUTPUT_TOKENS: "16"
+      WANDB_ON: "false"
+      OTEL_SDK_DISABLED: "true"
+      ORT_DISABLE_TELEMETRY: "1"
+      CHICO_RUNNER_IMAGE: chico-science-runner:phase5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install runner prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes bubblewrap util-linux
+      - name: Build pinned experiment runner
+        run: docker build --tag "$CHICO_RUNNER_IMAGE" --file docker/runner.Dockerfile .
+      - name: Install Poetry
+        run: pip install poetry==2.2.1
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Validate lock
+        run: poetry check --lock
+      - name: Run zero-call preflight
+        run: poetry run python -m src.cli preflight --output phase5-smoke-preflight.json
+      - name: Run exactly one authorized OpenAI call
+        run: >-
+          poetry run python -m src.cli smoke-openai
+          "${{ inputs.authorization }}"
+          --output phase5-smoke.json
+          --budget-output phase5-smoke-budget.json
+      - name: Preserve smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase5-one-call-smoke
+          path: |
+            phase5-smoke-preflight.json
+            phase5-smoke.json
+            phase5-smoke-budget.json
+          if-no-files-found: warn
