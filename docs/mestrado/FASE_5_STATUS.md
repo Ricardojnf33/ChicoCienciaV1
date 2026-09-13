@@ -115,29 +115,24 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Integrar, na ordem, a pilha de PRs #2 a #6 ou atualizar a `main` por procedimento
-   equivalente revisado. A PR #8 demonstrou que a `main` atual não resolve
-   `crewai-tools (^0.4.0)`: o run
-   [34720268555](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34720268555)
-   falhou em `Install deps`, antes de lint ou testes. A PR #8 altera somente o
-   dispatcher; portanto, corrigir dependências dentro dela ampliaria indevidamente
-   seu escopo de segurança.
-2. Revalidar e mesclar a PR #8 inerte do dispatcher na `main`, porque o GitHub só
-   habilita `workflow_dispatch` quando o arquivo existe na branch padrão. Essa PR
-   não contém o código live e seu job recusa qualquer ref diferente da branch da
-   Fase 5.
-3. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
+1. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
    ao responsável; obter autorização explícita antes de despachar o workflow.
-4. Se autorizado, selecionar `feat/mestrado-fase-5`, executar o smoke uma vez e
+2. Se autorizado, selecionar `feat/mestrado-fase-5`, executar o smoke uma vez e
    inspecionar resposta, redaction, tokens, custo, journal e ausência de retentativa.
-5. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
-6. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+3. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
+4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-7. Executar B0 e a matriz principal apenas depois do congelamento.
+5. Executar B0 e a matriz principal apenas depois do congelamento.
 
-O próximo passo é revisar a integração da pilha #2 a #6 que leva à `main` as
-correções de runtime já validadas. Nenhuma PR foi mesclada automaticamente neste
-checkpoint. Depois dessa integração, a PR #8 deve ser revalidada e poderá habilitar
-o controle manual sem executar a chamada. A presença do secret, o preflight verde
-e a existência do workflow não autorizam consumo. A primeira chamada real continua
-proibida até autorização explícita do responsável.
+## Ativação do dispatcher concluída
+
+Em 13/09/2026, as PRs #2 a #6 foram integradas à `main` mediante revalidação por
+fase. A PR #8 foi então atualizada sobre a nova baseline, passou na CI de push
+[34770519991](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34770519991)
+e na CI do PR
+[34770521733](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34770521733),
+e foi mesclada no commit `f569b66fa8aa0436f05686b4619beb065fa67be4`.
+Essa integração apenas tornou o controle manual visível na branch padrão; não
+despachou o workflow. A presença do secret, o preflight verde e a existência do
+workflow não autorizam consumo. A primeira chamada real continua proibida até
+autorização explícita do responsável.

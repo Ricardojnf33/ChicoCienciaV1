@@ -111,6 +111,16 @@ falhou em `Install deps`, antes de lint e testes, porque a `main` ainda referenc
 Para preservar o escopo auditável da PR #8, a correção de dependências não foi
 misturada nela.
 
+Em 13/09/2026, a integração foi executada por gates. A PR #3 foi retargeteada para
+`main` e incorporou a PR #2 junto da correção de runtime; depois, as PRs #4, #5 e
+#6 foram retargeteadas, revalidadas individualmente e mescladas. A PR #8 foi
+atualizada sobre essa baseline e passou nas CIs
+[34770519991](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34770519991)
+e [34770521733](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34770521733).
+O dispatcher foi integrado à `main` em
+`f569b66fa8aa0436f05686b4619beb065fa67be4`. Nenhum desses eventos despachou o
+smoke ou acessou a API da OpenAI.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -118,10 +128,7 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Revisar e integrar a pilha de PRs #2, #3, #4, #5 e #6, nessa ordem, para que a
-`main` receba o runtime já validado. Em seguida, revalidar e mesclar a PR #8 do
-dispatcher. Essas mesclagens exigem decisão do responsável e não foram realizadas
-automaticamente. Não selecionar a branch da Fase 5 nem despachar o workflow sem
-autorização explícita para uma chamada e teto de US$ 0,001. Em caso de autorização,
-executar uma vez, auditar os três artefatos e interromper antes dos pilotos para
-nova decisão.
+Apresentar o gate final ao responsável. Não selecionar a branch da Fase 5 nem
+despachar o workflow sem autorização explícita para exatamente uma chamada e teto
+de US$ 0,001. Em caso de autorização, executar uma vez, auditar os três artefatos e
+interromper antes dos pilotos para nova decisão.
