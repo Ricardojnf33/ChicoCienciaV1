@@ -4,36 +4,70 @@ import structlog
 import uuid
 from pathlib import Path
 import json
-from src.crews.ai_scientist_v2 import build_crew
-from src.processes.ats_process import run_agentic_tree
+from src.processes.ats_process import ExecutionMode, run_agentic_tree
 from src.core.tree import AgenticTree
 from src.config.logging_config import configure_logging
 
 app = typer.Typer(help="AI Scientist v2 — CLI")
 
 @app.command()
-def init(objective: str, budget: int = 10, out_dir: str = "runs", verbose: bool = False):
+def init(
+    objective: str,
+    budget: int = 10,
+    out_dir: str = "runs",
+    mode: ExecutionMode = ExecutionMode.MOCK,
+    verbose: bool = False,
+):
     configure_logging(verbose=verbose)
     log = structlog.get_logger()
     run_id = str(uuid.uuid4())[:8]
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    crew = build_crew()
-    tree = AgenticTree.new(objective_yaml=objective)
+    crew = None
+    if mode is ExecutionMode.LIVE:
+        from src.crews.ai_scientist_v2 import build_crew
+
+        crew = build_crew()
+    artifact_root = Path(out_dir) / run_id / "artifacts"
+    tree = AgenticTree.new(objective_yaml=objective, artifact_root=str(artifact_root))
     log.info("init.start", objective=objective, budget=budget, run_id=run_id)
-    run_agentic_tree(crew, tree, budget=budget, checkpoint_path=f"{out_dir}/{run_id}.json")
+    run_agentic_tree(
+        crew,
+        tree,
+        budget=budget,
+        checkpoint_path=f"{out_dir}/{run_id}.json",
+        mode=mode,
+        sqlite_url=f"sqlite:///{Path(out_dir) / (run_id + '.db')}",
+    )
     tree.save_json(f"{out_dir}/{run_id}.json")
     log.info("init.done", run_id=run_id, out=f"{out_dir}/{run_id}.json")
-    typer.echo("Run finalizado. Confira a pasta 'experiments/'.")
+    typer.echo(f"Run finalizado. Artefatos em: {artifact_root}")
 
 @app.command()
-def resume(run_id: str, out_dir: str = "runs", budget: int = 5, verbose: bool = False):
+def resume(
+    run_id: str,
+    out_dir: str = "runs",
+    budget: int = 5,
+    mode: ExecutionMode = ExecutionMode.MOCK,
+    verbose: bool = False,
+):
     configure_logging(verbose=verbose)
     log = structlog.get_logger()
     path = f"{out_dir}/{run_id}.json"
     tree = AgenticTree.load_json(path)
-    crew = build_crew()
+    crew = None
+    if mode is ExecutionMode.LIVE:
+        from src.crews.ai_scientist_v2 import build_crew
+
+        crew = build_crew()
     log.info("resume.start", run_id=run_id, budget=budget)
-    run_agentic_tree(crew, tree, budget=budget, checkpoint_path=path)
+    run_agentic_tree(
+        crew,
+        tree,
+        budget=budget,
+        checkpoint_path=path,
+        mode=mode,
+        sqlite_url=f"sqlite:///{Path(out_dir) / (run_id + '.db')}",
+    )
     tree.save_json(path)
     log.info("resume.done", run_id=run_id)
 

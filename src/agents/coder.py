@@ -10,14 +10,10 @@ except Exception:
             self.name = name
 try:
     from src.tools.crewai_adapters import DatasetTool, PythonRunnerTool, PlotTool
-    from crewai_tools import FileReadTool, FileWriterTool
 except ImportError:
     from src.tools.datasets import DatasetTool
     from src.tools.python_repl import PythonRunnerTool
     from src.tools.plotting import PlotTool
-    # Fallback stubs if crewai_tools missing (dry run)
-    class FileReadTool: pass
-    class FileWriterTool: pass
 
 coder = Agent(
     role="Coder",
@@ -25,5 +21,5 @@ coder = Agent(
           "salvar results.json e figuras."),
     backstory="Desenvolvedor Python experiente em ciência de dados, focado em código limpo e reprodutível.",
     verbose=True,
-    tools=[DatasetTool(), PythonRunnerTool(), PlotTool(), FileReadTool(), FileWriterTool()],
+    tools=[DatasetTool(), PythonRunnerTool(), PlotTool()],
 )

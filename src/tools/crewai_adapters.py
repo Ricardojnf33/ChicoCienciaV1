@@ -8,14 +8,10 @@ try:
     from crewai.tools.base_tool import BaseTool
     CREWAI_TOOLS_AVAILABLE = True
 except ImportError:
-    try:
-        from crewai_tools import BaseTool
-        CREWAI_TOOLS_AVAILABLE = True
-    except ImportError:
-        CREWAI_TOOLS_AVAILABLE = False
-        BaseTool = None
+    CREWAI_TOOLS_AVAILABLE = False
+    BaseTool = None
 
-from typing import Any, Dict, List
+from typing import List
 from src.tools.literature import LiteratureTool as BaseLiteratureTool
 from src.tools.datasets import DatasetTool as BaseDatasetTool
 from src.tools.python_repl import PythonRunnerTool as BasePythonRunnerTool
@@ -107,4 +103,3 @@ else:
     PythonRunnerTool = BasePythonRunnerTool
     PlotTool = BasePlotTool
     MetricsTool = BaseMetricsTool
-

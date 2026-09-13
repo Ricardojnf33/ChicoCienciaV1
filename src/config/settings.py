@@ -1,7 +1,9 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
     OPENAI_API_KEY: str | None = None
     SEMANTIC_SCHOLAR_API_KEY: str | None = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     MODEL_TEXT: str = os.getenv("MODEL_TEXT", "gpt-4.1-mini")
@@ -23,7 +25,3 @@ class Settings(BaseSettings):
     # Semantic Scholar rate limiting
     SEMANTIC_SCHOLAR_RATE_LIMIT: float = float(os.getenv("SEMANTIC_SCHOLAR_RATE_LIMIT", "1.1"))
     SEMANTIC_SCHOLAR_CACHE_TTL: int = int(os.getenv("SEMANTIC_SCHOLAR_CACHE_TTL", "3600"))
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
