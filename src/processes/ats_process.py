@@ -1,38 +1,421 @@
-try:
-    from crewai import Task, Crew, Process  # type: ignore
-except Exception:
-    class Task:  # minimal stub for dry-run
-        def __init__(self, agent=None, description: str = ""):
-            self.agent = agent
-            self.description = description
-
-    class Crew:  # minimal stub for dry-run
-        def __init__(self, agents=None, process=None, verbose: bool = False):
-            self.agents = agents or []
-            self.process = process
-            self.verbose = verbose
-
-        def kickoff(self, tasks):
-            return None
-
-    class Process:
-        hierarchical = "hierarchical"
-from src.core.tree import AgenticTree
-from src.prompts.stages import build_prompt, next_stage
-from src.config.settings import Settings
-import structlog
-from src.core.persistence import init_db, NodeRow, upsert_node
-import json as _json
-import wandb
+import json
 import time
+from enum import Enum
+from pathlib import Path
+from collections.abc import Callable
+from typing import Any
 
-def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int = 2, checkpoint_path: str = None):
+import structlog
+
+from src.config.settings import Settings
+from src.core.contracts import (
+    AttemptRecord,
+    CanonicalResult,
+    ExecutionEvidence,
+    RunManifest,
+    canonicalize_attempt,
+    file_sha256,
+    load_result,
+    save_manifest,
+    utc_now,
+    write_result,
+)
+from src.core.enums import ExecStatus
+from src.core.evaluation import (
+    EvaluationDecision,
+    EvaluationRecord,
+    load_evaluation,
+    not_evaluated_record,
+    write_evaluation,
+)
+from src.core.persistence import NodeRow, init_db, upsert_node
+from src.core.tree import AgenticTree
+from src.core.variants import ExperimentVariant, policy_for
+from src.prompts.stages import build_prompt, next_stage
+from src.tools.python_repl import PythonRunnerTool
+
+
+class ExecutionMode(str, Enum):
+    MOCK = "mock"
+    LIVE = "live"
+
+
+ReviewProvider = Callable[[Any, Path, int], tuple[EvaluationRecord, EvaluationRecord]]
+
+
+def _node_row(node) -> NodeRow:
+    persisted_meta = {
+        **node.meta,
+        "depth": node.depth,
+        "hypothesis": node.hypothesis.model_dump() if node.hypothesis else None,
+        "experiment_plan": (
+            node.experiment_plan.model_dump() if node.experiment_plan else None
+        ),
+    }
+    return NodeRow(
+        id=node.id,
+        parent_id=node.parent_id,
+        type=node.type.name,
+        stage=node.stage.value,
+        prompt=node.prompt,
+        plan=node.plan,
+        code_path=node.code_path,
+        results_path=node.results_path,
+        figs_paths=json.dumps(node.figs_paths) if node.figs_paths else None,
+        score=node.score,
+        visits=node.visits,
+        value_sum=node.value_sum,
+        status=node.status.name,
+        meta=json.dumps(persisted_meta),
+    )
+
+
+def _agent_by_role(crew: Any, role: str):
+    return next(
+        agent
+        for agent in crew.agents
+        if getattr(agent, "role", "").lower() == role.lower()
+    )
+
+
+def _mock_result(
+    attempt_dir: Path,
+    *,
+    node_id: str,
+    attempt: int,
+    primary_metric: str,
+) -> Path:
+    return write_result(
+        attempt_dir / "results.json",
+        CanonicalResult(
+            node_id=node_id,
+            attempt=attempt,
+            status="SUCCEEDED",
+            primary_metric=primary_metric,
+            metrics={primary_metric: 0.5},
+            execution=ExecutionEvidence(
+                mode="mock",
+                synthetic=True,
+                network_used=False,
+                return_code=0,
+            ),
+        ),
+    )
+
+
+def _run_live_attempt(
+    crew: Any,
+    node,
+    prompt: str,
+    branching: int,
+    attempt_dir: Path,
+    attempt: int,
+) -> Path:
+    from crewai import Task
+
+    researcher = _agent_by_role(crew, "Researcher")
+    coder = _agent_by_role(crew, "Coder")
+    expected_code = attempt_dir / "code.py"
+    raw_result = attempt_dir / "raw_results.json"
+    tasks = []
+    if attempt == 1:
+        tasks.append(
+            Task(
+                agent=researcher,
+                description=(
+                    f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}."
+                ),
+                expected_output="Lista de hipóteses testáveis com revisão de literatura",
+            )
+        )
+    tasks.extend(
+        [
+            Task(
+                agent=coder,
+                description=(
+                    f"Implementar o plano do nó {node.id}. Salvar o código em {expected_code} "
+                    f"e a métrica primária escalar no topo de {raw_result}."
+                ),
+                expected_output="Código e raw_results.json nos caminhos declarados",
+            ),
+        ]
+    )
+    crew.tasks = tasks
+    crew.kickoff()
+    runner_result = PythonRunnerTool().run_script(
+        str(expected_code),
+        workdir=str(attempt_dir),
+        timeout=180,
+        evidence_path=str(attempt_dir / "execution.json"),
+    )
+    if runner_result["returncode"] != 0:
+        raise RuntimeError(
+            "Execução controlada falhou "
+            f"(return_code={runner_result['returncode']}, "
+            f"timed_out={runner_result['timed_out']}): {runner_result['stderr']}"
+        )
+    return canonicalize_attempt(
+        attempt_dir,
+        node_id=node.id,
+        attempt=attempt,
+        mode="live",
+        primary_metric=node.meta["primary_metric"],
+    )
+
+
+def _save_attempt(
+    manifest: RunManifest | None,
+    manifest_path: str | None,
+    record: AttemptRecord,
+) -> None:
+    if manifest is None:
+        return
+    key = (record.node_id, record.attempt)
+    for index, current in enumerate(manifest.attempts):
+        if (current.node_id, current.attempt) == key:
+            manifest.attempts[index] = record
+            break
+    else:
+        manifest.attempts.append(record)
+    validated = RunManifest.model_validate(manifest.model_dump())
+    manifest.attempts = validated.attempts
+    if manifest_path:
+        save_manifest(manifest_path, manifest)
+
+
+def _materialize_evaluations(
+    node,
+    result_path: Path,
+    attempt_dir: Path,
+    attempt: int,
+    *,
+    mode: ExecutionMode,
+    review_provider: ReviewProvider | None,
+) -> tuple[EvaluationRecord, Path, EvaluationRecord, Path]:
+    if review_provider is None:
+        reviewer = not_evaluated_record(
+            node_id=node.id,
+            attempt=attempt,
+            evaluator="reviewer",
+            rationale="Nenhum Reviewer confiável foi executado nesta tentativa.",
+            synthetic=mode is ExecutionMode.MOCK,
+        )
+        vlm = not_evaluated_record(
+            node_id=node.id,
+            attempt=attempt,
+            evaluator="vlm",
+            rationale="Nenhuma avaliação visual confiável foi executada.",
+            synthetic=mode is ExecutionMode.MOCK,
+        )
+    else:
+        reviewer, vlm = review_provider(node, result_path, attempt)
+    expected = ((reviewer, "reviewer"), (vlm, "vlm"))
+    for record, evaluator in expected:
+        if (
+            record.node_id != node.id
+            or record.attempt != attempt
+            or record.evaluator != evaluator
+        ):
+            raise ValueError(f"Identidade inválida na avaliação {evaluator}.")
+    if vlm.evaluated and not node.figs_paths:
+        raise ValueError("VLM não pode avaliar uma tentativa sem figura declarada.")
+
+    reviewer_path = write_evaluation(attempt_dir / "review.json", reviewer)
+    vlm_path = write_evaluation(attempt_dir / "vlm_review.json", vlm)
+    reviewer = load_evaluation(
+        reviewer_path,
+        node_id=node.id,
+        attempt=attempt,
+        evaluator="reviewer",
+    )
+    vlm = load_evaluation(
+        vlm_path,
+        node_id=node.id,
+        attempt=attempt,
+        evaluator="vlm",
+    )
+    return reviewer, reviewer_path, vlm, vlm_path
+
+
+def _successful_attempts(manifest: RunManifest | None) -> list[AttemptRecord]:
+    if manifest is None:
+        return []
+    return sorted(
+        (record for record in manifest.attempts if record.status == "SUCCEEDED"),
+        key=lambda record: (record.finished_at or record.started_at, record.node_id),
+    )
+
+
+def _next_attempt(manifest: RunManifest | None, node_id: str) -> int:
+    attempts = [
+        record.attempt
+        for record in (manifest.attempts if manifest else [])
+        if record.node_id == node_id
+    ]
+    return max(attempts, default=0) + 1
+
+
+def _finalize_success(
+    tree: AgenticTree,
+    record: AttemptRecord,
+    *,
+    branching: int,
+    engine,
+) -> None:
+    node = tree.nodes[record.node_id]
+    if not record.result_path or not record.result_sha256:
+        raise ValueError("Tentativa concluída sem caminho ou hash do resultado.")
+    if file_sha256(record.result_path) != record.result_sha256:
+        raise ValueError(f"Hash divergente ao retomar {record.node_id}/{record.attempt}.")
+    result = load_result(
+        record.result_path,
+        node_id=record.node_id,
+        attempt=record.attempt,
+        mode=record.mode,
+    )
+    reviewer_decision = record.reviewer_decision or EvaluationDecision.NOT_EVALUATED.value
+    vlm_decision = record.vlm_decision or EvaluationDecision.NOT_EVALUATED.value
+    reviewer_evaluated = reviewer_decision != EvaluationDecision.NOT_EVALUATED.value
+    vlm_evaluated = vlm_decision != EvaluationDecision.NOT_EVALUATED.value
+    if record.reviewer_path and record.reviewer_sha256:
+        if file_sha256(record.reviewer_path) != record.reviewer_sha256:
+            raise ValueError(f"Hash do Reviewer divergente em {record.node_id}/{record.attempt}.")
+        load_evaluation(
+            record.reviewer_path,
+            node_id=record.node_id,
+            attempt=record.attempt,
+            evaluator="reviewer",
+        )
+    if record.vlm_path and record.vlm_sha256:
+        if file_sha256(record.vlm_path) != record.vlm_sha256:
+            raise ValueError(f"Hash do VLM divergente em {record.node_id}/{record.attempt}.")
+        load_evaluation(
+            record.vlm_path,
+            node_id=record.node_id,
+            attempt=record.attempt,
+            evaluator="vlm",
+        )
+    marker = f"{record.node_id}:{record.attempt}:{record.result_sha256}"
+    already_applied = (
+        node.status is ExecStatus.SUCCEEDED
+        and node.results_path == record.result_path
+        and node.visits > 0
+    )
+    node.status = ExecStatus.SUCCEEDED
+    node.meta.update(
+        {
+            "execution_mode": record.mode,
+            "synthetic": result.execution.synthetic,
+            "reviewer_evaluated": reviewer_evaluated,
+            "vlm_evaluated": vlm_evaluated,
+            "reviewer_decision": reviewer_decision,
+            "vlm_decision": vlm_decision,
+            "reviewer_path": record.reviewer_path,
+            "vlm_path": record.vlm_path,
+            "finalized_attempt": marker,
+        }
+    )
+    if node.id in tree.frontier:
+        tree.frontier.remove(node.id)
+    if not already_applied and node.meta.get("backpropagated_attempt") != marker:
+        tree.update_result(
+            node.id,
+            record.result_path,
+            reviewer_decision=reviewer_decision,
+            vlm_decision=vlm_decision,
+        )
+        score = tree.nodes[node.id].score or 0.0
+        tree.backpropagate(tree.nodes[node.id], score)
+        node.meta["backpropagated_attempt"] = marker
+    upsert_node(engine, _node_row(node))
+
+    children = [child for child in tree.nodes.values() if child.parent_id == node.id]
+    if not children and branching > 0:
+        child_ids = tree.expand(node, k=branching)
+        children = [tree.nodes[child_id] for child_id in child_ids]
+    for child in children:
+        if child.stage == node.stage:
+            child.stage = next_stage(child.stage)
+        upsert_node(engine, _node_row(child))
+
+
+def reconcile_completed_attempts(
+    tree: AgenticTree,
+    manifest: RunManifest | None,
+    *,
+    branching: int,
+    engine,
+) -> int:
+    """Apply durable successful attempts once after a crash or interrupted checkpoint."""
+    reconciled = 0
+    for record in _successful_attempts(manifest):
+        if record.node_id not in tree.nodes:
+            raise ValueError(f"Manifesto referencia nó ausente: {record.node_id}")
+        before = tree.nodes[record.node_id].meta.get("finalized_attempt")
+        _finalize_success(tree, record, branching=branching, engine=engine)
+        after = tree.nodes[record.node_id].meta.get("finalized_attempt")
+        if before != after:
+            reconciled += 1
+    return reconciled
+
+
+def run_agentic_tree(
+    crew: Any,
+    tree: AgenticTree,
+    budget: int,
+    branching: int = 2,
+    checkpoint_path: str | None = None,
+    *,
+    mode: ExecutionMode = ExecutionMode.MOCK,
+    sqlite_url: str | None = None,
+    manifest: RunManifest | None = None,
+    manifest_path: str | None = None,
+    variant: ExperimentVariant = ExperimentVariant.A,
+    review_provider: ReviewProvider | None = None,
+) -> None:
     settings = Settings()
-    dry_run = settings.OPENAI_API_KEY is None
+    mode = ExecutionMode(mode)
+    variant = ExperimentVariant(variant)
+    policy = policy_for(variant)
+    effective_branching = policy.effective_branching(branching)
+    if mode is ExecutionMode.LIVE and crew is None:
+        raise ValueError("O modo live requer uma Crew configurada.")
+    if mode is ExecutionMode.LIVE and not (settings.OPENAI_API_KEY or "").strip():
+        raise ValueError("O modo live requer OPENAI_API_KEY não vazia.")
+
     log = structlog.get_logger()
-    
-    # --- OBSERVABILITY: WandB Init ---
-    if settings.WANDB_ON and not dry_run:
+    if manifest is not None and manifest.variant != variant.value:
+        raise ValueError(
+            f"Variante do manifesto é {manifest.variant}, mas a execução solicitou {variant.value}."
+        )
+    log.info(
+        "ats.start",
+        mode=mode.value,
+        variant=variant.value,
+        budget=budget,
+        branching=effective_branching,
+    )
+    engine = init_db(sqlite_url or settings.SQLITE_URL)
+    for persisted_node in tree.nodes.values():
+        upsert_node(engine, _node_row(persisted_node))
+    reconciled = reconcile_completed_attempts(
+        tree,
+        manifest,
+        branching=effective_branching,
+        engine=engine,
+    )
+    if reconciled and checkpoint_path:
+        tree.save_json(checkpoint_path)
+        log.info("ats.resume.reconciled", attempts=reconciled, path=checkpoint_path)
+    if manifest is not None:
+        manifest.status = "RUNNING"
+        if manifest_path:
+            save_manifest(manifest_path, manifest)
+
+    wandb_run = False
+    if settings.WANDB_ON and mode is ExecutionMode.LIVE:
+        import wandb
+
         wandb.init(
             project=settings.WANDB_PROJECT,
             config={
@@ -40,238 +423,178 @@ def run_agentic_tree(crew: Crew, tree: AgenticTree, budget: int, branching: int 
                 "branching": branching,
                 "model_text": settings.MODEL_TEXT,
                 "model_vision": settings.MODEL_VISION,
-                "objective": tree.objective_data.get("title", "Unknown")
-            }
+                "objective": tree.objective.get("objective", {}).get("title", "Unknown"),
+            },
         )
-        log.info("observability.wandb_init", project=settings.WANDB_PROJECT)
-    elif settings.WANDB_ON and dry_run:
-        log.warning("observability.wandb_skipped", reason="Dry-run mode active")
+        wandb_run = True
 
-    log.info("ats.start", mode="DRY-RUN" if dry_run else "REAL", budget=budget)
-
-    engine = init_db(settings.SQLITE_URL)
-    
-    start_time = time.time()
-    
-    for i in range(budget):
-        iter_start = time.time()
-        node = tree.select()
-        prompt = build_prompt(node.stage, objective_json=node.prompt)
-        log.info("ats.iter.start", iteration=i+1, node_id=node.id, stage=node.stage.name)
-
-        # Persiste snapshot do nó atual
-        upsert_node(engine, NodeRow(
-            id=node.id,
-            parent_id=node.parent_id,
-            type=node.type.name,
-            stage=node.stage.value,
-            prompt=node.prompt,
-            plan=node.plan,
-            code_path=node.code_path,
-            results_path=node.results_path,
-            figs_paths=_json.dumps(node.figs_paths) if node.figs_paths else None,
-            score=node.score,
-            visits=node.visits,
-            value_sum=node.value_sum,
-            status=node.status.name,
-            meta=_json.dumps(node.meta) if node.meta else None,
-        ))
-
-        def _agent_by_role(c: Crew, role: str):
-            """Encontra agente por role (CrewAI não tem campo 'name')."""
-            return next(a for a in c.agents if getattr(a, "role", "").lower() == role.lower())
-
-        researcher = _agent_by_role(crew, "Researcher")
-        coder = _agent_by_role(crew, "Coder")
-        runner = _agent_by_role(crew, "Runner")
-        reviewer = _agent_by_role(crew, "Reviewer")
-        vlm_critic = _agent_by_role(crew, "VLM Critic")
-
-        # --- SELF-HEALING LOOP ---
-        max_retries = 2
-        attempt = 0
-        success = False
-        res_path = None
-        vlm_ok = True
-        
-        while attempt <= max_retries and not success:
-            current_tasks = []
-            
-            # 1. Researcher (only on first attempt)
-            if attempt == 0:
-                current_tasks.append(Task(
-                    agent=researcher,
-                    description=f"{prompt}\nGere {branching} hipóteses/planos para o nó {node.id}.",
-                    expected_output="Lista de hipóteses testáveis com revisão de literatura"
-                ))
-            
-            # 2. Coder (Initial or Correction)
-            if attempt == 0:
-                coder_desc = (
-                    f"Implementar o melhor plano para o nó {node.id} com reprodutibilidade.\n"
-                    f"IMPORTANTE: O código DEVE ser salvo em: ./experiments/{node.id}/code.py\n"
-                    f"IMPORTANTE: O código DEVE salvar results.json em: ./experiments/{node.id}/results.json\n"
-                    f"IMPORTANTE: Verifique se o arquivo ./experiments/{node.id}/code.py foi criado com sucesso antes de finalizar."
-                )
-            else:
-                # Correction Prompt
-                coder_desc = (
-                    f"A tentativa anterior falhou. Corrija o código para o nó {node.id}.\n"
-                    f"Erro reportado: O arquivo ./experiments/{node.id}/code.py não foi encontrado ou falhou na execução.\n"
-                    f"CERTIFIQUE-SE de salvar o arquivo corretamente em: ./experiments/{node.id}/code.py"
-                )
-                log.warning("ats.self_healing.retry", node_id=node.id, attempt=attempt)
-
-            current_tasks.append(Task(
-                agent=coder,
-                description=coder_desc,
-                expected_output="Caminho absoluto do arquivo Python criado e confirmação de existência."
-            ))
-
-            # 3. Runner
-            current_tasks.append(Task(
-                agent=runner,
-                description=(
-                    f"Executar o código do nó {node.id} localizado em ./experiments/{node.id}/code.py.\n"
-                    f"Certifique-se de que o arquivo existe antes de executar."
-                ),
-                expected_output="Artefatos salvos: results.json e figuras"
-            ))
-
-            # Execute Coder & Runner (and Researcher if first try)
-            kickoff_output = None
-            if not dry_run:
-                try:
-                    crew.tasks = current_tasks
-                    kickoff_output = crew.kickoff()
-                except Exception as e:
-                    log.warning("ats.kickoff.error", error=str(e), attempt=attempt)
-                    kickoff_output = None
-
-            # Check for Success (File Existence)
-            # Best-effort extraction of results path
-            import os
-            expected_res_path = f"./experiments/{node.id}/results.json"
-            expected_code_path = f"./experiments/{node.id}/code.py"
-            
-            if dry_run:
-                success = True # Always succeed in dry-run
-            elif os.path.exists(expected_code_path):
-                 # We assume success if code exists, but ideally we check results.json too
-                 # For now, let's be lenient: if code exists, we proceed to Reviewer
-                 success = True
-                 if os.path.exists(expected_res_path):
-                     res_path = expected_res_path
-            else:
-                success = False
-            
-            attempt += 1
-
-        # 4. Reviewer & VLM (Only if success or out of retries)
-        final_tasks = [
-            Task(
-                agent=reviewer,
-                description=f"Avaliar resultados do nó {node.id}, checar validade e gerar report.",
-                expected_output="Avaliação dos resultados e sugestões para próximos passos"
-            ),
-            Task(
-                agent=vlm_critic,
-                description=f"Revisar figuras do nó {node.id} (VLM) e classificar BUG/NON_BUG.",
-                expected_output="Classificação BUG/NON_BUG das figuras"
-            ),
-        ]
-        
-        if not dry_run:
-             try:
-                crew.tasks = final_tasks
-                crew.kickoff() # Execute final analysis
-             except Exception as e:
-                log.warning("ats.final_tasks.error", error=str(e))
-
-        # Extract final results for tree update
-        if not res_path and not dry_run:
-             # Try one last time to find it
-             if os.path.exists(f"./experiments/{node.id}/results.json"):
-                 res_path = f"./experiments/{node.id}/results.json"
-
-        if not res_path:
-            # Fallback: gera um results.json sintético
-            res_path = f"./experiments/{node.id}/results.json"
-            os.makedirs(f"./experiments/{node.id}", exist_ok=True)
-            with open(res_path, "w") as f:
-                json.dump({"accuracy": 0.5}, f)
-
-        tree.update_result(node.id, res_path, vlm_ok=vlm_ok)
-        # Persiste nó atualizado após resultado
-        n = tree.nodes[node.id]
-        upsert_node(engine, NodeRow(
-            id=n.id,
-            parent_id=n.parent_id,
-            type=n.type.name,
-            stage=n.stage.value,
-            prompt=n.prompt,
-            plan=n.plan,
-            code_path=n.code_path,
-            results_path=n.results_path,
-            figs_paths=_json.dumps(n.figs_paths) if n.figs_paths else None,
-            score=n.score,
-            visits=n.visits,
-            value_sum=n.value_sum,
-            status=n.status.name,
-            meta=_json.dumps(n.meta) if n.meta else None,
-        ))
-        score = tree.nodes[node.id].score or 0.0
-        tree.backpropagate(tree.nodes[node.id], score)
-        
-        iter_duration = time.time() - iter_start
-        log.info("ats.iter.scored", node_id=node.id, score=score, duration=f"{iter_duration:.2f}s")
-
-        # --- OBSERVABILITY: WandB Log ---
-        if settings.WANDB_ON and not dry_run:
-            wandb.log({
-                "iteration": i + 1,
-                "node_id": node.id,
-                "stage": node.stage.name,
-                "score": score,
-                "duration": iter_duration,
-                "best_score": max((n.score or 0.0) for n in tree.nodes.values())
-            })
-
-        # expansão simples por estágio
-        child_ids = tree.expand(tree.nodes[node.id], k=branching)
-        # Atualiza estágios dos filhos
-        for cid in child_ids:
-            c = tree.nodes[cid]
-            c.stage = next_stage(c.stage)
-            # Persiste cada filho criado
-            upsert_node(engine, NodeRow(
-                id=c.id,
-                parent_id=c.parent_id,
-                type=c.type.name,
-                stage=c.stage.value,
-                prompt=c.prompt,
-                plan=c.plan,
-                code_path=c.code_path,
-                results_path=c.results_path,
-                figs_paths=_json.dumps(c.figs_paths) if c.figs_paths else None,
-                score=c.score,
-                visits=c.visits,
-                value_sum=c.value_sum,
-                status=c.status.name,
-                meta=_json.dumps(c.meta) if c.meta else None,
-            ))
-        log.info("ats.iter.children", node_id=node.id, children=child_ids)
-
-        if tree.should_early_stop(threshold=tree.settings.EARLY_STOP_SCORE):
-            log.info("ats.early_stop", best=max((n.score or 0.0) for n in tree.nodes.values()))
+    for iteration in range(budget):
+        if not tree.frontier:
+            log.info("ats.search.exhausted", iteration=iteration)
             break
-        
-        # --- CHECKPOINTING ---
+        iteration_start = time.time()
+        node = tree.select()
+        node.status = ExecStatus.RUNNING
+        upsert_node(engine, _node_row(node))
+        prompt = build_prompt(node.stage, objective_json=node.prompt)
+        log.info(
+            "ats.iter.start",
+            iteration=iteration + 1,
+            node_id=node.id,
+            stage=node.stage.name,
+        )
+
+        node.meta["primary_metric"] = tree.primary_metric
+        max_attempts = policy.max_attempts_per_node
+        result_path = None
+        first_attempt = _next_attempt(manifest, node.id)
+        if first_attempt > max_attempts:
+            node.status = ExecStatus.FAILED
+            upsert_node(engine, _node_row(node))
+            if checkpoint_path:
+                tree.save_json(checkpoint_path)
+            if manifest is not None:
+                manifest.status = "FAILED"
+                if manifest_path:
+                    save_manifest(manifest_path, manifest)
+            raise RuntimeError(
+                f"Nó {node.id} esgotou o limite de {max_attempts} tentativas."
+            )
+        successful_record = None
+        for attempt in range(first_attempt, max_attempts + 1):
+            attempt_dir = tree.artifact_root / node.id / f"attempt-{attempt}"
+            attempt_dir.mkdir(parents=True, exist_ok=True)
+            started_at = utc_now()
+            _save_attempt(
+                manifest,
+                manifest_path,
+                AttemptRecord(
+                    node_id=node.id,
+                    attempt=attempt,
+                    mode=mode.value,
+                    status="RUNNING",
+                    directory=str(attempt_dir),
+                    started_at=started_at,
+                ),
+            )
+            try:
+                if mode is ExecutionMode.MOCK:
+                    result_path = _mock_result(
+                        attempt_dir,
+                        node_id=node.id,
+                        attempt=attempt,
+                        primary_metric=tree.primary_metric,
+                    )
+                else:
+                    result_path = _run_live_attempt(
+                        crew,
+                        node,
+                        prompt,
+                        branching,
+                        attempt_dir,
+                        attempt,
+                    )
+                reviewer, reviewer_path, vlm, vlm_path = _materialize_evaluations(
+                    node,
+                    Path(result_path),
+                    attempt_dir,
+                    attempt,
+                    mode=mode,
+                    review_provider=review_provider,
+                )
+                successful_record = AttemptRecord(
+                    node_id=node.id,
+                    attempt=attempt,
+                    mode=mode.value,
+                    status="SUCCEEDED",
+                    directory=str(attempt_dir),
+                    result_path=str(result_path),
+                    result_sha256=file_sha256(result_path),
+                    reviewer_path=str(reviewer_path),
+                    reviewer_sha256=file_sha256(reviewer_path),
+                    reviewer_decision=reviewer.decision.value,
+                    vlm_path=str(vlm_path),
+                    vlm_sha256=file_sha256(vlm_path),
+                    vlm_decision=vlm.decision.value,
+                    started_at=started_at,
+                    finished_at=utc_now(),
+                )
+                _save_attempt(
+                    manifest,
+                    manifest_path,
+                    successful_record,
+                )
+                break
+            except Exception as exc:
+                _save_attempt(
+                    manifest,
+                    manifest_path,
+                    AttemptRecord(
+                        node_id=node.id,
+                        attempt=attempt,
+                        mode=mode.value,
+                        status="FAILED",
+                        directory=str(attempt_dir),
+                        error=str(exc),
+                        started_at=started_at,
+                        finished_at=utc_now(),
+                    ),
+                )
+                log.warning(
+                    "ats.attempt.failed",
+                    node_id=node.id,
+                    attempt=attempt,
+                    error=str(exc),
+                )
+                if attempt == max_attempts:
+                    node.status = ExecStatus.FAILED
+                    upsert_node(engine, _node_row(node))
+                    if checkpoint_path:
+                        tree.save_json(checkpoint_path)
+                    if manifest is not None:
+                        manifest.status = "FAILED"
+                        if manifest_path:
+                            save_manifest(manifest_path, manifest)
+                    raise
+
+        if result_path is None:
+            raise RuntimeError("Tentativa terminou sem resultado validado.")
+        if successful_record is None:
+            raise RuntimeError("Tentativa concluída sem registro durável.")
+        _finalize_success(
+            tree,
+            successful_record,
+            branching=effective_branching,
+            engine=engine,
+        )
+        score = tree.nodes[node.id].score or 0.0
+
         if checkpoint_path:
-            from pathlib import Path
-            Path(checkpoint_path).parent.mkdir(parents=True, exist_ok=True)
             tree.save_json(checkpoint_path)
             log.info("ats.checkpoint.saved", path=checkpoint_path)
-    
-    if settings.WANDB_ON and not dry_run:
+
+        duration = time.time() - iteration_start
+        log.info("ats.iter.scored", node_id=node.id, score=score, duration=duration)
+        if wandb_run:
+            import wandb
+
+            wandb.log(
+                {
+                    "iteration": iteration + 1,
+                    "node_id": node.id,
+                    "score": score,
+                    "duration": duration,
+                }
+            )
+        if tree.should_early_stop(threshold=tree.settings.EARLY_STOP_SCORE):
+            log.info("ats.early_stop", score=score)
+            break
+
+    if wandb_run:
+        import wandb
+
         wandb.finish()
+    if manifest is not None:
+        manifest.status = "SUCCEEDED"
+        if manifest_path:
+            save_manifest(manifest_path, manifest)

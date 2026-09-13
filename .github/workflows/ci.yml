@@ -4,16 +4,17 @@ jobs:
   lint-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
       - name: Install Poetry
-        run: pip install poetry
+        run: pip install poetry==2.2.1
       - name: Install deps
-        run: poetry install
+        run: poetry install --no-interaction
+      - name: Validate lock
+        run: poetry check --lock
       - name: Lint
-        run: poetry run ruff check .
+        run: poetry run ruff check src tests
       - name: Tests
-        run: poetry run pytest -q || true
-
+        run: poetry run pytest -q

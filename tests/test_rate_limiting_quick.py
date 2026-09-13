@@ -26,7 +26,7 @@ def main():
     print("="*60)
     
     settings = Settings()
-    print(f"\n📋 Configurações:")
+    print("\n📋 Configurações:")
     print(f"  Rate Limit: {settings.SEMANTIC_SCHOLAR_RATE_LIMIT}s")
     print(f"  Cache TTL: {settings.SEMANTIC_SCHOLAR_CACHE_TTL}s")
     print(f"  API Key: {'✅' if settings.SEMANTIC_SCHOLAR_API_KEY else '❌'}")
