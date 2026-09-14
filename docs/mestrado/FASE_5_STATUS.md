@@ -96,12 +96,31 @@ setuptools 80.10.2. O runner usou backend Docker e a imagem
 `sha256:fdf396b11a76a89680a64179d35b3fefc6b6e7241742ec57decaa99a95bbf41a`.
 
 Localmente, com telemetrias OpenTelemetry e ONNX Runtime explicitamente
-desativadas, Ruff passou e `pytest -q` registrou 75 testes aprovados e quatro testes
+desativadas, Ruff passou e `pytest -q` registrou 82 testes aprovados e quatro testes
 live desmarcados. Além da B0, os testes cobrem reserva e rejeição pré-transporte,
 contabilização por chamada, timeout, metadados ausentes, retomada do journal,
-sincronização com manifesto, autorização do smoke e recusa de mais de uma chamada.
-Nenhum resultado principal foi coletado: são testes do mecanismo, não amostra
-científica.
+sincronização com manifesto, autorização do smoke, recusa de mais de uma chamada,
+propagação de seed e retomada dos seis pilotos sem reexecução. Nenhum resultado
+principal foi coletado: são testes do mecanismo, não amostra científica.
+
+## Ensaio offline do executor de pilotos
+
+O comando `run-pilots` materializa exclusivamente as seis especificações
+`kind=pilot`, cria um manifesto agregado e um manifesto por run e pode retomar um
+checkpoint sem repetir runs já concluídos. Uma retomada é recusada se o hash do
+plano, o modo, o objetivo ou um checkpoint parcial divergirem. O caminho `live`
+falha antes de construir a Crew sem a autorização literal separada
+`I_AUTHORIZE_SIX_PILOT_RUNS`.
+
+A seed da especificação passou a integrar o manifesto de cada run, o estado do
+orquestrador e o parâmetro `seed` do modelo. O prompt do Coder também exige seu uso
+em `random`, NumPy, partições e estimadores aplicáveis. Isso registra a intenção de
+reprodutibilidade sem alegar determinismo integral de uma API externa.
+
+Um ensaio CLI em diretório temporário executou B1, A e A0 nas seis identidades do
+plano e terminou com seis estados `SUCCEEDED`, seeds 11/11/23/23/37/37 e consumo
+agregado igual a zero chamadas, zero tokens e US$ 0. Os scores sintéticos do mock
+não são dados piloto e não serão usados na dissertação.
 
 ## Identidade e limites da campanha
 
@@ -145,12 +164,14 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Construir e validar offline o executor dos seis pilotos, preservando um ledger
-   independente por run e parada global em 144 chamadas, 240.000 tokens ou US$ 0,18.
-2. Obter autorização separada antes de executar os seis pilotos.
-3. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+1. Criar o workflow live com um job por piloto, preflight zero-call, timeout duro de
+   15 minutos por run e agregação fail-closed dos seis artefatos.
+2. Revalidar o teto global de 144 chamadas, 240.000 tokens e US$ 0,18 antes do
+   despacho.
+3. Obter autorização separada antes de executar os seis pilotos.
+4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-4. Executar B0 e a matriz principal apenas depois do congelamento.
+5. Executar B0 e a matriz principal apenas depois do congelamento.
 
 ## Ativação do dispatcher concluída
 

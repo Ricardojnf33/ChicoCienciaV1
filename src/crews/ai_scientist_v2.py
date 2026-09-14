@@ -35,6 +35,7 @@ def build_budgeted_llm(
     *,
     model: str,
     ledger: LLMBudgetLedger,
+    experiment_seed: int | None = None,
 ) -> ChatOpenAI:
     return ChatOpenAI(
         model=model,
@@ -42,6 +43,7 @@ def build_budgeted_llm(
         temperature=0,
         max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
         max_retries=0,
+        seed=experiment_seed,
         callbacks=[BudgetCallbackHandler(ledger, model=model)],
     )
 
@@ -50,6 +52,7 @@ def build_crew(
     settings: Settings | None = None,
     *,
     budget_path: str | Path | None = None,
+    experiment_seed: int | None = None,
 ) -> Crew:
     resolved = settings or Settings()
     resolved.require_openai_api_key()
@@ -58,11 +61,13 @@ def build_crew(
         resolved,
         model=resolved.MODEL_TEXT,
         ledger=ledger,
+        experiment_seed=experiment_seed,
     )
     vision_llm = build_budgeted_llm(
         resolved,
         model=resolved.MODEL_VISION,
         ledger=ledger,
+        experiment_seed=experiment_seed,
     )
     manager = build_manager(text_llm)
     agents = [

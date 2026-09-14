@@ -128,6 +128,7 @@ class RunManifest(BaseModel):
     effective_branching: int = Field(default=2, ge=1)
     max_depth: int = Field(default=4, ge=0)
     automatic_correction: bool = True
+    experiment_seed: int | None = None
     llm_model: str | None = None
     llm_budget_path: str | None = None
     llm_token_limit: int = Field(default=0, ge=0)

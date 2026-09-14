@@ -65,6 +65,35 @@ def test_crew_receives_key_explicitly_without_exporting_it(monkeypatch):
     assert "OPENAI_API_KEY" not in os.environ
 
 
+def test_crew_propagates_experiment_seed_without_exporting_it(monkeypatch, tmp_path):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    for name in (
+        "ALL_PROXY",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "all_proxy",
+        "http_proxy",
+        "https_proxy",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    settings = Settings(
+        OPENAI_API_KEY="sk-test-seed-never-send",
+        _env_file=None,
+    )
+
+    from src.crews.ai_scientist_v2 import build_crew
+
+    crew = build_crew(
+        settings,
+        budget_path=tmp_path / "budget.json",
+        experiment_seed=37,
+    )
+
+    assert crew.manager_agent.llm.seed == 37
+    assert all(agent.llm.seed == 37 for agent in crew.agents)
+    assert "CHICO_EXPERIMENT_SEED" not in os.environ
+
+
 def test_crew_rejects_absent_key_before_agent_construction():
     from src.crews.ai_scientist_v2 import build_crew
 

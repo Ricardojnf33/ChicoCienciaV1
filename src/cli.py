@@ -277,6 +277,51 @@ def run_b0_command(
         f"{result.metrics[result.primary_metric]:.6f}; LLM tokens=0; arquivo={output}"
     )
 
+
+@app.command("run-pilots")
+def run_pilots_command(
+    campaign_plan: str,
+    output_root: str = "runs/pilots",
+    mode: ExecutionMode = ExecutionMode.MOCK,
+    authorization: Optional[str] = None,
+):
+    """Executa/retoma os seis pilotos; live requer autorização separada."""
+    from src.processes.pilot_process import run_pilot_campaign
+
+    crew_factory = None
+    if mode is ExecutionMode.LIVE:
+        from src.crews.ai_scientist_v2 import build_crew
+
+        plan = load_campaign_plan(campaign_plan)
+
+        def configured_crew_factory(spec, budget_path: Path):
+            settings = Settings(
+                MODEL_TEXT=plan.model_text,
+                MODEL_VISION=plan.model_vision,
+                LLM_TOKEN_LIMIT=spec.token_limit,
+                LLM_COST_LIMIT_USD=spec.cost_limit_usd,
+                LLM_CALL_LIMIT=spec.call_limit,
+            )
+            return build_crew(
+                settings,
+                budget_path=budget_path,
+                experiment_seed=spec.seed,
+            )
+
+        crew_factory = configured_crew_factory
+    aggregate, path = run_pilot_campaign(
+        campaign_plan,
+        output_root,
+        mode=mode,
+        authorization=authorization,
+        crew_factory=crew_factory,
+    )
+    typer.echo(
+        f"Pilotos {aggregate.status}; runs={len(aggregate.runs)}; "
+        f"chamadas={aggregate.api_calls_started}; tokens={aggregate.total_tokens}; "
+        f"custo=US${aggregate.cost_usd:.8f}; manifesto={path}"
+    )
+
 @app.command()
 def inspect(run_id: str, out_dir: str = "runs", limit: int = 20):
     path = _existing_tree_path(out_dir, run_id)

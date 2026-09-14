@@ -139,6 +139,15 @@ um kill switch explícito de 24 chamadas iniciadas por run. O plano passa a limi
 os seis pilotos a 144 chamadas, 240.000 tokens, US$ 0,18 e 5.400 segundos se
 executados sequencialmente. Nenhum piloto foi executado durante essa alteração.
 
+Na sequência, o executor `run-pilots` foi construído e ensaiado integralmente em
+modo mock. Ele selecionou somente as seis specs piloto, persistiu seed e identidade
+por run, agregou chamadas/tokens/custo e retomou estados concluídos sem reexecução.
+O caminho live exige a autorização literal separada
+`I_AUTHORIZE_SIX_PILOT_RUNS` antes da construção da Crew. A seed passou a ser
+encaminhada também ao parâmetro do modelo e à instrução do código experimental.
+O ensaio terminou com seis runs mock aprovados e consumo LLM zero; seus valores
+sintéticos não constituem dados científicos.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -146,9 +155,7 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Não usar **Re-run all jobs** no run do smoke. Desabilitar o workflow manual na tela
-do GitHub Actions, pois reexecuções históricas reutilizam o SHA e a ref originais.
-Construir o executor offline dos seis pilotos com ledger individual e agregador
-fail-closed da campanha. Depois, apresentar ao responsável a auditoria do smoke e
-o preflight do executor. Os pilotos exigem autorização separada e não foram
-iniciados.
+Construir o workflow live dos pilotos com preflight zero-call, isolamento, um job
+por run, timeout duro de 15 minutos e agregador fail-closed. Validá-lo sem despachar
+a API e então apresentar ao responsável o escopo fechado de seis runs. Os pilotos
+exigem autorização separada e não foram iniciados.

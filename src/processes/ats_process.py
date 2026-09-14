@@ -1,4 +1,5 @@
 import json
+import random
 import time
 from enum import Enum
 from pathlib import Path
@@ -140,6 +141,7 @@ def _run_live_attempt(
     branching: int,
     attempt_dir: Path,
     attempt: int,
+    experiment_seed: int | None,
 ) -> Path:
     from crewai import Task
 
@@ -164,7 +166,9 @@ def _run_live_attempt(
                 agent=coder,
                 description=(
                     f"Implementar o plano do nó {node.id}. Salvar o código em {expected_code} "
-                    f"e a métrica primária escalar no topo de {raw_result}."
+                    f"e a métrica primária escalar no topo de {raw_result}. "
+                    f"Usar a seed experimental {experiment_seed} em random, NumPy, "
+                    "partições e estimadores aplicáveis, e registrá-la no resultado."
                 ),
                 expected_output="Código e raw_results.json nos caminhos declarados",
             ),
@@ -402,6 +406,7 @@ def run_agentic_tree(
     manifest_path: str | None = None,
     variant: ExperimentVariant = ExperimentVariant.A,
     review_provider: ReviewProvider | None = None,
+    experiment_seed: int | None = None,
 ) -> None:
     settings = Settings()
     mode = ExecutionMode(mode)
@@ -418,6 +423,15 @@ def run_agentic_tree(
         raise ValueError(
             f"Variante do manifesto é {manifest.variant}, mas a execução solicitou {variant.value}."
         )
+    if manifest is not None:
+        if manifest.experiment_seed is None:
+            manifest.experiment_seed = experiment_seed
+        elif experiment_seed != manifest.experiment_seed:
+            raise ValueError(
+                "Seed solicitada diverge da seed experimental persistida no manifesto."
+            )
+    if experiment_seed is not None:
+        random.seed(experiment_seed)
     log.info(
         "ats.start",
         mode=mode.value,
@@ -525,6 +539,7 @@ def run_agentic_tree(
                         branching,
                         attempt_dir,
                         attempt,
+                        experiment_seed,
                     )
                     _sync_llm_budget(manifest, manifest_path, crew)
                 reviewer, reviewer_path, vlm, vlm_path = _materialize_evaluations(

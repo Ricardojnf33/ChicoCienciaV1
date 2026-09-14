@@ -18,6 +18,11 @@ Compararei quatro condições sobre os mesmos objetivos. B0 servirá como contro
 
 Os datasets propostos são Iris, Wine e Digits. As seeds de divisão serão 11, 23, 37, 51 e 71. Cada run é uma execução completa do workflow para uma condição, dataset e seed; não é um fold, um nó ou uma chamada de modelo. Temperatura, seed do provedor quando suportada e identificador do modelo serão registrados, sem pressupor determinismo de uma API externa.
 
+O executor deve persistir a seed no manifesto, aplicá-la ao estado pseudoaleatório
+local e encaminhá-la ao parâmetro `seed` do provedor. O código experimental deverá
+usar a mesma seed em partições e estimadores aplicáveis. Divergência entre a seed
+solicitada e a persistida torna a retomada inválida.
+
 Antes da coleta principal, farei seis runs piloto, dois por condição generativa, distribuídos entre Iris e Wine. Eles servirão para estimar viabilidade e ajustar limites. Seus dados serão excluídos da comparação principal. O protocolo será congelado em commit após o piloto. Qualquer ajuste posterior será registrado como desvio; não se escolherá uma configuração em função de favorecer A.
 
 ### 8 1 1 Execução automatizada das condições generativas
