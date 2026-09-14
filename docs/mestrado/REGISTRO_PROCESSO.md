@@ -121,6 +121,15 @@ O dispatcher foi integrado à `main` em
 `f569b66fa8aa0436f05686b4619beb065fa67be4`. Nenhum desses eventos despachou o
 smoke ou acessou a API da OpenAI.
 
+Em 14/09/2026, após autorização literal, o run manual
+[34890553182](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34890553182)
+executou o smoke exatamente uma vez e terminou em PASS. O journal registrou uma
+chamada iniciada, uma concluída, zero falhas, 18 tokens de entrada, cinco de saída,
+23 no total e custo de US$ 0,0000057. O sentinel correspondeu ao esperado; somente
+seu hash foi persistido. O artefato `phase5-one-call-smoke` tem ID `10366926127` e
+digest `sha256:196e4e8f400ef59d293e1cab29eebdf95569b370bcdbaca9151b36b84e2e73c6`.
+Nenhum piloto ou run principal foi iniciado.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -128,7 +137,7 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Apresentar o gate final ao responsável. Não selecionar a branch da Fase 5 nem
-despachar o workflow sem autorização explícita para exatamente uma chamada e teto
-de US$ 0,001. Em caso de autorização, executar uma vez, auditar os três artefatos e
-interromper antes dos pilotos para nova decisão.
+Não usar **Re-run all jobs** no run do smoke. Desabilitar o workflow manual na tela
+do GitHub Actions, pois reexecuções históricas reutilizam o SHA e a ref originais.
+Depois, apresentar ao responsável a auditoria do smoke e o plano dos seis pilotos.
+Os pilotos exigem autorização separada e não foram iniciados.

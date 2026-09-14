@@ -1,11 +1,11 @@
 # Fase 5 — status da preparação empírica
 
-Estado: em andamento, atualizado em 12 de setembro de 2026. O preflight protegido
+Estado: em andamento, atualizado em 14 de setembro de 2026. O preflight protegido
 está verde, a matriz da campanha foi materializada, o baseline B0 foi implementado
-e o kill switch de tokens/custo está ativo no caminho live. Um workflow manual de
-uma chamada foi preparado, mas não executado. O protocolo permanece em rascunho
-(`protocol_frozen: false`), a coleta não começou e nenhuma chamada à API da OpenAI
-foi realizada.
+e o kill switch de tokens/custo está ativo no caminho live. O smoke autorizado foi
+executado uma única vez e aprovado. O protocolo permanece em rascunho
+(`protocol_frozen: false`), os pilotos não começaram e nenhum resultado principal
+foi coletado.
 
 ## Resultado deste incremento
 
@@ -47,6 +47,33 @@ preflight zero-call e só então uma invocação. A resposta não é armazenada;
 seu hash, aderência ao sentinel, tokens, custo e contagens serão preservados.
 O job também exige `refs/heads/feat/mestrado-fase-5`, de modo que um despacho na
 branch padrão seja recusado antes de carregar o secret.
+
+## Resultado do smoke real
+
+O run manual
+[34890553182](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34890553182)
+foi executado em 14/09/2026 sobre o commit
+`9f5e278ff6dea8b26336dd560b8c9906d3008673` e terminou em PASS. O artefato
+`phase5-one-call-smoke`, ID `10366926127`, digest
+`sha256:196e4e8f400ef59d293e1cab29eebdf95569b370bcdbaca9151b36b84e2e73c6`,
+contém três arquivos JSON e registrou:
+
+| Medida | Resultado |
+| --- | --- |
+| Modelo | `gpt-4o-mini-2024-07-18` |
+| Chamadas iniciadas/concluídas/falhas | 1 / 1 / 0 |
+| Tokens de entrada/saída/total | 18 / 5 / 23 |
+| Custo observado | US$ 0,0000057 |
+| Duração da chamada | 4,578 s |
+| Sentinel | hash preservado e `response_matches_expected: true` |
+| Retentativas internas | 0 |
+
+A resposta textual não foi persistida. O artefato preserva somente o SHA-256
+`be18e5fa97f1c7176d72e71dfb12627fae2e04610eeb14c6cff419bc8e2760e5`, a
+confirmação do sentinel, uso, custo e contadores. O preflight imediatamente anterior
+registrou `api_calls_performed: 0`, credencial mascarada e todos os gates em PASS.
+Portanto, a evidência sustenta apenas a conectividade e a contabilização do caminho
+live; ela não constitui resultado científico do sistema multiagente.
 
 ## Evidência reproduzível
 
@@ -115,14 +142,14 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Apresentar este preflight, o teto de US$ 0,001 e a semântica de uma única chamada
-   ao responsável; obter autorização explícita antes de despachar o workflow.
-2. Se autorizado, selecionar `feat/mestrado-fase-5`, executar o smoke uma vez e
-   inspecionar resposta, redaction, tokens, custo, journal e ausência de retentativa.
-3. Somente após smoke aprovado e nova autorização, executar os seis pilotos.
-4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+1. Desabilitar operacionalmente o workflow de smoke no GitHub Actions e não usar
+   **Re-run all jobs**. O branch head passa também a recusar `run_number != 1` ou
+   `run_attempt != 1`; uma reexecução do run histórico ainda reutiliza o SHA e a ref
+   originais, motivo pelo qual a desativação no GitHub continua necessária.
+2. Obter autorização separada antes de executar os seis pilotos.
+3. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-5. Executar B0 e a matriz principal apenas depois do congelamento.
+4. Executar B0 e a matriz principal apenas depois do congelamento.
 
 ## Ativação do dispatcher concluída
 
