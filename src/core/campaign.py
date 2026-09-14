@@ -34,8 +34,10 @@ class CampaignLimits(BaseModel):
     wall_time_seconds: int = Field(default=900, ge=1)
     tokens_per_generative_run: int = Field(default=40_000, ge=1)
     cost_per_generative_run_usd: float = Field(default=0.03, gt=0)
+    calls_per_generative_run: int = Field(default=24, ge=1)
     campaign_token_limit: int = Field(default=2_040_000, ge=1)
     campaign_cost_limit_usd: float = Field(default=1.53, gt=0)
+    campaign_call_limit: int = Field(default=1_224, ge=1)
 
 
 class CampaignRunSpec(BaseModel):
@@ -50,15 +52,22 @@ class CampaignRunSpec(BaseModel):
     uses_llm: bool
     token_limit: int = Field(ge=0)
     cost_limit_usd: float = Field(ge=0)
+    call_limit: int = Field(ge=0)
 
     @model_validator(mode="after")
     def validate_condition_budget(self):
         if self.condition == "B0" and (
-            self.uses_llm or self.token_limit != 0 or self.cost_limit_usd != 0
+            self.uses_llm
+            or self.token_limit != 0
+            or self.cost_limit_usd != 0
+            or self.call_limit != 0
         ):
             raise ValueError("B0 deve registrar uso e custo de LLM iguais a zero.")
         if self.condition != "B0" and (
-            not self.uses_llm or self.token_limit == 0 or self.cost_limit_usd == 0
+            not self.uses_llm
+            or self.token_limit == 0
+            or self.cost_limit_usd == 0
+            or self.call_limit == 0
         ):
             raise ValueError("Condição generativa requer limites positivos de LLM.")
         return self
@@ -101,10 +110,13 @@ class EmpiricalCampaignPlan(BaseModel):
         generative_count = sum(run.uses_llm for run in self.runs)
         expected_tokens = generative_count * self.limits.tokens_per_generative_run
         expected_cost = generative_count * self.limits.cost_per_generative_run_usd
+        expected_calls = generative_count * self.limits.calls_per_generative_run
         if self.limits.campaign_token_limit != expected_tokens:
             raise ValueError("Teto de tokens não corresponde aos 51 runs generativos.")
         if abs(self.limits.campaign_cost_limit_usd - expected_cost) > 1e-9:
             raise ValueError("Teto monetário não corresponde aos limites por run.")
+        if self.limits.campaign_call_limit != expected_calls:
+            raise ValueError("Teto de chamadas não corresponde aos runs generativos.")
         return self
 
 
@@ -134,6 +146,7 @@ def _run_spec(
         uses_llm=uses_llm,
         token_limit=limits.tokens_per_generative_run if uses_llm else 0,
         cost_limit_usd=limits.cost_per_generative_run_usd if uses_llm else 0,
+        call_limit=limits.calls_per_generative_run if uses_llm else 0,
     )
 
 

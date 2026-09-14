@@ -58,6 +58,7 @@ def _sync_llm_budget(
     manifest.llm_budget_path = str(ledger.journal_path) if ledger.journal_path else None
     manifest.llm_token_limit = snapshot.token_limit
     manifest.llm_cost_limit_usd = snapshot.cost_limit_usd
+    manifest.llm_call_limit = snapshot.call_limit
     manifest.llm_input_tokens = snapshot.input_tokens
     manifest.llm_cached_input_tokens = snapshot.cached_input_tokens
     manifest.llm_output_tokens = snapshot.output_tokens

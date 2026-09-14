@@ -107,6 +107,7 @@ def run_preflight(
         values = (
             settings.LLM_TOKEN_LIMIT,
             settings.LLM_COST_LIMIT_USD,
+            settings.LLM_CALL_LIMIT,
             settings.LLM_MAX_OUTPUT_TOKENS,
             settings.LLM_INPUT_PER_MILLION_USD,
             settings.LLM_CACHED_INPUT_PER_MILLION_USD,
@@ -126,6 +127,7 @@ def run_preflight(
         return (
             f"Teto por run={settings.LLM_TOKEN_LIMIT} tokens/"
             f"US${settings.LLM_COST_LIMIT_USD:.8f}; "
+            f"chamadas máximas={settings.LLM_CALL_LIMIT}; "
             f"saída máxima por chamada={settings.LLM_MAX_OUTPUT_TOKENS} tokens."
         )
 

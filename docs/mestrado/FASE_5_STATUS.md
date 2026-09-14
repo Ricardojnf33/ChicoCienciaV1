@@ -34,7 +34,9 @@ selecionado, métricas, duração e contadores de LLM são gravados no resultado
 
 Cada chamada live reserva, antes do transporte, os tokens estimados de entrada e a
 saída máxima. A chamada é recusada se a projeção ultrapassar 40.000 tokens ou
-US$ 0,03 no run. A resposta substitui a reserva pelo uso informado pelo provedor;
+US$ 0,03 no run. Um terceiro kill switch limita explicitamente cada run generativo
+a 24 chamadas iniciadas, incluindo falhas de transporte. A resposta substitui a
+reserva pelo uso informado pelo provedor;
 ausência de metadados cobra a reserva integral e bloqueia novas chamadas. O journal
 por chamada e os totais no manifesto permitem retomada auditável. Retentativas
 internas do cliente foram desativadas (`max_retries=0`); recuperações pertencem ao
@@ -106,14 +108,15 @@ científica.
 | Item | Valor |
 | --- | --- |
 | Plano | `phase5-draft-v1` |
-| SHA-256 do plano | `d907aac11365c06f1f8f8245e5909bdb79c5aca1d2803a6cf53d997b63ebf906` |
+| SHA-256 do plano | `eaac40d89cb3206ec27138bd43580a1b5ab6c9c824ff4bc70595d2a4d8badea4` |
 | Datasets | Iris, Wine e Digits |
 | Seeds | 11, 23, 37, 51 e 71 |
 | Condições principais | B0, B1, A e A0; 15 runs cada |
 | Pilotos | 2 B1, 2 A e 2 A0; somente Iris/Wine |
 | Modelo | `gpt-4o-mini-2024-07-18` |
-| Limite por run generativo | 6 tentativas, 2 correções por nó, 900 s, 40.000 tokens e US$ 0,03 |
-| Limite da campanha | 2.040.000 tokens e US$ 1,53 |
+| Limite por run generativo | 6 iterações, 2 correções por nó, 900 s, 24 chamadas, 40.000 tokens e US$ 0,03 |
+| Limite dos seis pilotos | 144 chamadas, 240.000 tokens, US$ 0,18 e 5.400 s se sequenciais |
+| Limite da campanha | 1.224 chamadas, 2.040.000 tokens e US$ 1,53 |
 
 Os preços registrados no plano são US$ 0,15 por milhão de tokens de entrada,
 US$ 0,075 para entrada em cache e US$ 0,60 por milhão de tokens de saída, conforme
@@ -142,10 +145,8 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Desabilitar operacionalmente o workflow de smoke no GitHub Actions e não usar
-   **Re-run all jobs**. O branch head passa também a recusar `run_number != 1` ou
-   `run_attempt != 1`; uma reexecução do run histórico ainda reutiliza o SHA e a ref
-   originais, motivo pelo qual a desativação no GitHub continua necessária.
+1. Construir e validar offline o executor dos seis pilotos, preservando um ledger
+   independente por run e parada global em 144 chamadas, 240.000 tokens ou US$ 0,18.
 2. Obter autorização separada antes de executar os seis pilotos.
 3. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
@@ -163,3 +164,7 @@ Essa integração apenas tornou o controle manual visível na branch padrão; n�
 despachou o workflow. A presença do secret, o preflight verde e a existência do
 workflow não autorizam consumo. A primeira chamada real continua proibida até
 autorização explícita do responsável.
+
+Em 14/09/2026, após a auditoria do único run, o workflow foi desabilitado
+manualmente no GitHub Actions. O repositório continua registrando exatamente um
+evento `workflow_dispatch`, run `34890553182`, tentativa 1, concluído com sucesso.

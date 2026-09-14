@@ -45,3 +45,7 @@ def test_campaign_is_deterministically_randomized_and_b0_has_zero_llm_cost():
     )
     assert first.limits.campaign_token_limit == 2_040_000
     assert first.limits.campaign_cost_limit_usd == 1.53
+    assert first.limits.campaign_call_limit == 1_224
+    assert all(
+        run.call_limit == 24 for run in first.runs if run.uses_llm
+    )

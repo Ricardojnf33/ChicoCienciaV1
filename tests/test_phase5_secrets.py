@@ -59,6 +59,7 @@ def test_crew_receives_key_explicitly_without_exporting_it(monkeypatch):
     budget = budget_for_crew(crew).snapshot()
     assert budget.token_limit == 40_000
     assert budget.cost_limit_usd == 0.03
+    assert budget.call_limit == 24
     assert all(agent.llm.max_tokens == 2_048 for agent in crew.agents)
     assert all(agent.llm.max_retries == 0 for agent in crew.agents)
     assert "OPENAI_API_KEY" not in os.environ

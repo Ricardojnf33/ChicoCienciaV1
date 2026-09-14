@@ -19,6 +19,7 @@ def _ledger(tmp_path, **overrides):
         "model": "gpt-4o-mini-2024-07-18",
         "token_limit": 1_000,
         "cost_limit_usd": 0.03,
+        "call_limit": 24,
         "max_output_tokens_per_call": 100,
         "input_per_million_usd": 0.15,
         "cached_input_per_million_usd": 0.075,
@@ -49,6 +50,21 @@ def test_budget_rejects_projected_call_before_transport(tmp_path):
 
     with pytest.raises(BudgetExceeded, match="Orçamento LLM bloqueado"):
         ledger.reserve("still-blocked", input_tokens=1)
+
+
+def test_budget_rejects_call_after_explicit_call_limit(tmp_path):
+    ledger = _ledger(tmp_path, call_limit=1)
+    ledger.reserve("first", input_tokens=10)
+    ledger.fail("first", TimeoutError("provider timeout"))
+
+    with pytest.raises(BudgetExceeded, match="teto de 1 chamadas"):
+        ledger.reserve("second", input_tokens=10)
+
+    snapshot = ledger.snapshot()
+    assert snapshot.started_calls == 1
+    assert snapshot.failed_calls == 1
+    assert snapshot.rejected_calls == 1
+    assert snapshot.call_limit == 1
 
 
 def test_callback_accounts_each_completed_call_and_releases_reservation(tmp_path):
@@ -145,5 +161,6 @@ def test_run_manifest_receives_durable_budget_totals(tmp_path):
     assert persisted.llm_model == "gpt-4o-mini-2024-07-18"
     assert persisted.llm_total_tokens == 15
     assert persisted.llm_cost_usd > 0
+    assert persisted.llm_call_limit == 24
     assert persisted.llm_completed_calls == 1
     assert persisted.llm_budget_path == str(tmp_path / "llm-budget.json")

@@ -33,6 +33,7 @@ class LLMBudgetSnapshot(BaseModel):
     model: str = Field(min_length=1)
     token_limit: int = Field(ge=1)
     cost_limit_usd: float = Field(gt=0)
+    call_limit: int = Field(default=24, ge=1)
     max_output_tokens_per_call: int = Field(ge=1)
     input_per_million_usd: float = Field(ge=0)
     cached_input_per_million_usd: float = Field(ge=0)
@@ -74,17 +75,24 @@ class LLMBudgetLedger:
         model: str,
         token_limit: int,
         cost_limit_usd: float,
+        call_limit: int,
         max_output_tokens_per_call: int,
         input_per_million_usd: float,
         cached_input_per_million_usd: float,
         output_per_million_usd: float,
         journal_path: str | Path | None = None,
     ):
-        if token_limit < 1 or cost_limit_usd <= 0 or max_output_tokens_per_call < 1:
+        if (
+            token_limit < 1
+            or cost_limit_usd <= 0
+            or call_limit < 1
+            or max_output_tokens_per_call < 1
+        ):
             raise ValueError("Limites de LLM devem ser positivos.")
         self.model = model
         self.token_limit = token_limit
         self.cost_limit_usd = cost_limit_usd
+        self.call_limit = call_limit
         self.max_output_tokens_per_call = max_output_tokens_per_call
         self.input_per_million_usd = input_per_million_usd
         self.cached_input_per_million_usd = cached_input_per_million_usd
@@ -125,6 +133,14 @@ class LLMBudgetLedger:
                 self.rejected_calls += 1
                 self._persist()
                 raise BudgetExceeded(f"Orçamento LLM bloqueado: {self.stop_reason}")
+            if self.started_calls >= self.call_limit:
+                self.rejected_calls += 1
+                self.stop_reason = (
+                    "Próxima chamada recusada antes do transporte: "
+                    f"teto de {self.call_limit} chamadas atingido."
+                )
+                self._persist()
+                raise BudgetExceeded(self.stop_reason)
             if call_id in self._reservations:
                 raise ValueError(f"Reserva duplicada para a chamada {call_id}.")
             output_tokens = self.max_output_tokens_per_call
@@ -246,6 +262,7 @@ class LLMBudgetLedger:
                 model=self.model,
                 token_limit=self.token_limit,
                 cost_limit_usd=self.cost_limit_usd,
+                call_limit=self.call_limit,
                 max_output_tokens_per_call=self.max_output_tokens_per_call,
                 input_per_million_usd=self.input_per_million_usd,
                 cached_input_per_million_usd=self.cached_input_per_million_usd,
@@ -275,6 +292,7 @@ class LLMBudgetLedger:
             previous.model,
             previous.token_limit,
             previous.cost_limit_usd,
+            previous.call_limit,
             previous.max_output_tokens_per_call,
             previous.input_per_million_usd,
             previous.cached_input_per_million_usd,
@@ -284,6 +302,7 @@ class LLMBudgetLedger:
             self.model,
             self.token_limit,
             self.cost_limit_usd,
+            self.call_limit,
             self.max_output_tokens_per_call,
             self.input_per_million_usd,
             self.cached_input_per_million_usd,

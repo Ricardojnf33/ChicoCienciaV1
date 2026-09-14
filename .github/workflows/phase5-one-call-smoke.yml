@@ -30,6 +30,7 @@ jobs:
       MODEL_VISION: gpt-4o-mini-2024-07-18
       LLM_TOKEN_LIMIT: "512"
       LLM_COST_LIMIT_USD: "0.001"
+      LLM_CALL_LIMIT: "1"
       LLM_MAX_OUTPUT_TOKENS: "16"
       WANDB_ON: "false"
       OTEL_SDK_DISABLED: "true"

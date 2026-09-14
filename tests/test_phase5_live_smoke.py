@@ -101,3 +101,4 @@ def test_smoke_workflow_is_manual_and_restricted_to_phase_branch():
     assert "github.run_number == 1" in workflow
     assert "github.run_attempt == 1" in workflow
     assert "environment: phase5-pilot" in workflow
+    assert 'LLM_CALL_LIMIT: "1"' in workflow

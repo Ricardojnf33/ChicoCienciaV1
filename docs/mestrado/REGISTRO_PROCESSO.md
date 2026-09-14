@@ -130,6 +130,15 @@ seu hash foi persistido. O artefato `phase5-one-call-smoke` tem ID `10366926127`
 digest `sha256:196e4e8f400ef59d293e1cab29eebdf95569b370bcdbaca9151b36b84e2e73c6`.
 Nenhum piloto ou run principal foi iniciado.
 
+Após a confirmação visual de `Workflow disabled successfully`, o dispatcher do
+smoke passou ao estado operacional desabilitado. A consulta de runs continuou
+mostrando exatamente um `workflow_dispatch`, sem reexecução. Na preparação dos
+pilotos foi identificado que tokens e custo limitavam indiretamente chamadas
+concluídas, mas falhas de transporte não consumiam esses tetos. Foi então adicionado
+um kill switch explícito de 24 chamadas iniciadas por run. O plano passa a limitar
+os seis pilotos a 144 chamadas, 240.000 tokens, US$ 0,18 e 5.400 segundos se
+executados sequencialmente. Nenhum piloto foi executado durante essa alteração.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -139,5 +148,7 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 Não usar **Re-run all jobs** no run do smoke. Desabilitar o workflow manual na tela
 do GitHub Actions, pois reexecuções históricas reutilizam o SHA e a ref originais.
-Depois, apresentar ao responsável a auditoria do smoke e o plano dos seis pilotos.
-Os pilotos exigem autorização separada e não foram iniciados.
+Construir o executor offline dos seis pilotos com ledger individual e agregador
+fail-closed da campanha. Depois, apresentar ao responsável a auditoria do smoke e
+o preflight do executor. Os pilotos exigem autorização separada e não foram
+iniciados.

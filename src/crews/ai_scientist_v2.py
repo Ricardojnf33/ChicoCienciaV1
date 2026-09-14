@@ -21,6 +21,7 @@ def build_budget_ledger(
         model=settings.MODEL_TEXT,
         token_limit=settings.LLM_TOKEN_LIMIT,
         cost_limit_usd=settings.LLM_COST_LIMIT_USD,
+        call_limit=settings.LLM_CALL_LIMIT,
         max_output_tokens_per_call=settings.LLM_MAX_OUTPUT_TOKENS,
         input_per_million_usd=settings.LLM_INPUT_PER_MILLION_USD,
         cached_input_per_million_usd=settings.LLM_CACHED_INPUT_PER_MILLION_USD,

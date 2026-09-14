@@ -132,6 +132,7 @@ class RunManifest(BaseModel):
     llm_budget_path: str | None = None
     llm_token_limit: int = Field(default=0, ge=0)
     llm_cost_limit_usd: float = Field(default=0, ge=0)
+    llm_call_limit: int = Field(default=0, ge=0)
     llm_input_tokens: int = Field(default=0, ge=0)
     llm_cached_input_tokens: int = Field(default=0, ge=0)
     llm_output_tokens: int = Field(default=0, ge=0)
@@ -163,8 +164,15 @@ class RunManifest(BaseModel):
             raise ValueError("Total LLM deve ser entrada + saída.")
         if self.llm_cached_input_tokens > self.llm_input_tokens:
             raise ValueError("Entrada em cache não pode superar a entrada LLM.")
-        if (self.llm_token_limit == 0) != (self.llm_cost_limit_usd == 0):
-            raise ValueError("Limites de tokens e custo devem ser ativados juntos.")
+        enabled_limits = (
+            self.llm_token_limit > 0,
+            self.llm_cost_limit_usd > 0,
+            self.llm_call_limit > 0,
+        )
+        if len(set(enabled_limits)) != 1:
+            raise ValueError(
+                "Limites de tokens, custo e chamadas devem ser ativados juntos."
+            )
         if not self.llm_token_limit and (
             self.llm_total_tokens or self.llm_cost_usd or self.llm_started_calls
         ):
