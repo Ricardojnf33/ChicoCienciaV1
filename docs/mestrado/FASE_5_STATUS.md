@@ -96,7 +96,7 @@ setuptools 80.10.2. O runner usou backend Docker e a imagem
 `sha256:fdf396b11a76a89680a64179d35b3fefc6b6e7241742ec57decaa99a95bbf41a`.
 
 Localmente, com telemetrias OpenTelemetry e ONNX Runtime explicitamente
-desativadas, Ruff passou e `pytest -q` registrou 82 testes aprovados e quatro testes
+desativadas, Ruff passou e `pytest -q` registrou 90 testes aprovados e quatro testes
 live desmarcados. Além da B0, os testes cobrem reserva e rejeição pré-transporte,
 contabilização por chamada, timeout, metadados ausentes, retomada do journal,
 sincronização com manifesto, autorização do smoke, recusa de mais de uma chamada,
@@ -121,6 +121,24 @@ Um ensaio CLI em diretório temporário executou B1, A e A0 nas seis identidades
 plano e terminou com seis estados `SUCCEEDED`, seeds 11/11/23/23/37/37 e consumo
 agregado igual a zero chamadas, zero tokens e US$ 0. Os scores sintéticos do mock
 não são dados piloto e não serão usados na dissertação.
+
+## Workflow dos seis pilotos preparado
+
+O workflow `Phase 5 six-pilot campaign` aceita apenas `workflow_dispatch` e exige
+branch, primeira execução, primeira tentativa e a autorização literal
+`I_AUTHORIZE_SIX_PILOT_RUNS`. Um preflight zero-call antecede a matriz fechada. Os
+seis jobs usam `max-parallel: 1`, ledger próprio, runner isolado e timeout duro de
+15 minutos no passo experimental. A saída bruta da Crew foi desativada nos logs.
+
+Cada job publica um bundle independente mesmo em falha e verifica se a credencial
+foi persistida. O job final roda com `always()`, baixa os seis bundles e recusa
+artefatos ausentes, identidades ou modos divergentes, limites inconsistentes,
+journal diferente do manifesto, reserva ativa e totais acima dos tetos. Em sucesso,
+produz `pilot-campaign-report.json` e `pilot-checksums.json`.
+
+O ensaio local reproduziu a topologia da matriz com seis processos mock separados,
+seguido pelo agregador: seis runs aprovados, 19 hashes SHA-256 e consumo LLM zero.
+O workflow ainda não foi despachado e ainda não está disponível na `main`.
 
 ## Identidade e limites da campanha
 
@@ -164,14 +182,16 @@ preflight verde foi o run
 
 ## Gates pendentes
 
-1. Criar o workflow live com um job por piloto, preflight zero-call, timeout duro de
-   15 minutos por run e agregação fail-closed dos seis artefatos.
-2. Revalidar o teto global de 144 chamadas, 240.000 tokens e US$ 0,18 antes do
+1. Publicar o workflow na branch da Fase 5 e obter CI/preflight remotos verdes sem
+   despachá-lo.
+2. Integrar em PR separada somente o dispatcher inerte à `main`, condição necessária
+   para que o GitHub apresente o botão manual.
+3. Revalidar o teto global de 144 chamadas, 240.000 tokens e US$ 0,18 antes do
    despacho.
-3. Obter autorização separada antes de executar os seis pilotos.
-4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+4. Obter autorização separada antes de executar os seis pilotos.
+5. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-5. Executar B0 e a matriz principal apenas depois do congelamento.
+6. Executar B0 e a matriz principal apenas depois do congelamento.
 
 ## Ativação do dispatcher concluída
 

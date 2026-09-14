@@ -148,6 +148,15 @@ encaminhada também ao parâmetro do modelo e à instrução do código experime
 O ensaio terminou com seis runs mock aprovados e consumo LLM zero; seus valores
 sintéticos não constituem dados científicos.
 
+O executor foi então separado em `run-pilot`, adequado a um job de matriz, e
+`aggregate-pilots`, que reconcilia os seis bundles sem receber a credencial. O
+workflow manual preparado exige primeira execução/tentativa, branch da Fase 5 e a
+autorização literal antes do environment. O preflight antecede os jobs; a matriz
+usa `max-parallel: 1` e timeout de 15 minutos por execução; o agregador roda mesmo
+após falha para tornar artefatos ausentes observáveis. Um ensaio com seis processos
+mock independentes terminou em PASS, gerou 19 checksums e registrou zero chamadas,
+tokens e custo. O workflow não foi despachado.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -155,7 +164,6 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Construir o workflow live dos pilotos com preflight zero-call, isolamento, um job
-por run, timeout duro de 15 minutos e agregador fail-closed. Validá-lo sem despachar
-a API e então apresentar ao responsável o escopo fechado de seis runs. Os pilotos
-exigem autorização separada e não foram iniciados.
+Publicar e validar remotamente o workflow sem despachá-lo. Depois, integrar somente
+o dispatcher inerte à `main` por PR separada e reapresentar ao responsável o escopo
+fechado de seis runs. Os pilotos exigem autorização separada e não foram iniciados.

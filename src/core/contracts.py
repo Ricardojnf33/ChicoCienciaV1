@@ -121,6 +121,10 @@ class RunManifest(BaseModel):
     schema_version: Literal["1.0"] = "1.0"
     run_id: str = Field(min_length=1)
     objective_path: str = Field(min_length=1)
+    objective_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    campaign_plan_sha256: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$"
+    )
     primary_metric: str = Field(min_length=1)
     variant: VariantName = "A"
     budget: int = Field(default=0, ge=0)

@@ -45,6 +45,27 @@ def _existing_tree_path(out_dir: str, run_id: str) -> Path:
     return current if current.is_file() else legacy
 
 
+def _pilot_crew_factory(plan):
+    from src.crews.ai_scientist_v2 import build_crew
+
+    def configured(spec, budget_path: Path):
+        settings = Settings(
+            MODEL_TEXT=plan.model_text,
+            MODEL_VISION=plan.model_vision,
+            LLM_TOKEN_LIMIT=spec.token_limit,
+            LLM_COST_LIMIT_USD=spec.cost_limit_usd,
+            LLM_CALL_LIMIT=spec.call_limit,
+            CREW_VERBOSE=False,
+        )
+        return build_crew(
+            settings,
+            budget_path=budget_path,
+            experiment_seed=spec.seed,
+        )
+
+    return configured
+
+
 @app.command()
 def init(
     objective: str,
@@ -290,25 +311,8 @@ def run_pilots_command(
 
     crew_factory = None
     if mode is ExecutionMode.LIVE:
-        from src.crews.ai_scientist_v2 import build_crew
-
         plan = load_campaign_plan(campaign_plan)
-
-        def configured_crew_factory(spec, budget_path: Path):
-            settings = Settings(
-                MODEL_TEXT=plan.model_text,
-                MODEL_VISION=plan.model_vision,
-                LLM_TOKEN_LIMIT=spec.token_limit,
-                LLM_COST_LIMIT_USD=spec.cost_limit_usd,
-                LLM_CALL_LIMIT=spec.call_limit,
-            )
-            return build_crew(
-                settings,
-                budget_path=budget_path,
-                experiment_seed=spec.seed,
-            )
-
-        crew_factory = configured_crew_factory
+        crew_factory = _pilot_crew_factory(plan)
     aggregate, path = run_pilot_campaign(
         campaign_plan,
         output_root,
@@ -320,6 +324,59 @@ def run_pilots_command(
         f"Pilotos {aggregate.status}; runs={len(aggregate.runs)}; "
         f"chamadas={aggregate.api_calls_started}; tokens={aggregate.total_tokens}; "
         f"custo=US${aggregate.cost_usd:.8f}; manifesto={path}"
+    )
+
+
+@app.command("run-pilot")
+def run_pilot_command(
+    campaign_plan: str,
+    run_id: str,
+    output_root: str = "runs/pilots",
+    mode: ExecutionMode = ExecutionMode.MOCK,
+    authorization: Optional[str] = None,
+):
+    """Executa/retoma um único piloto da matriz fechada."""
+    from src.processes.pilot_process import run_pilot
+
+    crew_factory = None
+    if mode is ExecutionMode.LIVE:
+        crew_factory = _pilot_crew_factory(load_campaign_plan(campaign_plan))
+    record, path = run_pilot(
+        campaign_plan,
+        run_id,
+        output_root,
+        mode=mode,
+        authorization=authorization,
+        crew_factory=crew_factory,
+    )
+    typer.echo(
+        f"Piloto {record.run_id} {record.status}; chamadas={record.llm_started_calls}; "
+        f"tokens={record.llm_total_tokens}; custo=US${record.llm_cost_usd:.8f}; "
+        f"registro={path}"
+    )
+
+
+@app.command("aggregate-pilots")
+def aggregate_pilots_command(
+    campaign_plan: str,
+    campaign_dir: str,
+    output: str,
+    mode: ExecutionMode = ExecutionMode.MOCK,
+):
+    """Valida e agrega os seis bundles produzidos independentemente."""
+    from src.processes.pilot_process import aggregate_pilot_artifacts
+
+    aggregate, report, checksums = aggregate_pilot_artifacts(
+        campaign_plan,
+        campaign_dir,
+        output,
+        mode=mode,
+    )
+    typer.echo(
+        f"Agregação {aggregate.status}; runs={len(aggregate.runs)}; "
+        f"chamadas={aggregate.api_calls_started}; tokens={aggregate.total_tokens}; "
+        f"custo=US${aggregate.cost_usd:.8f}; relatório={report}; "
+        f"checksums={checksums}"
     )
 
 @app.command()

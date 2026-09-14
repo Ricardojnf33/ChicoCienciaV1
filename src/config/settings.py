@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     HUMAN_IN_LOOP: bool = False
     WANDB_ON: bool = False
     WANDB_PROJECT: str = "ChicoCienciaV1"
+    CREW_VERBOSE: bool = False
 
     # Semantic Scholar rate limiting
     SEMANTIC_SCHOLAR_RATE_LIMIT: float = 1.1

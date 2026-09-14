@@ -80,7 +80,7 @@ def build_crew(
         agents=agents,
         process=Process.hierarchical,
         manager_agent=manager,
-        verbose=True,
+        verbose=resolved.CREW_VERBOSE,
     )
     object.__setattr__(crew, "_chico_llm_budget", ledger)
     return crew

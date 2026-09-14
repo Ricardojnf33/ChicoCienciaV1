@@ -1,11 +1,17 @@
 from collections import Counter
+import json
 
 import pytest
 
 from src.core.campaign import build_campaign_plan, write_campaign_plan
 from src.core.contracts import load_manifest
 from src.processes.ats_process import ExecutionMode
-from src.processes.pilot_process import PilotCampaignManifest, run_pilot_campaign
+from src.processes.pilot_process import (
+    PilotCampaignManifest,
+    aggregate_pilot_artifacts,
+    run_pilot,
+    run_pilot_campaign,
+)
 
 
 def _plan(tmp_path):
@@ -74,6 +80,29 @@ def test_live_pilots_refuse_missing_separate_authorization_before_factory(tmp_pa
     assert factory_called is False
 
 
+def test_single_live_pilot_refuses_missing_authorization_before_factory(tmp_path):
+    plan, plan_path = _plan(tmp_path)
+    selected = next(run for run in plan.runs if run.kind == "pilot")
+    factory_called = False
+
+    def forbidden_factory(spec, budget_path):
+        nonlocal factory_called
+        factory_called = True
+        raise AssertionError("factory não deveria ser chamada")
+
+    with pytest.raises(PermissionError, match="autorização literal separada"):
+        run_pilot(
+            plan_path,
+            selected.run_id,
+            tmp_path / "pilots",
+            mode=ExecutionMode.LIVE,
+            authorization="NOT_AUTHORIZED",
+            crew_factory=forbidden_factory,
+        )
+
+    assert factory_called is False
+
+
 def test_resume_refuses_changed_campaign_plan(tmp_path):
     plan, plan_path = _plan(tmp_path)
     output = tmp_path / "pilots"
@@ -94,3 +123,58 @@ def test_aggregate_refuses_consumption_above_global_cap(tmp_path):
 
     with pytest.raises(ValueError, match="teto de chamadas"):
         PilotCampaignManifest.model_validate(payload)
+
+
+def test_single_pilot_runner_executes_only_selected_identity_and_resumes(tmp_path):
+    plan, plan_path = _plan(tmp_path)
+    selected = next(run for run in plan.runs if run.kind == "pilot")
+    output = tmp_path / "matrix"
+
+    first, record_path = run_pilot(plan_path, selected.run_id, output)
+    attempts = load_manifest(first.manifest_path).attempts
+    second, second_path = run_pilot(plan_path, selected.run_id, output)
+
+    assert first.status == second.status == "SUCCEEDED"
+    assert record_path == second_path
+    assert load_manifest(second.manifest_path).attempts == attempts
+    campaign_dir = output / plan.campaign_id
+    assert sorted(path.name for path in campaign_dir.iterdir()) == [selected.run_id]
+
+
+def test_aggregator_validates_six_independent_bundles_and_writes_checksums(tmp_path):
+    plan, plan_path = _plan(tmp_path)
+    output = tmp_path / "matrix"
+    for spec in plan.runs:
+        if spec.kind == "pilot":
+            run_pilot(plan_path, spec.run_id, output)
+    campaign_dir = output / plan.campaign_id
+
+    aggregate, report, checksums = aggregate_pilot_artifacts(
+        plan_path,
+        campaign_dir,
+        campaign_dir / "pilot-campaign-report.json",
+        mode=ExecutionMode.MOCK,
+    )
+
+    assert aggregate.status == "SUCCEEDED"
+    assert aggregate.api_calls_started == aggregate.total_tokens == 0
+    assert aggregate.cost_usd == 0
+    assert report.is_file() and checksums.is_file()
+    checksum_payload = json.loads(checksums.read_text())
+    assert len(checksum_payload) == 19
+    assert all(len(value) == 64 for value in checksum_payload.values())
+
+
+def test_aggregator_fails_closed_when_one_bundle_is_missing(tmp_path):
+    plan, plan_path = _plan(tmp_path)
+    output = tmp_path / "matrix"
+    selected = next(run for run in plan.runs if run.kind == "pilot")
+    run_pilot(plan_path, selected.run_id, output)
+
+    with pytest.raises(FileNotFoundError, match="Artefato piloto ausente"):
+        aggregate_pilot_artifacts(
+            plan_path,
+            output / plan.campaign_id,
+            output / "report.json",
+            mode=ExecutionMode.MOCK,
+        )

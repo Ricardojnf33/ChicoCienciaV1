@@ -23,6 +23,12 @@ local e encaminhá-la ao parâmetro `seed` do provedor. O código experimental d
 usar a mesma seed em partições e estimadores aplicáveis. Divergência entre a seed
 solicitada e a persistida torna a retomada inválida.
 
+Os pilotos serão executados em matriz fechada e sequencial, um job por identidade.
+Cada job terá ledger independente e timeout duro de 15 minutos. Um agregador sem
+acesso ao secret exigirá os seis bundles, reconciliará journal e manifesto e
+calculará checksums antes de aceitar o lote. Falha ou ausência de qualquer bundle
+invalida o lote inteiro; não haverá repetição automática.
+
 Antes da coleta principal, farei seis runs piloto, dois por condição generativa, distribuídos entre Iris e Wine. Eles servirão para estimar viabilidade e ajustar limites. Seus dados serão excluídos da comparação principal. O protocolo será congelado em commit após o piloto. Qualquer ajuste posterior será registrado como desvio; não se escolherá uma configuração em função de favorecer A.
 
 ### 8 1 1 Execução automatizada das condições generativas
