@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from typer.testing import CliRunner
+from typer.main import get_command
 
 from src.cli import app
 
@@ -51,7 +51,7 @@ def test_pilot_workflow_preflights_scans_secrets_and_always_aggregates():
 
 
 def test_aggregate_cli_exposes_mode_as_named_option():
-    result = CliRunner().invoke(app, ["aggregate-pilots", "--help"])
+    command = get_command(app).commands["aggregate-pilots"]
+    parameter = next(item for item in command.params if item.name == "mode")
 
-    assert result.exit_code == 0
-    assert "--mode" in result.output
+    assert "--mode" in parameter.opts

@@ -157,6 +157,22 @@ após falha para tornar artefatos ausentes observáveis. Um ensaio com seis proc
 mock independentes terminou em PASS, gerou 19 checksums e registrou zero chamadas,
 tokens e custo. O workflow não foi despachado.
 
+A preparação foi publicada na branch da Fase 5 no commit remoto
+`84e77fe5bf2e13e249e3e086372b7911b4d3d81c`. O preflight protegido
+[34909994055](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34909994055)
+passou sem acessar a API. As CIs de branch
+[34909993965](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34909993965)
+e da PR
+[34909997947](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34909997947)
+encontraram uma única falha após 89 aprovações e quatro desmarcações: o teste da
+opção `--mode` dependia da saída Rich de `--help`, que varia conforme largura e
+capacidades do terminal. O contrato real da CLI e o workflow não falharam. O teste
+foi corrigido para inspecionar diretamente os parâmetros Typer/Click, sem depender
+da apresentação do terminal. Após a correção, o gate local voltou a registrar 90
+testes aprovados, quatro testes live desmarcados, Ruff aprovado e lock válido.
+Nenhum workflow de piloto foi despachado e nenhuma chamada OpenAI ocorreu nessa
+correção.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
