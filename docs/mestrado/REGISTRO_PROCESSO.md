@@ -217,6 +217,24 @@ permanece consumido e não deve ser reexecutado. A correção reserva somente o 
 número 2, primeira tentativa, e exige republicação Base64 do plano com conferência
 do blob Git antes de nova autorização.
 
+A recuperação foi publicada com correspondência exata entre todos os blobs locais
+e remotos; o plano passou a apontar para
+`e1f2138831a7eb3c2ab144a98f586d3e65c7ece5`. A CI de push
+[34982320599](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982320599),
+a CI da PR #7
+[34982327631](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982327631)
+e o preflight protegido
+[34982320606](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982320606)
+passaram. A PR unitária
+[#10](https://github.com/Ricardojnf33/ChicoCienciaV1/pull/10) atualizou o dispatcher
+da `main`, passou nas CIs de push
+[34982733031](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982733031)
+e de PR
+[34982804866](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982804866),
+foi mesclada em `4ba97396dcc02aa53d2da4a3365c463df313ce5d` e passou na CI pós-merge
+[34982993230](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982993230).
+O histórico ainda contém somente o run número 1; o run número 2 não foi iniciado.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -224,6 +242,5 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Publicar o plano restaurado e o dispatcher limitado ao run número 2, validar os
-gates remotos sem executar pilotos e somente então reapresentar a autorização ao
-responsável. Os pilotos não foram iniciados.
+Obter nova confirmação explícita do responsável antes do segundo e último dispatch
+permitido. Os pilotos não foram iniciados.

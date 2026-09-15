@@ -186,6 +186,22 @@ artefato de preflight gerou uma anotação secundária, pois o arquivo ainda nã
 sido produzido. A recuperação reserva exclusivamente o `run_number == 2`, mantém
 `run_attempt == 1` e republica o plano com verificação do blob Git.
 
+O plano foi republicado byte a byte no blob
+`e1f2138831a7eb3c2ab144a98f586d3e65c7ece5`. A correção passou na CI de push
+[34982320599](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982320599),
+na CI da PR #7
+[34982327631](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982327631)
+e no preflight protegido
+[34982320606](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982320606).
+A PR de recuperação
+[#10](https://github.com/Ricardojnf33/ChicoCienciaV1/pull/10), com somente o
+dispatcher, passou nas CIs
+[34982733031](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982733031)
+e [34982804866](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982804866),
+foi integrada em `4ba97396dcc02aa53d2da4a3365c463df313ce5d` e passou na CI pós-merge
+[34982993230](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982993230).
+O histórico permanece com apenas o run número 1, falho e zero-call.
+
 ## Identidade e limites da campanha
 
 | Item | Valor |
@@ -228,12 +244,10 @@ preflight verde foi o run
 
 ## Gates seguintes
 
-1. Publicar o plano restaurado e o dispatcher restrito ao run número 2; validar CI
-   e preflight sem executar pilotos.
-2. Obter nova confirmação explícita antes do segundo e último dispatch permitido.
-3. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+1. Obter nova confirmação explícita antes do segundo e último dispatch permitido.
+2. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-4. Executar B0 e a matriz principal apenas depois do congelamento.
+3. Executar B0 e a matriz principal apenas depois do congelamento.
 
 ## Ativação do dispatcher do smoke concluída
 
