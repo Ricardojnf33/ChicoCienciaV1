@@ -317,4 +317,639 @@
       "objective_path": "objectives/wine.yaml",
       "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
       "uses_llm": true,
-      "tãÍ¸¶‰ËkºwµçKˆÂˆœ[—ÚYˆ›XZ[‹MLKXK]Ú[™K\ÌŒÈ‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆLKˆ˜ÛÛ™][ÛˆˆH‹ˆ™]\Ù]ˆÚ[™H‹ˆœÙYYˆŒËˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËİÚ[™KX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒ™™˜˜MÌÌXMØÌXÙYY™ŒLØ™M™MÙÎMNŒMÙNMÍŒLLÎXŒ‹ˆ\Ù\×ÛHˆYKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒËˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹ML‹XŒ]Ú[™K\ÍLH‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆL‹ˆ˜ÛÛ™][ÛˆˆŒ‹ˆ™]\Ù]ˆÚ[™H‹ˆœÙYYˆLKˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËİÚ[™KX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒ™™˜˜MÌÌXMØÌXÙYY™ŒLØ™M™MÙÎMNŒMÙNMÍŒLLÎXŒ‹ˆ\Ù\×ÛHˆ˜[ÙKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MLËXLZ\š\Ë\ÌÍÈ‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆLËˆ˜ÛÛ™][ÛˆˆL‹ˆ™]\Ù]ˆš\š\È‹ˆœÙYYˆÍËˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËÚ\š\ËX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒÎŒŒŒX˜L˜MMLŒÌNLŒŒÙLYÌMØØXÌMMYYMXNXMMLÈ‹ˆ\Ù\×ÛHˆYKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒËˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MMXKYYÚ]Ë\ÌLH‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆMˆ˜ÛÛ™][ÛˆˆH‹ˆ™]\Ù]ˆ™YÚ]È‹ˆœÙYYˆLKˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËÙYÚ]ËX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒÙYMŒ™ŒXMÎLM™LMÙMM™MXLLÌNNMÍÍXYMÍ™ÍMŒØNŒŒŒYXY‹ˆ\Ù\×ÛHˆYKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒËˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MMKXŒKZ\š\Ë\ÌŒÈ‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆMKˆ˜ÛÛ™][ÛˆˆŒH‹ˆ™]\Ù]ˆš\š\È‹ˆœÙYYˆŒËˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËÚ\š\ËX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒÎŒŒŒX˜L˜MMLŒÌNLŒŒÙLYÌMØØXÌMMYYMXNXMMLÈ‹ˆ\Ù\×ÛHˆYKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒËˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MM‹XŒ]Ú[™K\ÌÍÈ‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆM‹ˆ˜ÛÛ™][ÛˆˆŒ‹ˆ™]\Ù]ˆÚ[™H‹ˆœÙYYˆÍËˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËİÚ[™KX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒ™™˜˜MÌÌXMØÌXÙYY™ŒLØ™M™MÙÎMNŒMÙNMÍŒLLÎXŒ‹ˆ\Ù\×ÛHˆ˜[ÙKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MMËXŒZ\š\Ë\ÌLH‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆMËˆ˜ÛÛ™][ÛˆˆŒ‹ˆ™]\Ù]ˆš\š\È‹ˆœÙYYˆLKˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËÚ\š\ËX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒÎŒŒŒX˜L˜MMLŒÌNLŒŒÙLYÌMØØXÌMMYYMXNXMMLÈ‹ˆ\Ù\×ÛHˆ˜[ÙKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MNXL]Ú[™K\ÌLH‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆNˆ˜ÛÛ™][ÛˆˆL‹ˆ™]\Ù]ˆÚ[™H‹ˆœÙYYˆLKˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËİÚ[™KX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒ™™˜˜MÌÌXMØÌXÙYY™ŒLØ™M™MÙÎMNŒMÙNMÍŒLLÎXŒ‹ˆ\Ù\×ÛHˆYKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒËˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MNKXK]Ú[™K\ÍÌH‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆNKˆ˜ÛÛ™][ÛˆˆH‹ˆ™]\Ù]ˆÚ[™H‹ˆœÙYYˆÌKˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËİÚ[™KX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒ™™˜˜MÌÌXMØÌXÙYY™ŒLØ™M™MÙÎMNŒMÙNMÍŒLLÎXŒ‹ˆ\Ù\×ÛHˆYKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒËˆ˜Ø[Û[Z]ˆˆKˆÂˆœ[—ÚYˆ›XZ[‹MŒXLYYÚ]Ë\ÌÍÈ‹ˆšÚ[™ˆ›XZ[ˆ‹ˆœÙ\]Y[˜ÙHˆŒˆ˜ÛÛ™][ÛˆˆL‹ˆ™]\Ù]ˆ™YÚ]È‹ˆœÙYYˆÍËˆ›Øš™Xİ]™WÜ]ˆ›Øš™Xİ]™\ËÙYÚ]ËX[[‹ˆ›Øš™Xİ]™WÜÚLMˆˆŒÙYMŒ™ŒXMÎLM™LMÙMM™MXLLÌNNMÍÍXYMÍ™ÍMŒØNŒŒŒYXY‹ˆ\Ù\×ÛHˆYKˆÚÙ[—Û[Z]ˆˆ˜ÛÜİÛ[Z]İ\ÙˆŒËˆ˜Ø[Û[Z]ˆˆBˆBŸ
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-16-a0-digits-s23",
+      "kind": "main",
+      "sequence": 16,
+      "condition": "A0",
+      "dataset": "digits",
+      "seed": 23,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-17-a0-wine-s51",
+      "kind": "main",
+      "sequence": 17,
+      "condition": "A0",
+      "dataset": "wine",
+      "seed": 51,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-18-a0-wine-s71",
+      "kind": "main",
+      "sequence": 18,
+      "condition": "A0",
+      "dataset": "wine",
+      "seed": 71,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-19-b0-digits-s23",
+      "kind": "main",
+      "sequence": 19,
+      "condition": "B0",
+      "dataset": "digits",
+      "seed": 23,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-20-b1-iris-s11",
+      "kind": "main",
+      "sequence": 20,
+      "condition": "B1",
+      "dataset": "iris",
+      "seed": 11,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-21-a-digits-s23",
+      "kind": "main",
+      "sequence": 21,
+      "condition": "A",
+      "dataset": "digits",
+      "seed": 23,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-22-b0-digits-s71",
+      "kind": "main",
+      "sequence": 22,
+      "condition": "B0",
+      "dataset": "digits",
+      "seed": 71,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-23-b0-iris-s51",
+      "kind": "main",
+      "sequence": 23,
+      "condition": "B0",
+      "dataset": "iris",
+      "seed": 51,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-24-a-iris-s71",
+      "kind": "main",
+      "sequence": 24,
+      "condition": "A",
+      "dataset": "iris",
+      "seed": 71,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-25-b0-iris-s23",
+      "kind": "main",
+      "sequence": 25,
+      "condition": "B0",
+      "dataset": "iris",
+      "seed": 23,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-26-b1-iris-s51",
+      "kind": "main",
+      "sequence": 26,
+      "condition": "B1",
+      "dataset": "iris",
+      "seed": 51,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-27-b1-digits-s51",
+      "kind": "main",
+      "sequence": 27,
+      "condition": "B1",
+      "dataset": "digits",
+      "seed": 51,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-28-a-wine-s37",
+      "kind": "main",
+      "sequence": 28,
+      "condition": "A",
+      "dataset": "wine",
+      "seed": 37,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-29-b1-wine-s23",
+      "kind": "main",
+      "sequence": 29,
+      "condition": "B1",
+      "dataset": "wine",
+      "seed": 23,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-30-a-digits-s71",
+      "kind": "main",
+      "sequence": 30,
+      "condition": "A",
+      "dataset": "digits",
+      "seed": 71,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-31-b0-digits-s11",
+      "kind": "main",
+      "sequence": 31,
+      "condition": "B0",
+      "dataset": "digits",
+      "seed": 11,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-32-a-digits-s37",
+      "kind": "main",
+      "sequence": 32,
+      "condition": "A",
+      "dataset": "digits",
+      "seed": 37,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-33-a0-iris-s11",
+      "kind": "main",
+      "sequence": 33,
+      "condition": "A0",
+      "dataset": "iris",
+      "seed": 11,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-34-b1-wine-s37",
+      "kind": "main",
+      "sequence": 34,
+      "condition": "B1",
+      "dataset": "wine",
+      "seed": 37,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-35-b1-digits-s37",
+      "kind": "main",
+      "sequence": 35,
+      "condition": "B1",
+      "dataset": "digits",
+      "seed": 37,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-36-b0-digits-s37",
+      "kind": "main",
+      "sequence": 36,
+      "condition": "B0",
+      "dataset": "digits",
+      "seed": 37,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-37-a0-digits-s11",
+      "kind": "main",
+      "sequence": 37,
+      "condition": "A0",
+      "dataset": "digits",
+      "seed": 11,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-38-a-wine-s51",
+      "kind": "main",
+      "sequence": 38,
+      "condition": "A",
+      "dataset": "wine",
+      "seed": 51,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-39-b1-wine-s71",
+      "kind": "main",
+      "sequence": 39,
+      "condition": "B1",
+      "dataset": "wine",
+      "seed": 71,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-40-a0-iris-s23",
+      "kind": "main",
+      "sequence": 40,
+      "condition": "A0",
+      "dataset": "iris",
+      "seed": 23,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-41-b0-wine-s23",
+      "kind": "main",
+      "sequence": 41,
+      "condition": "B0",
+      "dataset": "wine",
+      "seed": 23,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-42-a0-wine-s23",
+      "kind": "main",
+      "sequence": 42,
+      "condition": "A0",
+      "dataset": "wine",
+      "seed": 23,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-43-a-digits-s51",
+      "kind": "main",
+      "sequence": 43,
+      "condition": "A",
+      "dataset": "digits",
+      "seed": 51,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-44-a0-digits-s71",
+      "kind": "main",
+      "sequence": 44,
+      "condition": "A0",
+      "dataset": "digits",
+      "seed": 71,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-45-b1-iris-s71",
+      "kind": "main",
+      "sequence": 45,
+      "condition": "B1",
+      "dataset": "iris",
+      "seed": 71,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-46-b0-wine-s71",
+      "kind": "main",
+      "sequence": 46,
+      "condition": "B0",
+      "dataset": "wine",
+      "seed": 71,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-47-b0-iris-s37",
+      "kind": "main",
+      "sequence": 47,
+      "condition": "B0",
+      "dataset": "iris",
+      "seed": 37,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-48-b0-iris-s71",
+      "kind": "main",
+      "sequence": 48,
+      "condition": "B0",
+      "dataset": "iris",
+      "seed": 71,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-49-a0-wine-s37",
+      "kind": "main",
+      "sequence": 49,
+      "condition": "A0",
+      "dataset": "wine",
+      "seed": 37,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-50-b0-wine-s11",
+      "kind": "main",
+      "sequence": 50,
+      "condition": "B0",
+      "dataset": "wine",
+      "seed": 11,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-51-a-wine-s23",
+      "kind": "main",
+      "sequence": 51,
+      "condition": "A",
+      "dataset": "wine",
+      "seed": 23,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-52-b0-wine-s51",
+      "kind": "main",
+      "sequence": 52,
+      "condition": "B0",
+      "dataset": "wine",
+      "seed": 51,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-53-a0-iris-s37",
+      "kind": "main",
+      "sequence": 53,
+      "condition": "A0",
+      "dataset": "iris",
+      "seed": 37,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-54-a-digits-s11",
+      "kind": "main",
+      "sequence": 54,
+      "condition": "A",
+      "dataset": "digits",
+      "seed": 11,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-55-b1-iris-s23",
+      "kind": "main",
+      "sequence": 55,
+      "condition": "B1",
+      "dataset": "iris",
+      "seed": 23,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-56-b0-wine-s37",
+      "kind": "main",
+      "sequence": 56,
+      "condition": "B0",
+      "dataset": "wine",
+      "seed": 37,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-57-b0-iris-s11",
+      "kind": "main",
+      "sequence": 57,
+      "condition": "B0",
+      "dataset": "iris",
+      "seed": 11,
+      "objective_path": "objectives/iris.yaml",
+      "objective_sha256": "0078b221ba0b8fa54e200f71926063e1d8717cac29495edda4aa889a469464e3",
+      "uses_llm": false,
+      "token_limit": 0,
+      "cost_limit_usd": 0.0,
+      "call_limit": 0
+    },
+    {
+      "run_id": "main-58-a0-wine-s11",
+      "kind": "main",
+      "sequence": 58,
+      "condition": "A0",
+      "dataset": "wine",
+      "seed": 11,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-59-a-wine-s71",
+      "kind": "main",
+      "sequence": 59,
+      "condition": "A",
+      "dataset": "wine",
+      "seed": 71,
+      "objective_path": "objectives/wine.yaml",
+      "objective_sha256": "2ffba70c1a67c1cd4edad6d610cbe44bf4e467dc9580f2657e8e74f108539b60",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    },
+    {
+      "run_id": "main-60-a0-digits-s37",
+      "kind": "main",
+      "sequence": 60,
+      "condition": "A0",
+      "dataset": "digits",
+      "seed": 37,
+      "objective_path": "objectives/digits.yaml",
+      "objective_sha256": "3dee40822f1a79084816e17e56da5a0e31997741ade468c6d74163a8b221d5ad",
+      "uses_llm": true,
+      "token_limit": 40000,
+      "cost_limit_usd": 0.03,
+      "call_limit": 24
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 from typer.main import get_command
@@ -8,16 +9,31 @@ from src.cli import app
 WORKFLOW = (
     Path(__file__).parents[1] / ".github/workflows/phase5-pilots.yml"
 ).read_text()
+CAMPAIGN_PLAN = (
+    Path(__file__).parents[1]
+    / "docs/mestrado/evidencias/phase5-campaign-plan.json"
+)
+CAMPAIGN_PLAN_SHA256 = (
+    "eaac40d89cb3206ec27138bd43580a1b5ab6c9c824ff4bc70595d2a4d8badea4"
+)
 
 
 def test_pilot_workflow_is_manual_single_use_and_branch_restricted():
     assert "workflow_dispatch:" in WORKFLOW
     assert "push:" not in WORKFLOW
     assert "github.ref == 'refs/heads/feat/mestrado-fase-5'" in WORKFLOW
-    assert "github.run_number == 1" in WORKFLOW
+    assert "github.run_number == 2" in WORKFLOW
+    assert "github.run_number == 1" not in WORKFLOW
     assert "github.run_attempt == 1" in WORKFLOW
     assert "inputs.authorization == 'I_AUTHORIZE_SIX_PILOT_RUNS'" in WORKFLOW
     assert "cancel-in-progress: false" in WORKFLOW
+
+
+def test_pilot_workflow_pins_exact_campaign_plan_bytes():
+    actual_sha256 = hashlib.sha256(CAMPAIGN_PLAN.read_bytes()).hexdigest()
+
+    assert actual_sha256 == CAMPAIGN_PLAN_SHA256
+    assert f"CAMPAIGN_PLAN_SHA256: {CAMPAIGN_PLAN_SHA256}" in WORKFLOW
 
 
 def test_pilot_matrix_is_closed_sequential_and_hard_limited():

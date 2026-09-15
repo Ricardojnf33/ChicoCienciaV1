@@ -205,6 +205,18 @@ quatro live foram desmarcados, Ruff passou e o lock permaneceu válido. As falha
 intermediárias foram de integridade do ambiente e cache do tokenizador, anteriores
 à execução da Crew. Não houve dispatch ou chamada OpenAI.
 
+Após a autorização literal, o primeiro dispatch dos seis pilotos, run
+[34980482902](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34980482902),
+falhou em 12 segundos no primeiro gate de identidade. O SHA-256 do plano presente
+na branch remota divergia do valor congelado; a inspeção do blob confirmou bytes
+inválidos introduzidos na publicação anterior pela API Git. Nenhuma dependência foi
+instalada, a Crew não foi construída, os jobs `pilots` e `aggregate` foram
+desmarcados e nenhuma chamada OpenAI ocorreu. A anotação de artefato ausente foi
+secundária: o preflight não havia chegado a produzir o arquivo. O run número 1
+permanece consumido e não deve ser reexecutado. A correção reserva somente o run
+número 2, primeira tentativa, e exige republicação Base64 do plano com conferência
+do blob Git antes de nova autorização.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -212,5 +224,6 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Reapresentar a autorização separada ao responsável, com o escopo e os limites já
-revalidados. Os pilotos não foram iniciados.
+Publicar o plano restaurado e o dispatcher limitado ao run número 2, validar os
+gates remotos sem executar pilotos e somente então reapresentar a autorização ao
+responsável. Os pilotos não foram iniciados.

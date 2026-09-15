@@ -175,6 +175,17 @@ foi reconstruído em Python 3.11.16 a partir do lockfile; após pré-carregar so
 a tabela pública de tokenização, a validação terminou com 90 testes aprovados,
 quatro live desmarcados, Ruff aprovado e lock válido. Não houve chamada OpenAI.
 
+Após a autorização, o primeiro dispatch
+[34980482902](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34980482902)
+foi interrompido em 12 segundos no passo inicial de identidade. O blob remoto do
+plano não correspondia ao SHA-256 congelado e continha bytes inválidos, apesar de o
+arquivo local permanecer íntegro. O runner recusou o plano antes de instalar
+dependências, executar o preflight lógico ou construir a Crew. Os jobs dos seis
+pilotos e da agregação foram desmarcados; chamadas OpenAI: zero. A ausência do
+artefato de preflight gerou uma anotação secundária, pois o arquivo ainda não havia
+sido produzido. A recuperação reserva exclusivamente o `run_number == 2`, mantém
+`run_attempt == 1` e republica o plano com verificação do blob Git.
+
 ## Identidade e limites da campanha
 
 | Item | Valor |
@@ -217,10 +228,12 @@ preflight verde foi o run
 
 ## Gates seguintes
 
-1. Obter autorização separada antes de executar os seis pilotos.
-2. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+1. Publicar o plano restaurado e o dispatcher restrito ao run número 2; validar CI
+   e preflight sem executar pilotos.
+2. Obter nova confirmação explícita antes do segundo e último dispatch permitido.
+3. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-3. Executar B0 e a matriz principal apenas depois do congelamento.
+4. Executar B0 e a matriz principal apenas depois do congelamento.
 
 ## Ativação do dispatcher do smoke concluída
 
