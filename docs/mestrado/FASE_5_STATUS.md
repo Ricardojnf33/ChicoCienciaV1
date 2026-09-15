@@ -138,7 +138,22 @@ produz `pilot-campaign-report.json` e `pilot-checksums.json`.
 
 O ensaio local reproduziu a topologia da matriz com seis processos mock separados,
 seguido pelo agregador: seis runs aprovados, 19 hashes SHA-256 e consumo LLM zero.
-O workflow ainda não foi despachado e ainda não está disponível na `main`.
+O workflow foi publicado na branch da Fase 5, mas ainda não foi despachado nem está
+disponível na `main`.
+
+O primeiro commit remoto dessa preparação,
+`84e77fe5bf2e13e249e3e086372b7911b4d3d81c`, passou no preflight protegido
+[34909994055](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34909994055).
+As CIs detectaram uma dependência indevida do teste de `--help` em relação à
+renderização Rich do terminal. O contrato da CLI foi mantido e o teste passou a
+inspecionar diretamente os parâmetros Typer/Click. A correção remota
+`6e0d3d7a814fd0166f8e532bdb9e483903bb5298` passou na CI de push
+[34956663122](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956663122),
+na CI da PR
+[34956665985](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956665985)
+e no preflight protegido
+[34956663106](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956663106).
+Nenhum desses checks executou os pilotos ou chamou a OpenAI.
 
 ## Identidade e limites da campanha
 
@@ -180,20 +195,18 @@ fallback de container resolveu o bloqueio sem remover isolamento; o primeiro
 preflight verde foi o run
 [34640925508](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34640925508).
 
-## Gates pendentes
+## Gates seguintes
 
-1. Publicar o workflow na branch da Fase 5 e obter CI/preflight remotos verdes sem
-   despachá-lo.
-2. Integrar em PR separada somente o dispatcher inerte à `main`, condição necessária
+1. Integrar em PR separada somente o dispatcher inerte à `main`, condição necessária
    para que o GitHub apresente o botão manual.
-3. Revalidar o teto global de 144 chamadas, 240.000 tokens e US$ 0,18 antes do
+2. Revalidar o teto global de 144 chamadas, 240.000 tokens e US$ 0,18 antes do
    despacho.
-4. Obter autorização separada antes de executar os seis pilotos.
-5. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+3. Obter autorização separada antes de executar os seis pilotos.
+4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-6. Executar B0 e a matriz principal apenas depois do congelamento.
+5. Executar B0 e a matriz principal apenas depois do congelamento.
 
-## Ativação do dispatcher concluída
+## Ativação do dispatcher do smoke concluída
 
 Em 13/09/2026, as PRs #2 a #6 foram integradas à `main` mediante revalidação por
 fase. A PR #8 foi então atualizada sobre a nova baseline, passou na CI de push

@@ -173,6 +173,16 @@ testes aprovados, quatro testes live desmarcados, Ruff aprovado e lock válido.
 Nenhum workflow de piloto foi despachado e nenhuma chamada OpenAI ocorreu nessa
 correção.
 
+A correção foi publicada no commit remoto
+`6e0d3d7a814fd0166f8e532bdb9e483903bb5298`. A CI de push
+[34956663122](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956663122),
+a CI da PR
+[34956665985](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956665985)
+e o preflight protegido
+[34956663106](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956663106)
+terminaram em PASS. Assim, a publicação e a validação remota do executor e do
+workflow dos seis pilotos foram concluídas sem dispatch e com consumo LLM zero.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -180,6 +190,6 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Publicar e validar remotamente o workflow sem despachá-lo. Depois, integrar somente
-o dispatcher inerte à `main` por PR separada e reapresentar ao responsável o escopo
-fechado de seis runs. Os pilotos exigem autorização separada e não foram iniciados.
+Integrar somente o dispatcher inerte à `main` por PR separada e reapresentar ao
+responsável o escopo fechado de seis runs. Os pilotos exigem autorização separada
+e não foram iniciados.
