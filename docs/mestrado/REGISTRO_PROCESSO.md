@@ -183,6 +183,28 @@ e o preflight protegido
 terminaram em PASS. Assim, a publicação e a validação remota do executor e do
 workflow dos seis pilotos foram concluídas sem dispatch e com consumo LLM zero.
 
+Em seguida, a PR separada
+[#9](https://github.com/Ricardojnf33/ChicoCienciaV1/pull/9) foi criada a partir da
+`main` com somente `.github/workflows/phase5-pilots.yml`. As CIs de push
+[34957322305](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957322305)
+e da PR
+[34957357810](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957357810)
+passaram. Após confirmação do diff unitário, ela foi mesclada em
+`1f92ce2180c6e7ae27de9eed76a2c2d5e995b117`; a CI pós-merge
+[34957492480](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957492480)
+também passou. O dispatcher tornou-se visível na branch padrão, mas permaneceu com
+zero execuções. A integração não constituiu autorização e não consumiu a API.
+
+O gate pré-autorização recalculou o arquivo da campanha e confirmou seis pilotos,
+144 chamadas, 240.000 tokens, US$ 0,18 e 5.400 segundos sequenciais. O hash do
+arquivo permaneceu idêntico ao valor fixado no workflow. Durante a verificação, o
+workspace reciclou o interpretador do `.venv`; o ambiente local foi preservado e
+reconstruído em Python 3.11.16 a partir do lockfile. Depois de carregar no cache
+transitório apenas a tabela pública `o200k_base` do tokenizador, 90 testes passaram,
+quatro live foram desmarcados, Ruff passou e o lock permaneceu válido. As falhas
+intermediárias foram de integridade do ambiente e cache do tokenizador, anteriores
+à execução da Crew. Não houve dispatch ou chamada OpenAI.
+
 O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
 dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
@@ -190,6 +212,5 @@ os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
 ## Próxima ação
 
-Integrar somente o dispatcher inerte à `main` por PR separada e reapresentar ao
-responsável o escopo fechado de seis runs. Os pilotos exigem autorização separada
-e não foram iniciados.
+Reapresentar a autorização separada ao responsável, com o escopo e os limites já
+revalidados. Os pilotos não foram iniciados.

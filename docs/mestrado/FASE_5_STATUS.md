@@ -155,6 +155,26 @@ e no preflight protegido
 [34956663106](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956663106).
 Nenhum desses checks executou os pilotos ou chamou a OpenAI.
 
+A PR separada
+[#9](https://github.com/Ricardojnf33/ChicoCienciaV1/pull/9) adicionou somente esse
+dispatcher à `main`. Suas CIs de push
+[34957322305](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957322305)
+e de PR
+[34957357810](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957357810)
+passaram. O merge `1f92ce2180c6e7ae27de9eed76a2c2d5e995b117` também passou na CI
+pós-integração
+[34957492480](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957492480).
+O histórico do workflow permaneceu com zero dispatches após o merge.
+
+O gate posterior recalculou o plano antes de qualquer autorização: seis identidades
+piloto, 144 chamadas, 240.000 tokens, US$ 0,18 e 5.400 segundos sequenciais. O
+SHA-256 recalculado permaneceu
+`eaac40d89cb3206ec27138bd43580a1b5ab6c9c824ff4bc70595d2a4d8badea4`, idêntico
+ao valor fixado no dispatcher. O ambiente virtual local, reciclado pelo workspace,
+foi reconstruído em Python 3.11.16 a partir do lockfile; após pré-carregar somente
+a tabela pública de tokenização, a validação terminou com 90 testes aprovados,
+quatro live desmarcados, Ruff aprovado e lock válido. Não houve chamada OpenAI.
+
 ## Identidade e limites da campanha
 
 | Item | Valor |
@@ -197,14 +217,10 @@ preflight verde foi o run
 
 ## Gates seguintes
 
-1. Integrar em PR separada somente o dispatcher inerte à `main`, condição necessária
-   para que o GitHub apresente o botão manual.
-2. Revalidar o teto global de 144 chamadas, 240.000 tokens e US$ 0,18 antes do
-   despacho.
-3. Obter autorização separada antes de executar os seis pilotos.
-4. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
+1. Obter autorização separada antes de executar os seis pilotos.
+2. Analisar os pilotos, registrar eventuais ajustes e congelar prompts, versões,
    protocolo e plano por commit.
-5. Executar B0 e a matriz principal apenas depois do congelamento.
+3. Executar B0 e a matriz principal apenas depois do congelamento.
 
 ## Ativação do dispatcher do smoke concluída
 
