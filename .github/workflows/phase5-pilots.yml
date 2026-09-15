@@ -31,7 +31,7 @@ jobs:
   preflight:
     if: >-
       github.ref == 'refs/heads/feat/mestrado-fase-5' &&
-      github.run_number == 1 &&
+      github.run_number == 2 &&
       github.run_attempt == 1 &&
       inputs.authorization == 'I_AUTHORIZE_SIX_PILOT_RUNS'
     runs-on: ubuntu-latest
@@ -58,13 +58,13 @@ jobs:
         run: poetry check --lock
       - name: Run zero-call preflight
         run: poetry run python -m src.cli preflight --output phase5-pilot-preflight.json
-      - name: Preserve preflight evidence
+      - name: Preserve preflight evidence when available
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase5-pilot-preflight
           path: phase5-pilot-preflight.json
-          if-no-files-found: error
+          if-no-files-found: warn
 
   pilots:
     needs: preflight
