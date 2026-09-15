@@ -1,0 +1,165 @@
+name: Phase 5 six-pilot campaign
+
+on:
+  workflow_dispatch:
+    inputs:
+      authorization:
+        description: "Type I_AUTHORIZE_SIX_PILOT_RUNS after reviewing the pilot gate"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase5-six-pilot-campaign
+  cancel-in-progress: false
+
+env:
+  CAMPAIGN_PLAN: docs/mestrado/evidencias/phase5-campaign-plan.json
+  CAMPAIGN_PLAN_SHA256: eaac40d89cb3206ec27138bd43580a1b5ab6c9c824ff4bc70595d2a4d8badea4
+  CAMPAIGN_ID: phase5-draft-v1
+  CHICO_RUNNER_IMAGE: chico-science-runner:phase5
+  MODEL_TEXT: gpt-4o-mini-2024-07-18
+  MODEL_VISION: gpt-4o-mini-2024-07-18
+  WANDB_ON: "false"
+  CREW_VERBOSE: "false"
+  OTEL_SDK_DISABLED: "true"
+  ORT_DISABLE_TELEMETRY: "1"
+
+jobs:
+  preflight:
+    if: >-
+      github.ref == 'refs/heads/feat/mestrado-fase-5' &&
+      github.run_number == 1 &&
+      github.run_attempt == 1 &&
+      inputs.authorization == 'I_AUTHORIZE_SIX_PILOT_RUNS'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: phase5-pilot
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Verify frozen draft identity
+        run: echo "$CAMPAIGN_PLAN_SHA256  $CAMPAIGN_PLAN" | sha256sum --check --strict
+      - name: Install runner prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes bubblewrap util-linux
+      - name: Build pinned experiment runner
+        run: docker build --tag "$CHICO_RUNNER_IMAGE" --file docker/runner.Dockerfile .
+      - name: Install Poetry
+        run: pip install poetry==2.2.1
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Validate lock
+        run: poetry check --lock
+      - name: Run zero-call preflight
+        run: poetry run python -m src.cli preflight --output phase5-pilot-preflight.json
+      - name: Preserve preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase5-pilot-preflight
+          path: phase5-pilot-preflight.json
+          if-no-files-found: error
+
+  pilots:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: phase5-pilot
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        run_id:
+          - pilot-01-b1-iris-s11
+          - pilot-02-a-wine-s11
+          - pilot-03-a0-iris-s23
+          - pilot-04-b1-wine-s23
+          - pilot-05-a-iris-s37
+          - pilot-06-a0-wine-s37
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Verify campaign identity
+        run: echo "$CAMPAIGN_PLAN_SHA256  $CAMPAIGN_PLAN" | sha256sum --check --strict
+      - name: Install runner prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes bubblewrap util-linux
+      - name: Build pinned experiment runner
+        run: docker build --tag "$CHICO_RUNNER_IMAGE" --file docker/runner.Dockerfile .
+      - name: Install Poetry
+        run: pip install poetry==2.2.1
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Execute one authorized pilot with hard timeout
+        timeout-minutes: 15
+        run: >-
+          poetry run python -m src.cli run-pilot
+          "$CAMPAIGN_PLAN"
+          "${{ matrix.run_id }}"
+          --output-root runs/pilots
+          --mode live
+          --authorization "${{ inputs.authorization }}"
+      - name: Reject secret persistence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_dir="runs/pilots/$CAMPAIGN_ID/${{ matrix.run_id }}"
+          if [ -d "$run_dir" ] && grep -R --fixed-strings --quiet -- "$OPENAI_API_KEY" "$run_dir"; then
+            echo "::error::OpenAI credential found in pilot artifacts"
+            exit 1
+          fi
+      - name: Preserve independent pilot bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.run_id }}
+          path: runs/pilots/${{ env.CAMPAIGN_ID }}/${{ matrix.run_id }}
+          if-no-files-found: warn
+
+  aggregate:
+    needs: [preflight, pilots]
+    if: >-
+      always() &&
+      needs.preflight.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install Poetry
+        run: pip install poetry==2.2.1
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Download six independent bundles
+        uses: actions/download-artifact@v5
+        with:
+          pattern: pilot-*
+          path: runs/pilots/${{ env.CAMPAIGN_ID }}
+      - name: Aggregate and validate all pilot evidence
+        run: >-
+          poetry run python -m src.cli aggregate-pilots
+          "$CAMPAIGN_PLAN"
+          "runs/pilots/$CAMPAIGN_ID"
+          pilot-campaign-report.json
+          --mode live
+      - name: Preserve aggregate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase5-pilot-campaign-report
+          path: |
+            pilot-campaign-report.json
+            pilot-checksums.json
+          if-no-files-found: warn
