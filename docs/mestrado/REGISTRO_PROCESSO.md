@@ -333,3 +333,16 @@ reinterpretada como autorização do run 5. A publicação de um novo gate foi
 interrompida, mantendo o sistema inerte. O trabalho somente continuará após a
 autorização literal `I_AUTHORIZE_PHASE5_RECOVERY_RUN5`.
 
+## Run 5 autorizado e preparado
+
+A autorização `I_AUTHORIZE_PHASE5_RECOVERY_RUN5` permitiu rearmar o gate sem
+reinterpretar a autorização anterior. O dispatcher foi atualizado em
+`6a5fca44efcf11b87d186e305c7f60a19b5f3ec3` e seu teste de contrato em
+`cb89e70d6fde4d9f487c7dcfe68b65f6a3a4acf8`.
+
+A CI [35047113023](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047113023)
+e o preflight
+[35047113037](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047113037)
+passaram sem executar pilotos ou acessar a API. O run 5 está apto a um único
+despacho manual, mantendo as duas chamadas anteriores no teto agregado.
+
