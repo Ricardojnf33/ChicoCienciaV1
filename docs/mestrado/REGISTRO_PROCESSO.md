@@ -319,3 +319,17 @@ continuam contabilizados. O run 4 permanece não iniciado e deverá ser disparad
 uma única vez, manualmente, na branch da Fase 5. Reexecuções dos runs 2 e 3
 continuam proibidas.
 
+## Gate consumido do run 4
+
+A auditoria final do histórico identificou que o run
+[35046059553](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35046059553)
+já havia consumido `run_number == 4` no commit
+`34b5cc3798059a56320e46c2aaea1af340663279`. O dispatcher então vigente
+aceitava somente o run 3; por isso o evento foi integralmente `skipped` em dois
+segundos. Não houve job de piloto nem chamada OpenAI.
+
+Como números de run não são reutilizáveis, a autorização do run 4 não foi
+reinterpretada como autorização do run 5. A publicação de um novo gate foi
+interrompida, mantendo o sistema inerte. O trabalho somente continuará após a
+autorização literal `I_AUTHORIZE_PHASE5_RECOVERY_RUN5`.
+
