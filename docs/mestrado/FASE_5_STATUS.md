@@ -361,3 +361,36 @@ de run 4 foi publicado ou autorizado. A próxima etapa exige revisão explícita
 novo modelo de recuperação: iniciar manifests e árvores limpos para os pilotos 01
 e 02, importar somente seus journals para preservar as duas chamadas já cobradas
 e manter o teto total original de 144 chamadas.
+
+## Recuperação run 4 — autorizada e pronta para despacho
+
+A autorização literal `I_AUTHORIZE_PHASE5_RECOVERY_RUN4` foi recebida. O
+dispatcher foi publicado no commit
+`f9b99d96eca8cf60cc4841a8e23e1d7a26d79f01` e seu contrato automatizado foi
+consolidado nos commits
+`6b94b3b1e150dcb65d90edd12e6ae5a557798f12` e
+`588000277f56fbaafe690a615dc69d6e379a4259`.
+
+O run 4 aceita apenas a branch `feat/mestrado-fase-5`, `run_number == 4`,
+`run_attempt == 1` e a autorização exata. A matriz contém as seis identidades,
+usa `max-parallel: 1` e `fail-fast: true`. Para os pilotos 01 e 02, somente
+`llm-budget.json` é restaurado a partir do run
+[35044828531](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044828531);
+árvore, manifesto, banco e tentativas começam limpos. Os pilotos 03 a 06 começam
+sem checkpoint. O fallback conservador de contabilização está explicitamente
+ativado por `LLM_RECOVER_MISSING_USAGE=true`.
+
+Esse desenho preserva as duas chamadas já consumidas: os pilotos 01 e 02 dispõem
+de até 23 novas chamadas cada, e os pilotos 03 a 06 de até 24 cada. Assim, o teto
+cumulativo original permanece em 144 chamadas, 240.000 tokens e US$ 0,18. Nenhuma
+chamada foi realizada durante a publicação ou validação.
+
+A CI
+[35046474015](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35046474015)
+e o preflight protegido
+[35046473848](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35046473848)
+terminaram em PASS sobre o commit `588000277f56fbaafe690a615dc69d6e379a4259`.
+O run 4 ainda não foi despachado. Não devem ser usados `Re-run jobs` nos runs 2
+ou 3; a única operação permitida é um novo despacho manual do workflow com a
+autorização acima.
+
