@@ -394,3 +394,19 @@ O run 4 ainda não foi despachado. Não devem ser usados `Re-run jobs` nos runs 
 ou 3; a única operação permitida é um novo despacho manual do workflow com a
 autorização acima.
 
+### Errata operacional: número 4 já consumido
+
+A consulta final do histórico revelou o dispatch
+[35046059553](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35046059553),
+criado em 16/09/2026 às 01:56:49 UTC sobre o commit
+`34b5cc3798059a56320e46c2aaea1af340663279`. Ele recebeu `run_number == 4`,
+mas terminou como `skipped` em dois segundos porque o dispatcher antigo ainda
+aceitava somente o run 3. Nenhum job de piloto foi executado e nenhuma chamada
+OpenAI ocorreu.
+
+O número 4 não pode ser reutilizado pelo GitHub Actions. Por segurança, a tentativa
+de rearmar o dispatcher para o run 5 foi bloqueada porque a autorização recebida
+nomeava explicitamente o run 4. O próximo incremento depende de nova autorização
+literal `I_AUTHORIZE_PHASE5_RECOVERY_RUN5`. Até recebê-la, o workflow permanece
+inerte e nenhum novo dispatch deve ser realizado.
+
