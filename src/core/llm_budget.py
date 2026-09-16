@@ -81,6 +81,7 @@ class LLMBudgetLedger:
         cached_input_per_million_usd: float,
         output_per_million_usd: float,
         journal_path: str | Path | None = None,
+        recover_missing_usage_stop: bool = False,
     ):
         if (
             token_limit < 1
@@ -111,7 +112,10 @@ class LLMBudgetLedger:
         self.cost_usd = 0.0
         self.stop_reason: str | None = None
         if self.journal_path and self.journal_path.is_file():
-            self._restore(self.journal_path)
+            self._restore(
+                self.journal_path,
+                recover_missing_usage_stop=recover_missing_usage_stop,
+            )
 
     def _cost(self, input_tokens: int, output_tokens: int, cached_tokens: int = 0) -> float:
         uncached_tokens = input_tokens - cached_tokens
@@ -209,6 +213,33 @@ class LLMBudgetLedger:
             if exceeded:
                 raise BudgetExceeded(self.stop_reason)
 
+    def complete_estimated(self, call_id: str, *, output_tokens: int) -> None:
+        """Use the reserved input and tokenized response when provider usage is absent."""
+        with self._lock:
+            reservation = self._reservations.pop(call_id, None)
+            if reservation is None:
+                raise ValueError(f"Chamada sem reserva ativa: {call_id}.")
+            bounded_output = min(max(int(output_tokens), 0), reservation.output_tokens)
+            input_tokens = reservation.input_tokens
+            cost = self._cost(input_tokens, bounded_output)
+            self.input_tokens += input_tokens
+            self.output_tokens += bounded_output
+            self.cost_usd += cost
+            self.completed_calls += 1
+            self._calls.append(
+                LLMCallUsage(
+                    call_id=call_id,
+                    status="unaccounted",
+                    input_tokens=input_tokens,
+                    cached_input_tokens=0,
+                    output_tokens=bounded_output,
+                    total_tokens=input_tokens + bounded_output,
+                    cost_usd=cost,
+                    error="MissingUsageMetadataEstimated",
+                )
+            )
+            self._persist()
+
     def complete_unaccounted(self, call_id: str) -> None:
         """Charge the full reservation when the provider omits usage metadata."""
         with self._lock:
@@ -286,7 +317,12 @@ class LLMBudgetLedger:
         if self.journal_path:
             atomic_write_text(self.journal_path, self.snapshot().model_dump_json(indent=2))
 
-    def _restore(self, path: Path) -> None:
+    def _restore(
+        self,
+        path: Path,
+        *,
+        recover_missing_usage_stop: bool = False,
+    ) -> None:
         previous = LLMBudgetSnapshot.model_validate_json(path.read_text())
         identity = (
             previous.model,
@@ -321,6 +357,14 @@ class LLMBudgetLedger:
         self.output_tokens = previous.output_tokens
         self.cost_usd = previous.cost_usd
         self.stop_reason = previous.stop_reason
+        if (
+            recover_missing_usage_stop
+            and self.stop_reason
+            == "Resposta sem metadados de uso; reserva integral contabilizada."
+            and previous.reserved_tokens == 0
+            and previous.reserved_cost_usd == 0
+        ):
+            self.stop_reason = None
         self._calls = list(previous.calls)
 
 
@@ -357,8 +401,15 @@ class BudgetCallbackHandler(BaseCallbackHandler):
         try:
             usage = _response_usage(response)
         except RuntimeError:
-            self.ledger.complete_unaccounted(str(run_id))
-            raise
+            estimated_output = _response_text_tokens(response, self.encoding)
+            if estimated_output is None:
+                self.ledger.complete_unaccounted(str(run_id))
+                raise
+            self.ledger.complete_estimated(
+                str(run_id),
+                output_tokens=estimated_output,
+            )
+            return
         self.ledger.complete(
             str(run_id),
             input_tokens=usage["input_tokens"],
@@ -378,7 +429,11 @@ def _response_usage(response: Any) -> dict[str, int]:
     usage = output.get("token_usage") or output.get("usage") or {}
     if not usage:
         try:
-            usage = response.generations[0][0].message.usage_metadata or {}
+            message = response.generations[0][0].message
+            usage = message.usage_metadata or {}
+            if not usage:
+                metadata = getattr(message, "response_metadata", {}) or {}
+                usage = metadata.get("token_usage") or metadata.get("usage") or {}
         except (AttributeError, IndexError, TypeError):
             usage = {}
     input_tokens = usage.get("prompt_tokens", usage.get("input_tokens"))
@@ -396,3 +451,26 @@ def _response_usage(response: Any) -> dict[str, int]:
         "output_tokens": int(output_tokens),
         "cached_input_tokens": int(cached or 0),
     }
+
+
+
+def _response_text_tokens(response: Any, encoding: Any) -> int | None:
+    """Count returned text when LangChain omits provider usage metadata."""
+    generations = getattr(response, "generations", None)
+    if not generations:
+        return None
+    pieces: list[str] = []
+    for batch in generations:
+        items = batch if isinstance(batch, (list, tuple)) else [batch]
+        for generation in items:
+            text = getattr(generation, "text", None)
+            if not isinstance(text, str):
+                message = getattr(generation, "message", None)
+                text = getattr(message, "content", None)
+            if isinstance(text, str):
+                pieces.append(text)
+            elif text is not None:
+                pieces.append(json.dumps(text, sort_keys=True, ensure_ascii=False))
+    if not pieces:
+        return None
+    return sum(len(encoding.encode(piece)) for piece in pieces)
