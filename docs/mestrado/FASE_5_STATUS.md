@@ -311,3 +311,53 @@ A recuperação exige a nova autorização literal
 `I_AUTHORIZE_PHASE5_RECOVERY_RUN3`, além de branch, `run_number == 3` e
 `run_attempt == 1`. Até nova autorização, o dispatcher não deve ser executado nem
 reexecutado.
+
+
+## Run 3 — segunda falha controlada e revisão do contrato live
+
+O recovery run
+[35044828531](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044828531)
+passou no preflight, restaurou corretamente o artefato anterior e manteve o
+consumo do piloto 01. A retomada recusou continuar porque o nó já possuía três
+tentativas registradas. O piloto 02 iniciou uma única chamada e reproduziu a
+falha; os pilotos 03 a 06 foram cancelados pelo `fail-fast`.
+
+A inspeção conjunta dos logs e artefatos mostrou que a falha não era apenas a
+declaração inicial de `tools`. CrewAI 0.51.1 adiciona ferramentas de delegação ao
+manager no primeiro `kickoff`; reutilizar a mesma Crew na tentativa seguinte
+mantém essa mutação e viola o próprio gate do framework. Também foi confirmado que
+o resultado textual da Crew era descartado enquanto o executor esperava
+`code.py` no filesystem. Por fim, o callback não encontrou metadados de uso no
+formato retornado pela integração e aplicou corretamente o fail-closed após a
+primeira chamada.
+
+O artefato do piloto 02, ID `10427215077`, digest
+`sha256:a646c362eb333e522dbe7c5e70b51cebb43187c6620b4092fe8d8b370bee5b54`,
+registrou uma chamada, 2.829 tokens e US$ 0,00134595. O piloto 01 não iniciou nova
+chamada no run 3. O consumo piloto acumulado permanece em duas chamadas, 5.658
+tokens e US$ 0,00269190. Nenhum piloto foi concluído e nenhum dado pode ser usado
+como resultado científico.
+
+As correções seguintes foram publicadas sem chamadas externas:
+
+- `d7cefafba93c093890de66027f796dcc3e1a1aa3`: leitura adicional de metadata e
+  contabilização conservadora por tokenização da resposta quando usage estiver
+  ausente;
+- `843c0f138a03f52c8abba839fcfd2efc0f07108b` e
+  `908195ec036f6428aa8c4e66b1e3d81bc0ec679f`: recuperação do bloqueio legado
+  somente sob configuração explícita;
+- `3d5e903452a86e4d10b40e08d6144e83caf54102`: limpeza das ferramentas
+  transitórias antes do kickoff e materialização atômica do código retornado;
+- `230346dc45400f5d52031e228bdc232f8535f91e` e
+  `5b37a2b7abc27d28418a2200c3a899e667ecbe3c`: testes de fallback, migração,
+  extração de código e reutilização do manager.
+
+A CI
+[35045553230](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35045553230)
+e o preflight
+[35045553274](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35045553274)
+passaram. O dispatcher permanece limitado ao run 3 já consumido. Nenhum workflow
+de run 4 foi publicado ou autorizado. A próxima etapa exige revisão explícita do
+novo modelo de recuperação: iniciar manifests e árvores limpos para os pilotos 01
+e 02, importar somente seus journals para preservar as duas chamadas já cobradas
+e manter o teto total original de 144 chamadas.
