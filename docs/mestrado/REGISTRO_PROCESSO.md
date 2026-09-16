@@ -266,8 +266,34 @@ e o preflight
 [35044299050](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044299050)
 passaram sem novas chamadas.
 
+## Run 3 e revisão estrutural do caminho live
+
+O run
+[35044828531](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044828531)
+passou no preflight. O piloto 01 preservou a chamada anterior e foi interrompido
+sem novo consumo por já possuir três tentativas. O piloto 02 iniciou uma chamada,
+registrou 2.829 tokens e US$ 0,00134595 e reproduziu a falha do manager; os demais
+foram cancelados. O acumulado dos pilotos é duas chamadas, 5.658 tokens e
+US$ 0,00269190, sem piloto concluído.
+
+A investigação confirmou três lacunas do contrato live: mutação das ferramentas
+de delegação do manager entre kickoffs, descarte do código retornado pela Crew e
+ausência de usage metadata no formato esperado. Elas foram corrigidas nos commits
+`d7cefafba93c093890de66027f796dcc3e1a1aa3`,
+`843c0f138a03f52c8abba839fcfd2efc0f07108b`,
+`908195ec036f6428aa8c4e66b1e3d81bc0ec679f` e
+`3d5e903452a86e4d10b40e08d6144e83caf54102`, com regressões cobertas por
+`230346dc45400f5d52031e228bdc232f8535f91e` e
+`5b37a2b7abc27d28418a2200c3a899e667ecbe3c`. A CI
+[35045553230](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35045553230)
+e o preflight
+[35045553274](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35045553274)
+passaram sem novas chamadas.
+
 ## Próxima ação
 
-Não usar `Re-run jobs` no run 2. Após revisão deste registro, obter autorização
-literal nova — `I_AUTHORIZE_PHASE5_RECOVERY_RUN3` — e despachar uma única vez o
-workflow na branch `feat/mestrado-fase-5`.
+Não usar `Re-run jobs` nos runs 2 ou 3. O dispatcher continua fechado no run 3
+já consumido. Antes de publicar um run 4, revisar e autorizar explicitamente a
+recuperação que importará somente os journals dos pilotos 01 e 02 para preservar
+as duas chamadas anteriores, reiniciando manifests e árvores inválidos sem ampliar
+o teto total de 144 chamadas.
