@@ -240,7 +240,34 @@ dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
 implementação não serão apresentados como resultado científico. O detalhamento e
 os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
 
+## Incidente do segundo dispatch e correção do manager
+
+Em 16/09/2026, o run
+[35043495688](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35043495688)
+passou no preflight e iniciou apenas `pilot-01-b1-iris-s11`. O contrato do
+manager hierárquico falhou porque `build_manager` fornecia explicitamente
+`tools=[]`, proibido por CrewAI 0.51.1 para esse papel. O `fail-fast` cancelou
+os outros cinco pilotos e a agregação recusou corretamente a ausência dos bundles.
+
+A evidência preservada contabilizou uma chamada concluída, 2.829 tokens e
+US$ 0,00134595, sem falha de transporte e sem persistência da credencial. O
+incidente não produziu resultado científico. A correção e a proteção contra
+regressão foram publicadas nos commits
+`aeaba14775b086a16f87d54a58e70e49e63e031a` e
+`b9eaf14a77890b8d1f221739a4ab68300d370ad1`.
+
+A topologia de recuperação foi publicada em
+`fa79d5358ce571aa83dd149432e8fee23732f287` e validada pelo teste do commit
+`ba5a4706525ca2f945ae4d2ed0375a4c7f62fbcc`. Ela restaura o bundle do piloto
+01 a partir do artefato `10426096904`, preserva consumo e tentativas anteriores,
+retoma esse checkpoint e executa separadamente apenas os cinco pilotos inéditos.
+A CI [35044299063](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044299063)
+e o preflight
+[35044299050](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044299050)
+passaram sem novas chamadas.
+
 ## Próxima ação
 
-Obter nova confirmação explícita do responsável antes do segundo e último dispatch
-permitido. Os pilotos não foram iniciados.
+Não usar `Re-run jobs` no run 2. Após revisão deste registro, obter autorização
+literal nova — `I_AUTHORIZE_PHASE5_RECOVERY_RUN3` — e despachar uma única vez o
+workflow na branch `feat/mestrado-fase-5`.
