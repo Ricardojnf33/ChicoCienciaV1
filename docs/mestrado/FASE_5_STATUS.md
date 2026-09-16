@@ -1,11 +1,13 @@
 # Fase 5 — status da preparação empírica
 
-Estado: em andamento, atualizado em 14 de setembro de 2026. O preflight protegido
+Estado: em andamento, atualizado em 16 de setembro de 2026. O preflight protegido
 está verde, a matriz da campanha foi materializada, o baseline B0 foi implementado
 e o kill switch de tokens/custo está ativo no caminho live. O smoke autorizado foi
-executado uma única vez e aprovado. O protocolo permanece em rascunho
-(`protocol_frozen: false`), os pilotos não começaram e nenhum resultado principal
-foi coletado.
+executado uma única vez e aprovado. A segunda execução do dispatcher iniciou o
+primeiro piloto, preservou uma chamada real e interrompeu a matriz diante de uma
+incompatibilidade do manager hierárquico com CrewAI. O protocolo permanece em
+rascunho (`protocol_frozen: false`), nenhum piloto foi concluído e nenhum resultado
+principal foi coletado.
 
 ## Resultado deste incremento
 
@@ -265,3 +267,47 @@ autorização explícita do responsável.
 Em 14/09/2026, após a auditoria do único run, o workflow foi desabilitado
 manualmente no GitHub Actions. O repositório continua registrando exatamente um
 evento `workflow_dispatch`, run `34890553182`, tentativa 1, concluído com sucesso.
+
+
+## Incidente controlado do run 2 e preparação da recuperação
+
+O segundo dispatch autorizado,
+[35043495688](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35043495688),
+executou o preflight integralmente e iniciou somente
+`pilot-01-b1-iris-s11`. O job falhou ao construir a coordenação hierárquica com
+`Exception: Manager agent should not have tools`. A configuração
+`build_manager` passava explicitamente `tools=[]`; CrewAI 0.51.1 trata a
+presença desse campo no manager como violação de contrato. O `fail-fast`
+cancelou os outros cinco jobs antes da execução.
+
+O bundle `pilot-01-b1-iris-s11`, artefato ID `10426096904`, digest
+`sha256:061b04bd0515e583e77fd1c01d4fa2aa624b6532ac459b305b76acafd52035d9`,
+registrou uma chamada iniciada e concluída, zero falhas de transporte, 781 tokens
+de entrada, 2.048 de saída, 2.829 tokens totais e custo conservador de
+US$ 0,00134595. Como a resposta não continha metadados de uso, o ledger cobrou a
+reserva integral e rejeitou 49 reservas posteriores. A credencial permaneceu
+mascarada e a varredura de persistência passou. Esses dados são evidência de falha
+de integração e não resultado científico.
+
+A correção removeu a atribuição explícita de ferramentas do manager no commit
+`aeaba14775b086a16f87d54a58e70e49e63e031a`. O teste de regressão
+`b9eaf14a77890b8d1f221739a4ab68300d370ad1` verifica que
+`build_manager` mantém delegação sem fornecer o campo `tools`. A recuperação
+auditável foi preparada em
+`fa79d5358ce571aa83dd149432e8fee23732f287` e coberta em
+`ba5a4706525ca2f945ae4d2ed0375a4c7f62fbcc`.
+
+O run de recuperação número 3 não reinicia o piloto 01: ele baixa o bundle do run
+2, restaura `tree.json`, `manifest.json`, `run.db` e `llm-budget.json`, e
+retoma com a chamada e o custo anteriores preservados. Os cinco pilotos ainda não
+iniciados permanecem em matriz sequencial separada. O agregador somente aprova o
+conjunto quando os seis bundles estiverem presentes e coerentes. A CI de push
+[35044299063](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044299063)
+e o preflight protegido
+[35044299050](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35044299050)
+aprovaram essa topologia sem chamada OpenAI.
+
+A recuperação exige a nova autorização literal
+`I_AUTHORIZE_PHASE5_RECOVERY_RUN3`, além de branch, `run_number == 3` e
+`run_attempt == 1`. Até nova autorização, o dispatcher não deve ser executado nem
+reexecutado.
