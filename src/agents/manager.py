@@ -13,6 +13,5 @@ def build_manager(llm: Any) -> Agent:
         backstory="Gerente metódico, prioriza clareza, reprodutibilidade e ética.",
         allow_delegation=True,
         verbose=True,
-        tools=[],
         llm=llm,
     )
