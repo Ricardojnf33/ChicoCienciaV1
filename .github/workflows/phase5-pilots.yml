@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       authorization:
-        description: "Type I_AUTHORIZE_PHASE5_RECOVERY_RUN3 after reviewing run 35043495688"
+        description: "Type I_AUTHORIZE_PHASE5_RECOVERY_RUN4 after reviewing run 35044828531"
         required: true
         type: string
 
@@ -32,9 +32,9 @@ jobs:
   preflight:
     if: >-
       github.ref == 'refs/heads/feat/mestrado-fase-5' &&
-      github.run_number == 3 &&
+      github.run_number == 4 &&
       github.run_attempt == 1 &&
-      inputs.authorization == 'I_AUTHORIZE_PHASE5_RECOVERY_RUN3'
+      inputs.authorization == 'I_AUTHORIZE_PHASE5_RECOVERY_RUN4'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: phase5-pilot
@@ -67,64 +67,7 @@ jobs:
           path: phase5-pilot-preflight.json
           if-no-files-found: warn
 
-  recover_pilot_01:
-    needs: preflight
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    environment: phase5-pilot
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-      - name: Verify campaign identity
-        run: echo "$CAMPAIGN_PLAN_SHA256  $CAMPAIGN_PLAN" | sha256sum --check --strict
-      - name: Restore failed pilot checkpoint from run 2
-        uses: actions/download-artifact@v5
-        with:
-          name: pilot-01-b1-iris-s11
-          path: runs/pilots/${{ env.CAMPAIGN_ID }}/pilot-01-b1-iris-s11
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          run-id: 35043495688
-      - name: Install runner prerequisites
-        run: sudo apt-get update && sudo apt-get install --yes bubblewrap util-linux
-      - name: Build pinned experiment runner
-        run: docker build --tag "$CHICO_RUNNER_IMAGE" --file docker/runner.Dockerfile .
-      - name: Install Poetry
-        run: pip install poetry==2.2.1
-      - name: Install dependencies
-        run: poetry install --no-interaction
-      - name: Resume pilot 01 with prior consumption preserved
-        timeout-minutes: 15
-        run: >-
-          poetry run python -m src.cli run-pilot
-          "$CAMPAIGN_PLAN"
-          "pilot-01-b1-iris-s11"
-          --output-root runs/pilots
-          --mode live
-          --authorization "I_AUTHORIZE_SIX_PILOT_RUNS"
-      - name: Reject secret persistence
-        if: always()
-        shell: bash
-        run: |
-          set -euo pipefail
-          run_dir="runs/pilots/$CAMPAIGN_ID/pilot-01-b1-iris-s11"
-          if [ -d "$run_dir" ] && grep -R --fixed-strings --quiet -- "$OPENAI_API_KEY" "$run_dir"; then
-            echo "::error::OpenAI credential found in pilot artifacts"
-            exit 1
-          fi
-      - name: Preserve recovered pilot bundle
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pilot-01-b1-iris-s11
-          path: runs/pilots/${{ env.CAMPAIGN_ID }}/pilot-01-b1-iris-s11
-          if-no-files-found: warn
-
-  pilots_remaining:
+  pilots:
     needs: preflight
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -133,14 +76,22 @@ jobs:
       fail-fast: true
       max-parallel: 1
       matrix:
-        run_id:
-          - pilot-02-a-wine-s11
-          - pilot-03-a0-iris-s23
-          - pilot-04-b1-wine-s23
-          - pilot-05-a-iris-s37
-          - pilot-06-a0-wine-s37
+        include:
+          - run_id: pilot-01-b1-iris-s11
+            recover_ledger: true
+          - run_id: pilot-02-a-wine-s11
+            recover_ledger: true
+          - run_id: pilot-03-a0-iris-s23
+            recover_ledger: false
+          - run_id: pilot-04-b1-wine-s23
+            recover_ledger: false
+          - run_id: pilot-05-a-iris-s37
+            recover_ledger: false
+          - run_id: pilot-06-a0-wine-s37
+            recover_ledger: false
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      LLM_RECOVER_MISSING_USAGE: "true"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -148,6 +99,23 @@ jobs:
           python-version: "3.11"
       - name: Verify campaign identity
         run: echo "$CAMPAIGN_PLAN_SHA256  $CAMPAIGN_PLAN" | sha256sum --check --strict
+      - name: Restore prior ledger evidence
+        if: matrix.recover_ledger == true
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ matrix.run_id }}
+          path: recovery-source/${{ matrix.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: 35044828531
+      - name: Seed fresh run with prior accounting only
+        if: matrix.recover_ledger == true
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="runs/pilots/$CAMPAIGN_ID/${{ matrix.run_id }}"
+          mkdir -p "$target"
+          cp "recovery-source/${{ matrix.run_id }}/llm-budget.json" "$target/llm-budget.json"
       - name: Install runner prerequisites
         run: sudo apt-get update && sudo apt-get install --yes bubblewrap util-linux
       - name: Build pinned experiment runner
@@ -184,7 +152,7 @@ jobs:
           if-no-files-found: warn
 
   aggregate:
-    needs: [preflight, recover_pilot_01, pilots_remaining]
+    needs: [preflight, pilots]
     if: >-
       always() &&
       needs.preflight.result == 'success'
