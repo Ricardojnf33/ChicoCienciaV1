@@ -1,5 +1,6 @@
 import json
 import random
+import re
 import time
 from enum import Enum
 from pathlib import Path
@@ -9,6 +10,7 @@ from typing import Any
 import structlog
 
 from src.config.settings import Settings
+from src.core.atomic_io import atomic_write_text
 from src.core.contracts import (
     AttemptRecord,
     CanonicalResult,
@@ -134,6 +136,28 @@ def _mock_result(
     )
 
 
+def _reset_manager_delegation_tools(crew: Any) -> None:
+    """CrewAI mutates a hierarchical manager with delegation tools at kickoff."""
+    manager = getattr(crew, "manager_agent", None)
+    if manager is not None:
+        manager.tools = []
+
+
+def _extract_python_code(crew_output: Any) -> str:
+    raw = getattr(crew_output, "raw", crew_output)
+    if not isinstance(raw, str) or not raw.strip():
+        raise ValueError("Crew não retornou código Python textual.")
+    blocks = re.findall(
+        r"```(?:python|py)?\s*(.*?)```",
+        raw,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    code = max(blocks, key=len).strip() if blocks else raw.strip()
+    if not code:
+        raise ValueError("Crew retornou bloco Python vazio.")
+    return code + "\n"
+
+
 def _run_live_attempt(
     crew: Any,
     node,
@@ -168,14 +192,18 @@ def _run_live_attempt(
                     f"Implementar o plano do nó {node.id}. Salvar o código em {expected_code} "
                     f"e a métrica primária escalar no topo de {raw_result}. "
                     f"Usar a seed experimental {experiment_seed} em random, NumPy, "
-                    "partições e estimadores aplicáveis, e registrá-la no resultado."
+                    "partições e estimadores aplicáveis, e registrá-la no resultado. "
+                    f"O código deve gravar o JSON de métricas em {raw_result}. "
+                    "A resposta final deve conter somente um bloco Markdown ```python."
                 ),
-                expected_output="Código e raw_results.json nos caminhos declarados",
+                expected_output="Um único bloco Markdown com o código Python completo",
             ),
         ]
     )
     crew.tasks = tasks
-    crew.kickoff()
+    _reset_manager_delegation_tools(crew)
+    crew_output = crew.kickoff()
+    atomic_write_text(expected_code, _extract_python_code(crew_output))
     runner_result = PythonRunnerTool().run_script(
         str(expected_code),
         workdir=str(attempt_dir),
