@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       authorization:
-        description: "Type I_AUTHORIZE_PHASE5_RECOVERY_RUN4 after reviewing run 35044828531"
+        description: "Type I_AUTHORIZE_PHASE5_RECOVERY_RUN5 after reviewing run 35044828531"
         required: true
         type: string
 
@@ -32,9 +32,9 @@ jobs:
   preflight:
     if: >-
       github.ref == 'refs/heads/feat/mestrado-fase-5' &&
-      github.run_number == 4 &&
+      github.run_number == 5 &&
       github.run_attempt == 1 &&
-      inputs.authorization == 'I_AUTHORIZE_PHASE5_RECOVERY_RUN4'
+      inputs.authorization == 'I_AUTHORIZE_PHASE5_RECOVERY_RUN5'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: phase5-pilot
