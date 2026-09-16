@@ -22,13 +22,14 @@ def test_pilot_workflow_is_manual_single_use_and_branch_restricted():
     assert "workflow_dispatch:" in WORKFLOW
     assert "push:" not in WORKFLOW
     assert "github.ref == 'refs/heads/feat/mestrado-fase-5'" in WORKFLOW
-    assert "github.run_number == 4" in WORKFLOW
+    assert "github.run_number == 5" in WORKFLOW
+    assert "github.run_number == 4" not in WORKFLOW
     assert "github.run_number == 3" not in WORKFLOW
     assert "github.run_number == 2" not in WORKFLOW
     assert "github.run_number == 1" not in WORKFLOW
     assert "github.run_attempt == 1" in WORKFLOW
     assert (
-        "inputs.authorization == 'I_AUTHORIZE_PHASE5_RECOVERY_RUN4'"
+        "inputs.authorization == 'I_AUTHORIZE_PHASE5_RECOVERY_RUN5'"
         in WORKFLOW
     )
     assert "cancel-in-progress: false" in WORKFLOW
