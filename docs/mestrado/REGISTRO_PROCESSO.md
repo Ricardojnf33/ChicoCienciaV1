@@ -297,3 +297,25 @@ já consumido. Antes de publicar um run 4, revisar e autorizar explicitamente a
 recuperação que importará somente os journals dos pilotos 01 e 02 para preservar
 as duas chamadas anteriores, reiniciando manifests e árvores inválidos sem ampliar
 o teto total de 144 chamadas.
+
+## Recuperação run 4 publicada e autorizada
+
+A autorização `I_AUTHORIZE_PHASE5_RECOVERY_RUN4` foi registrada. O dispatcher
+`f9b99d96eca8cf60cc4841a8e23e1d7a26d79f01` implementa uma recuperação
+journal-only: importa somente os ledgers dos pilotos 01 e 02 do run 3 e cria novos
+manifestos, árvores, banco e estados de execução. Os demais quatro pilotos começam
+limpos. As seis identidades continuam sequenciais e fechadas por fail-fast.
+
+Os testes de contrato foram atualizados em
+`6b94b3b1e150dcb65d90edd12e6ae5a557798f12` e corrigidos em
+`588000277f56fbaafe690a615dc69d6e379a4259`. A CI
+[35046474015](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35046474015)
+e o preflight
+[35046473848](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35046473848)
+passaram. A preparação não chamou a OpenAI.
+
+O teto agregado não foi reiniciado: as duas chamadas e 5.658 tokens anteriores
+continuam contabilizados. O run 4 permanece não iniciado e deverá ser disparado
+uma única vez, manualmente, na branch da Fase 5. Reexecuções dos runs 2 e 3
+continuam proibidas.
+
