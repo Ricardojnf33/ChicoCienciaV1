@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     LLM_INPUT_PER_MILLION_USD: float = 0.15
     LLM_CACHED_INPUT_PER_MILLION_USD: float = 0.075
     LLM_OUTPUT_PER_MILLION_USD: float = 0.60
+    LLM_RECOVER_MISSING_USAGE: bool = False
 
     MAX_BRANCHING: int = 3
     MAX_DEPTH: int = 4
