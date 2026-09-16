@@ -410,3 +410,24 @@ nomeava explicitamente o run 4. O próximo incremento depende de nova autorizaç
 literal `I_AUTHORIZE_PHASE5_RECOVERY_RUN5`. Até recebê-la, o workflow permanece
 inerte e nenhum novo dispatch deve ser realizado.
 
+## Recuperação run 5 — autorização e gate concluídos
+
+A autorização literal `I_AUTHORIZE_PHASE5_RECOVERY_RUN5` foi recebida após o
+run 4 ter sido consumido sem execução. O dispatcher foi rearmado no commit
+`6a5fca44efcf11b87d186e305c7f60a19b5f3ec3` e o contrato automatizado foi
+fixado em `cb89e70d6fde4d9f487c7dcfe68b65f6a3a4acf8`.
+
+O workflow agora exige simultaneamente a branch `feat/mestrado-fase-5`,
+`run_number == 5`, `run_attempt == 1` e a autorização exata. A recuperação
+continua importando somente os journals dos pilotos 01 e 02 do run 3, mantendo
+novos manifests, árvores, banco e tentativas. As seis identidades permanecem
+sequenciais, com fail-fast e o teto cumulativo original preservado.
+
+A CI
+[35047113023](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047113023)
+e o preflight protegido
+[35047113037](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047113037)
+terminaram em PASS. Nenhum piloto foi executado e nenhuma chamada OpenAI ocorreu
+nessa preparação. O próximo evento permitido é um único despacho manual do run 5;
+não devem ser usados `Re-run jobs` nos runs anteriores.
+
