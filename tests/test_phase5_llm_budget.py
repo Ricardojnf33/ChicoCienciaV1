@@ -114,21 +114,54 @@ def test_failed_call_releases_reservation_without_claiming_usage(tmp_path):
     assert snapshot.calls[0].error == "TimeoutError"
 
 
-def test_missing_provider_usage_charges_full_reservation_and_stops(tmp_path):
+def test_missing_provider_usage_uses_tokenized_response_without_stopping(tmp_path):
     ledger = _ledger(tmp_path)
     callback = BudgetCallbackHandler(ledger)
     run_id = uuid4()
     callback.on_chat_model_start({}, [[HumanMessage(content="x")]], run_id=run_id)
-    reserved = ledger.snapshot().reserved_tokens
 
-    with pytest.raises(RuntimeError, match="sem contabilidade de tokens"):
-        callback.on_llm_end(SimpleNamespace(llm_output={}), run_id=run_id)
+    callback.on_llm_end(
+        SimpleNamespace(
+            llm_output={},
+            generations=[
+                [
+                    SimpleNamespace(
+                        text="resposta curta",
+                        message=SimpleNamespace(
+                            content="resposta curta",
+                            usage_metadata=None,
+                            response_metadata={},
+                        ),
+                    )
+                ]
+            ],
+        ),
+        run_id=run_id,
+    )
 
     snapshot = ledger.snapshot()
-    assert snapshot.total_tokens == reserved
+    assert snapshot.total_tokens > 0
     assert snapshot.reserved_tokens == 0
     assert snapshot.calls[0].status == "unaccounted"
-    assert snapshot.stop_reason
+    assert snapshot.calls[0].error == "MissingUsageMetadataEstimated"
+    assert snapshot.stop_reason is None
+    ledger.reserve("next-call", input_tokens=1)
+
+
+def test_missing_usage_stop_requires_explicit_recovery_opt_in(tmp_path):
+    ledger = _ledger(tmp_path)
+    ledger.reserve("legacy", input_tokens=10)
+    ledger.complete_unaccounted("legacy")
+
+    blocked = _ledger(tmp_path)
+    with pytest.raises(BudgetExceeded, match="Orçamento LLM bloqueado"):
+        blocked.reserve("blocked", input_tokens=1)
+
+    recovered = _ledger(tmp_path, recover_missing_usage_stop=True)
+    recovered.reserve("allowed", input_tokens=1)
+    snapshot = recovered.snapshot()
+    assert snapshot.started_calls == 2
+    assert snapshot.stop_reason is None
 
 
 def test_budget_journal_resumes_only_fully_accounted_calls(tmp_path):
