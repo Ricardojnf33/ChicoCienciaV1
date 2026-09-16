@@ -27,6 +27,7 @@ def build_budget_ledger(
         cached_input_per_million_usd=settings.LLM_CACHED_INPUT_PER_MILLION_USD,
         output_per_million_usd=settings.LLM_OUTPUT_PER_MILLION_USD,
         journal_path=budget_path,
+        recover_missing_usage_stop=settings.LLM_RECOVER_MISSING_USAGE,
     )
 
 
