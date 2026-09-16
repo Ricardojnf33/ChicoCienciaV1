@@ -22,10 +22,14 @@ def test_pilot_workflow_is_manual_single_use_and_branch_restricted():
     assert "workflow_dispatch:" in WORKFLOW
     assert "push:" not in WORKFLOW
     assert "github.ref == 'refs/heads/feat/mestrado-fase-5'" in WORKFLOW
-    assert "github.run_number == 2" in WORKFLOW
+    assert "github.run_number == 3" in WORKFLOW
+    assert "github.run_number == 2" not in WORKFLOW
     assert "github.run_number == 1" not in WORKFLOW
     assert "github.run_attempt == 1" in WORKFLOW
-    assert "inputs.authorization == 'I_AUTHORIZE_SIX_PILOT_RUNS'" in WORKFLOW
+    assert (
+        "inputs.authorization == 'I_AUTHORIZE_PHASE5_RECOVERY_RUN3'"
+        in WORKFLOW
+    )
     assert "cancel-in-progress: false" in WORKFLOW
 
 
@@ -36,18 +40,26 @@ def test_pilot_workflow_pins_exact_campaign_plan_bytes():
     assert f"CAMPAIGN_PLAN_SHA256: {CAMPAIGN_PLAN_SHA256}" in WORKFLOW
 
 
-def test_pilot_matrix_is_closed_sequential_and_hard_limited():
+def test_recovery_restores_run2_checkpoint_and_keeps_prior_consumption():
+    assert "actions: read" in WORKFLOW
+    assert "run-id: 35043495688" in WORKFLOW
+    assert "name: pilot-01-b1-iris-s11" in WORKFLOW
+    assert "Resume pilot 01 with prior consumption preserved" in WORKFLOW
+    assert "needs: [preflight, recover_pilot_01, pilots_remaining]" in WORKFLOW
+
+
+def test_remaining_pilot_matrix_is_closed_sequential_and_hard_limited():
     expected = (
-        "pilot-01-b1-iris-s11",
         "pilot-02-a-wine-s11",
         "pilot-03-a0-iris-s23",
         "pilot-04-b1-wine-s23",
         "pilot-05-a-iris-s37",
         "pilot-06-a0-wine-s37",
     )
-    assert all(WORKFLOW.count(run_id) >= 1 for run_id in expected)
     matrix_block = WORKFLOW.split("matrix:", 1)[1].split("env:", 1)[0]
-    assert sum(matrix_block.count(run_id) for run_id in expected) == 6
+
+    assert all(matrix_block.count(run_id) == 1 for run_id in expected)
+    assert "pilot-01-b1-iris-s11" not in matrix_block
     assert "max-parallel: 1" in WORKFLOW
     assert "fail-fast: true" in WORKFLOW
     assert "Execute one authorized pilot with hard timeout\n        timeout-minutes: 15" in WORKFLOW
@@ -56,9 +68,8 @@ def test_pilot_matrix_is_closed_sequential_and_hard_limited():
 
 def test_pilot_workflow_preflights_scans_secrets_and_always_aggregates():
     assert "Run zero-call preflight" in WORKFLOW
-    assert "Reject secret persistence" in WORKFLOW
+    assert WORKFLOW.count("Reject secret persistence") == 2
     assert "grep -R --fixed-strings --quiet -- \"$OPENAI_API_KEY\"" in WORKFLOW
-    assert "needs: [preflight, pilots]" in WORKFLOW
     assert "always()" in WORKFLOW
     assert "pattern: pilot-*" in WORKFLOW
     assert "aggregate-pilots" in WORKFLOW
