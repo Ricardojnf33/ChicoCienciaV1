@@ -23,6 +23,7 @@ def test_pilot_workflow_is_manual_single_use_and_branch_restricted():
     assert "push:" not in WORKFLOW
     assert "github.ref == 'refs/heads/feat/mestrado-fase-5'" in WORKFLOW
     assert "github.run_number == 4" in WORKFLOW
+    assert "github.run_number == 3" not in WORKFLOW
     assert "github.run_number == 2" not in WORKFLOW
     assert "github.run_number == 1" not in WORKFLOW
     assert "github.run_attempt == 1" in WORKFLOW
@@ -40,13 +41,14 @@ def test_pilot_workflow_pins_exact_campaign_plan_bytes():
     assert f"CAMPAIGN_PLAN_SHA256: {CAMPAIGN_PLAN_SHA256}" in WORKFLOW
 
 
-def test_recovery_restores_run2_checkpoint_and_keeps_prior_consumption():
+def test_recovery_restores_only_run3_ledgers_and_enables_accounting_fallback():
     assert "actions: read" in WORKFLOW
-    assert "run-id: 35043495688" in WORKFLOW
-    assert "name: pilot-01-b1-iris-s11" in WORKFLOW
-    assert "Resume pilot 01 with prior consumption preserved" in WORKFLOW
-    assert "needs: [preflight, recover_pilot_01, pilots_remaining]" in WORKFLOW
-
+    assert "run-id: 35044828531" in WORKFLOW
+    assert 'LLM_RECOVER_MISSING_USAGE: "true"' in WORKFLOW
+    assert "Restore prior ledger evidence" in WORKFLOW
+    assert "Seed fresh run with prior accounting only" in WORKFLOW
+    assert 'cp "recovery-source/${{ matrix.run_id }}/llm-budget.json"' in WORKFLOW
+    assert "needs: [preflight, pilots]" in WORKFLOW
 
 def test_six_pilot_matrix_is_closed_sequential_and_hard_limited():
     expected = (
