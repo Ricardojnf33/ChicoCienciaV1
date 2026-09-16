@@ -17,7 +17,7 @@ from src.core.variants import ExperimentVariant, policy_for
 from src.processes.ats_process import ExecutionMode, run_agentic_tree
 
 
-CrewFactory = Callable[[], Any]
+CrewFactory = Callable[[Path], Any]
 VARIANT_ORDER = (
     ExperimentVariant.B1,
     ExperimentVariant.A,
@@ -103,7 +103,7 @@ def run_variant_comparison(
         comparison_run.status = "RUNNING"
         save_comparison_manifest(comparison_path, comparison)
         try:
-            crew = crew_factory() if crew_factory else None
+            crew = crew_factory(run_dir / "llm-budget.json") if crew_factory else None
             run_agentic_tree(
                 crew,
                 tree,

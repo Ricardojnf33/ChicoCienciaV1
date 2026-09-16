@@ -1,0 +1,12 @@
+objective:
+  title: "Classificação reproduzível do Iris"
+  dataset: "iris"
+  primary_metric: "accuracy"
+  question: "Qual configuração simples generaliza melhor sem acessar o teste durante a seleção?"
+  hypotheses:
+    - "A intensidade de regularização altera a acurácia fora da amostra."
+  constraints:
+    - "Reserva estratificada de 20% para teste final."
+    - "Seleção somente nos 80% restantes com cinco folds estratificados."
+    - "Pipeline ajusta padronização apenas nos dados de treino."
+    - "Seed declarada no manifesto da campanha."

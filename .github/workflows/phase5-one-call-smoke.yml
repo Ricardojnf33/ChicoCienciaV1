@@ -17,7 +17,10 @@ concurrency:
 
 jobs:
   smoke:
-    if: github.ref == 'refs/heads/feat/mestrado-fase-5'
+    if: >-
+      github.ref == 'refs/heads/feat/mestrado-fase-5' &&
+      github.run_number == 1 &&
+      github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: phase5-pilot
@@ -27,6 +30,7 @@ jobs:
       MODEL_VISION: gpt-4o-mini-2024-07-18
       LLM_TOKEN_LIMIT: "512"
       LLM_COST_LIMIT_USD: "0.001"
+      LLM_CALL_LIMIT: "1"
       LLM_MAX_OUTPUT_TOKENS: "16"
       WANDB_ON: "false"
       OTEL_SDK_DISABLED: "true"

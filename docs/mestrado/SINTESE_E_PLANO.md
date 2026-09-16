@@ -175,9 +175,9 @@ Antes da coleta principal, farei seis runs piloto, dois por condição generativ
 
 ### 8 2 Controle do orçamento e das condições
 
-Como limite inicial a validar no piloto, cada run terá até seis tentativas de execução de candidato, no máximo duas correções por nó, 15 minutos de duração e 40 mil tokens totais registrados. Correções também consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 terá o mesmo teto de avaliação de candidatos e registrará custo de LLM igual a zero.
+Como limite inicial a validar no piloto, cada run terá até seis iterações de busca, no máximo duas correções por nó, 15 minutos de duração, 24 chamadas LLM iniciadas, 40 mil tokens totais e US$ 0,03. Chamadas com falha também consomem o teto de chamadas; correções consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 registrará chamadas, tokens e custo de LLM iguais a zero.
 
-Os 45 runs generativos principais mais seis pilotos representam um teto de planejamento de 2,04 milhões de tokens sob essa configuração. Esse valor não é consumo medido nem orçamento monetário. O valor financeiro será calculado a partir de tokens de entrada e saída, tarifas vigentes no início da coleta, infraestrutura e margem explicitada. O teto em moeda será registrado no manifesto da campanha antes da coleta paga.
+Os 45 runs generativos principais mais seis pilotos representam tetos de planejamento de 1.224 chamadas e 2,04 milhões de tokens sob essa configuração. Os seis pilotos ficam limitados, em conjunto, a 144 chamadas, 240 mil tokens e US$ 0,18. Esses valores são limites fail-closed, não consumo medido. O valor financeiro observado será calculado a partir de tokens de entrada e saída, tarifas registradas, infraestrutura e margem explicitada.
 
 O corpus bibliográfico será um snapshot comum, com identificadores e hashes. A ordem de execução das condições será alternada ou randomizada por dataset e seed, para reduzir efeitos de horário e instabilidade do serviço. Modelo, prompts, ferramentas e ambiente serão congelados. Uma mudança de versão do provedor exigirá nova identificação do lote.
 

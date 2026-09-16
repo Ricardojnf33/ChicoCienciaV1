@@ -18,6 +18,17 @@ Compararei quatro condições sobre os mesmos objetivos. B0 servirá como contro
 
 Os datasets propostos são Iris, Wine e Digits. As seeds de divisão serão 11, 23, 37, 51 e 71. Cada run é uma execução completa do workflow para uma condição, dataset e seed; não é um fold, um nó ou uma chamada de modelo. Temperatura, seed do provedor quando suportada e identificador do modelo serão registrados, sem pressupor determinismo de uma API externa.
 
+O executor deve persistir a seed no manifesto, aplicá-la ao estado pseudoaleatório
+local e encaminhá-la ao parâmetro `seed` do provedor. O código experimental deverá
+usar a mesma seed em partições e estimadores aplicáveis. Divergência entre a seed
+solicitada e a persistida torna a retomada inválida.
+
+Os pilotos serão executados em matriz fechada e sequencial, um job por identidade.
+Cada job terá ledger independente e timeout duro de 15 minutos. Um agregador sem
+acesso ao secret exigirá os seis bundles, reconciliará journal e manifesto e
+calculará checksums antes de aceitar o lote. Falha ou ausência de qualquer bundle
+invalida o lote inteiro; não haverá repetição automática.
+
 Antes da coleta principal, farei seis runs piloto, dois por condição generativa, distribuídos entre Iris e Wine. Eles servirão para estimar viabilidade e ajustar limites. Seus dados serão excluídos da comparação principal. O protocolo será congelado em commit após o piloto. Qualquer ajuste posterior será registrado como desvio; não se escolherá uma configuração em função de favorecer A.
 
 ### 8 1 1 Execução automatizada das condições generativas
@@ -29,13 +40,40 @@ poetry run python -m src.cli compare objective.example.yaml \
   --mode mock --budget 8 --branching 2 --max-depth 3 --max-branching 3
 ```
 
-O comando executa B1, A e A0 em diretórios separados e registra a política efetiva. Na Fase 5, a troca para `--mode live` ocorrerá somente após os gates de sandbox, custo e congelamento. B0 e a expansão por datasets e seeds ainda serão materializados antes dos pilotos; portanto, este comando encerra o critério operacional da Fase 4, mas não constitui a coleta empírica.
+O comando executa B1, A e A0 em diretórios separados e registra a política efetiva. Na Fase 5, a troca para `--mode live` ocorrerá somente após os gates de sandbox, custo e congelamento. A matriz de 66 especificações e o executor B0 já foram materializados, mas permanecem com `protocol_frozen: false`; portanto, testes do mecanismo não constituem coleta empírica.
+
+O baseline convencional pode ser executado por `run-b0`. Por padrão, o comando
+recusa um plano ainda não congelado; `--allow-draft` existe exclusivamente para
+testes de engenharia. Cada resultado registra hashes de dados e splits, scores de
+validação, hiperparâmetro selecionado, métricas no teste reservado e consumo LLM
+igual a zero.
+
+### 8 1 2 Gate de uma chamada
+
+Antes dos pilotos, um smoke operacional poderá realizar exatamente uma chamada ao
+snapshot textual. Ele não integra a amostra, não mede qualidade científica e não
+autoriza execuções subsequentes. O workflow só aceita despacho manual no
+environment `phase5-pilot`, exige a frase `I_AUTHORIZE_ONE_OPENAI_CALL`, desativa
+retentativas internas e aplica limites reduzidos de 512 tokens, 16 tokens de saída
+e US$ 0,001.
+
+O smoke será considerado aprovado somente se o preflight zero-call passar, houver
+uma chamada iniciada e concluída, o sentinel esperado for recebido, usage e custo
+forem persistidos e nenhuma credencial ou resposta aparecer nos artefatos. Falha
+de qualquer gate encerra a execução sem repetição automática. A simples presença
+da chave no GitHub Environment não constitui autorização.
+
+Por restrição do GitHub Actions, o arquivo do dispatcher precisa existir na branch
+padrão para que o acionamento manual seja habilitado. A cópia de ativação contém
+um gate de ref: somente `feat/mestrado-fase-5` pode executar o job. Portanto, a
+mesclagem isolada do dispatcher não realiza chamada e um despacho acidental na
+`main` é recusado antes do acesso ao environment.
 
 ### 8 2 Controle do orçamento e das condições
 
-Como limite inicial a validar no piloto, cada run terá até seis tentativas de execução de candidato, no máximo duas correções por nó, 15 minutos de duração e 40 mil tokens totais registrados. Correções também consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 terá o mesmo teto de avaliação de candidatos e registrará custo de LLM igual a zero.
+Como limite inicial a validar no piloto, cada run terá até seis iterações de busca, no máximo duas correções por nó, 15 minutos de duração, 24 chamadas LLM iniciadas, 40 mil tokens totais e US$ 0,03. Chamadas com falha também consomem o teto de chamadas; correções consomem o limite de tentativas. O encerramento ocorrerá ao atingir qualquer teto. As condições generativas compartilharão esses limites; B0 terá o mesmo teto de avaliação de candidatos e registrará chamadas, tokens e custo de LLM iguais a zero.
 
-Os 45 runs generativos principais mais seis pilotos representam um teto de planejamento de 2,04 milhões de tokens sob essa configuração. Esse valor não é consumo medido nem orçamento monetário. O valor financeiro será calculado a partir de tokens de entrada e saída, tarifas vigentes no início da coleta, infraestrutura e margem explicitada. O teto em moeda será registrado no manifesto da campanha antes da coleta paga.
+Os 45 runs generativos principais mais seis pilotos representam tetos de planejamento de 1.224 chamadas e 2,04 milhões de tokens sob essa configuração. Esse valor não é consumo medido. O plano materializado limita cada run generativo a 24 chamadas e US$ 0,03, os seis pilotos a 144 chamadas, 240 mil tokens e US$ 0,18, e a campanha a US$ 1,53. O snapshot de preço, consultado em 11/09/2026 na [documentação oficial do `gpt-4o-mini`](https://developers.openai.com/api/docs/models/gpt-4o-mini), registra US$ 0,15 por milhão de tokens de entrada, US$ 0,075 para entrada em cache e US$ 0,60 por milhão de tokens de saída. O teto monetário inclui margem conservadora e será revalidado imediatamente antes de qualquer coleta paga.
 
 O corpus bibliográfico será um snapshot comum, com identificadores e hashes. A ordem de execução das condições será alternada ou randomizada por dataset e seed, para reduzir efeitos de horário e instabilidade do serviço. Modelo, prompts, ferramentas e ambiente serão congelados. Uma mudança de versão do provedor exigirá nova identificação do lote.
 

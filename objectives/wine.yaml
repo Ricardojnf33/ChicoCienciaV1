@@ -1,0 +1,12 @@
+objective:
+  title: "Classificação reproduzível do Wine"
+  dataset: "wine"
+  primary_metric: "f1_macro"
+  question: "Qual configuração simples maximiza F1 macro sem reutilizar o teste na seleção?"
+  hypotheses:
+    - "A intensidade de regularização altera o F1 macro fora da amostra."
+  constraints:
+    - "Reserva estratificada de 20% para teste final."
+    - "Seleção somente nos 80% restantes com cinco folds estratificados."
+    - "Dropout excluído da comparação principal."
+    - "Seed declarada no manifesto da campanha."

@@ -66,6 +66,181 @@ Estado: concluída em 11/09/2026. Foram publicados três incrementos técnicos:
 
 Resultado: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. A CI remota [34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898) aprovou todos os gates. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
 
+## Fase 5 — preparação da campanha empírica
+
+Estado: em andamento em 11/09/2026. O secret é injetado somente no job protegido e
+permanece mascarado. O runner passou a usar fallback Docker sem rede, filesystem
+raiz somente leitura, usuário não-root e limites de recursos. A compatibilidade de
+tokenização tornou-se um gate e o modelo foi fixado no snapshot
+`gpt-4o-mini-2024-07-18`.
+
+Incrementos técnicos publicados neste ciclo:
+
+- `480106c0a461b11911c325d2a02bbf25682b0e05`: fallback de container endurecido;
+- `3fed6821ab1fbd8140019dbc8601874105393710`: correção da montagem gravável;
+- `596dcc7d065cf06787533492d9b039301440976a`: gate de tokenizador;
+- `0ab198318521d22cd24b902f615a89e8aa0f586a`: tolerância de cold start no probe;
+- `9d36f390e0972f52210e88bfb39f6f6a647409d4`: matriz de 66 runs materializada;
+- `7f5dee3e00952a898691e8fef287d93cd62214f5`: baseline B0 leakage-safe;
+- `8da58f95b0d727f2e4e5a788c6b707966688f922`: kill switch e journal de LLM;
+- `eb86b567b4add0404d924a6650dc770afb4f89cf`: smoke manual de uma chamada.
+
+A CI de branch [34657963619](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963619),
+a CI da PR [34657967293](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657967293)
+e o preflight protegido [34657963667](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34657963667)
+passaram. Após os dois gates seguintes, a CI de branch
+[34719631682](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631682),
+a CI da PR [34719633915](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719633915)
+e o preflight [34719631681](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34719631681)
+também passaram. Localmente, Ruff e 75 testes offline passaram; quatro testes live
+foram desmarcados. O relatório remoto registrou `api_calls_performed: 0`.
+
+O ledger agora reserva tokens/custo antes do transporte, persiste cada chamada,
+interrompe na ausência de metadados e sincroniza totais com o manifesto. O cliente
+não faz retentativas internas. O workflow manual limita o primeiro smoke a uma
+chamada, 512 tokens, 16 tokens de saída e US$ 0,001. Telemetrias OpenTelemetry e
+ONNX Runtime foram desativadas nos workflows.
+
+Foi identificado um gate de plataforma: `workflow_dispatch` só fica disponível
+quando o arquivo existe na branch padrão. O job foi adicionalmente limitado à ref
+`feat/mestrado-fase-5`. A PR #8 foi aberta separadamente e contém somente esse
+dispatcher inerte. Seu CI
+[34720268555](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34720268555)
+falhou em `Install deps`, antes de lint e testes, porque a `main` ainda referencia
+`crewai-tools (^0.4.0)`. O dispatcher não foi executado e nenhuma chamada ocorreu.
+Para preservar o escopo auditável da PR #8, a correção de dependências não foi
+misturada nela.
+
+Em 13/09/2026, a integração foi executada por gates. A PR #3 foi retargeteada para
+`main` e incorporou a PR #2 junto da correção de runtime; depois, as PRs #4, #5 e
+#6 foram retargeteadas, revalidadas individualmente e mescladas. A PR #8 foi
+atualizada sobre essa baseline e passou nas CIs
+[34770519991](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34770519991)
+e [34770521733](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34770521733).
+O dispatcher foi integrado à `main` em
+`f569b66fa8aa0436f05686b4619beb065fa67be4`. Nenhum desses eventos despachou o
+smoke ou acessou a API da OpenAI.
+
+Em 14/09/2026, após autorização literal, o run manual
+[34890553182](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34890553182)
+executou o smoke exatamente uma vez e terminou em PASS. O journal registrou uma
+chamada iniciada, uma concluída, zero falhas, 18 tokens de entrada, cinco de saída,
+23 no total e custo de US$ 0,0000057. O sentinel correspondeu ao esperado; somente
+seu hash foi persistido. O artefato `phase5-one-call-smoke` tem ID `10366926127` e
+digest `sha256:196e4e8f400ef59d293e1cab29eebdf95569b370bcdbaca9151b36b84e2e73c6`.
+Nenhum piloto ou run principal foi iniciado.
+
+Após a confirmação visual de `Workflow disabled successfully`, o dispatcher do
+smoke passou ao estado operacional desabilitado. A consulta de runs continuou
+mostrando exatamente um `workflow_dispatch`, sem reexecução. Na preparação dos
+pilotos foi identificado que tokens e custo limitavam indiretamente chamadas
+concluídas, mas falhas de transporte não consumiam esses tetos. Foi então adicionado
+um kill switch explícito de 24 chamadas iniciadas por run. O plano passa a limitar
+os seis pilotos a 144 chamadas, 240.000 tokens, US$ 0,18 e 5.400 segundos se
+executados sequencialmente. Nenhum piloto foi executado durante essa alteração.
+
+Na sequência, o executor `run-pilots` foi construído e ensaiado integralmente em
+modo mock. Ele selecionou somente as seis specs piloto, persistiu seed e identidade
+por run, agregou chamadas/tokens/custo e retomou estados concluídos sem reexecução.
+O caminho live exige a autorização literal separada
+`I_AUTHORIZE_SIX_PILOT_RUNS` antes da construção da Crew. A seed passou a ser
+encaminhada também ao parâmetro do modelo e à instrução do código experimental.
+O ensaio terminou com seis runs mock aprovados e consumo LLM zero; seus valores
+sintéticos não constituem dados científicos.
+
+O executor foi então separado em `run-pilot`, adequado a um job de matriz, e
+`aggregate-pilots`, que reconcilia os seis bundles sem receber a credencial. O
+workflow manual preparado exige primeira execução/tentativa, branch da Fase 5 e a
+autorização literal antes do environment. O preflight antecede os jobs; a matriz
+usa `max-parallel: 1` e timeout de 15 minutos por execução; o agregador roda mesmo
+após falha para tornar artefatos ausentes observáveis. Um ensaio com seis processos
+mock independentes terminou em PASS, gerou 19 checksums e registrou zero chamadas,
+tokens e custo. O workflow não foi despachado.
+
+A preparação foi publicada na branch da Fase 5 no commit remoto
+`84e77fe5bf2e13e249e3e086372b7911b4d3d81c`. O preflight protegido
+[34909994055](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34909994055)
+passou sem acessar a API. As CIs de branch
+[34909993965](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34909993965)
+e da PR
+[34909997947](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34909997947)
+encontraram uma única falha após 89 aprovações e quatro desmarcações: o teste da
+opção `--mode` dependia da saída Rich de `--help`, que varia conforme largura e
+capacidades do terminal. O contrato real da CLI e o workflow não falharam. O teste
+foi corrigido para inspecionar diretamente os parâmetros Typer/Click, sem depender
+da apresentação do terminal. Após a correção, o gate local voltou a registrar 90
+testes aprovados, quatro testes live desmarcados, Ruff aprovado e lock válido.
+Nenhum workflow de piloto foi despachado e nenhuma chamada OpenAI ocorreu nessa
+correção.
+
+A correção foi publicada no commit remoto
+`6e0d3d7a814fd0166f8e532bdb9e483903bb5298`. A CI de push
+[34956663122](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956663122),
+a CI da PR
+[34956665985](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956665985)
+e o preflight protegido
+[34956663106](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34956663106)
+terminaram em PASS. Assim, a publicação e a validação remota do executor e do
+workflow dos seis pilotos foram concluídas sem dispatch e com consumo LLM zero.
+
+Em seguida, a PR separada
+[#9](https://github.com/Ricardojnf33/ChicoCienciaV1/pull/9) foi criada a partir da
+`main` com somente `.github/workflows/phase5-pilots.yml`. As CIs de push
+[34957322305](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957322305)
+e da PR
+[34957357810](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957357810)
+passaram. Após confirmação do diff unitário, ela foi mesclada em
+`1f92ce2180c6e7ae27de9eed76a2c2d5e995b117`; a CI pós-merge
+[34957492480](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34957492480)
+também passou. O dispatcher tornou-se visível na branch padrão, mas permaneceu com
+zero execuções. A integração não constituiu autorização e não consumiu a API.
+
+O gate pré-autorização recalculou o arquivo da campanha e confirmou seis pilotos,
+144 chamadas, 240.000 tokens, US$ 0,18 e 5.400 segundos sequenciais. O hash do
+arquivo permaneceu idêntico ao valor fixado no workflow. Durante a verificação, o
+workspace reciclou o interpretador do `.venv`; o ambiente local foi preservado e
+reconstruído em Python 3.11.16 a partir do lockfile. Depois de carregar no cache
+transitório apenas a tabela pública `o200k_base` do tokenizador, 90 testes passaram,
+quatro live foram desmarcados, Ruff passou e o lock permaneceu válido. As falhas
+intermediárias foram de integridade do ambiente e cache do tokenizador, anteriores
+à execução da Crew. Não houve dispatch ou chamada OpenAI.
+
+Após a autorização literal, o primeiro dispatch dos seis pilotos, run
+[34980482902](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34980482902),
+falhou em 12 segundos no primeiro gate de identidade. O SHA-256 do plano presente
+na branch remota divergia do valor congelado; a inspeção do blob confirmou bytes
+inválidos introduzidos na publicação anterior pela API Git. Nenhuma dependência foi
+instalada, a Crew não foi construída, os jobs `pilots` e `aggregate` foram
+desmarcados e nenhuma chamada OpenAI ocorreu. A anotação de artefato ausente foi
+secundária: o preflight não havia chegado a produzir o arquivo. O run número 1
+permanece consumido e não deve ser reexecutado. A correção reserva somente o run
+número 2, primeira tentativa, e exige republicação Base64 do plano com conferência
+do blob Git antes de nova autorização.
+
+A recuperação foi publicada com correspondência exata entre todos os blobs locais
+e remotos; o plano passou a apontar para
+`e1f2138831a7eb3c2ab144a98f586d3e65c7ece5`. A CI de push
+[34982320599](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982320599),
+a CI da PR #7
+[34982327631](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982327631)
+e o preflight protegido
+[34982320606](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982320606)
+passaram. A PR unitária
+[#10](https://github.com/Ricardojnf33/ChicoCienciaV1/pull/10) atualizou o dispatcher
+da `main`, passou nas CIs de push
+[34982733031](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982733031)
+e de PR
+[34982804866](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982804866),
+foi mesclada em `4ba97396dcc02aa53d2da4a3365c463df313ce5d` e passou na CI pós-merge
+[34982993230](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34982993230).
+O histórico ainda contém somente o run número 1; o run número 2 não foi iniciado.
+
+O plano continua com `protocol_frozen: false`. Nenhum dos 15 runs B0 principais,
+dos seis pilotos ou dos 45 runs generativos principais foi coletado. Testes de
+implementação não serão apresentados como resultado científico. O detalhamento e
+os hashes estão em [FASE_5_STATUS.md](FASE_5_STATUS.md).
+
 ## Próxima ação
 
-Preparar a Fase 5 sem iniciar chamadas pagas: validar o sandbox em host compatível, adicionar B0 e a matriz dataset/seed ao manifesto, registrar orçamento financeiro e congelar configurações antes dos seis pilotos. As Fases 5 e 6 permanecem planejadas.
+Obter nova confirmação explícita do responsável antes do segundo e último dispatch
+permitido. Os pilotos não foram iniciados.
