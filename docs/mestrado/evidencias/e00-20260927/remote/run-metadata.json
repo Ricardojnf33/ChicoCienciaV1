@@ -1,0 +1,54 @@
+{
+  "workflow": "Roadmap E00 - manual evidence gate",
+  "workflow_id": 368583325,
+  "run_id": 36350845233,
+  "run_attempt": 1,
+  "run_number": 1,
+  "event": "workflow_dispatch",
+  "actor": "Ricardojnf33",
+  "branch": "main",
+  "tested_sha": "41857710afd66616423e80ce025f8ec676de7665",
+  "status": "completed",
+  "conclusion": "success",
+  "run_url": "https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/36350845233",
+  "started_at": "2026-09-27T21:12:22Z",
+  "completed_at": "2026-09-27T21:12:31Z",
+  "job": {
+    "id": 108709103655,
+    "name": "validate-evidence",
+    "url": "https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/36350845233/job/108709103655",
+    "conclusion": "success",
+    "steps": [
+      "Set up job",
+      "actions/checkout@v7",
+      "Validate roadmap and evidence contracts",
+      "Publish job summary",
+      "Preserve evidence even on validation failure",
+      "Post actions/checkout@v7",
+      "Complete job"
+    ]
+  },
+  "artifact": {
+    "id": 10942187121,
+    "name": "roadmap-e00-36350845233-1",
+    "size_in_bytes": 2231,
+    "api_digest": "sha256:0cbd794118c2b0fe19af9cea4b312117c999c8c1f76df7f1f3a10034940a9aac",
+    "downloaded_zip_sha256": "0cbd794118c2b0fe19af9cea4b312117c999c8c1f76df7f1f3a10034940a9aac",
+    "expires_at": "2026-12-26T21:12:23Z",
+    "files_preserved_in_repository": [
+      "report.json",
+      "summary.md",
+      "checksums.json"
+    ]
+  },
+  "scope_and_limitations": {
+    "passed_checks": 11,
+    "validator_llm_api_calls": 0,
+    "application_tests": "not_run",
+    "live_e2e": "not_validated",
+    "scientific_validation": "not_performed",
+    "academic_gate_g0": "pending_user_input",
+    "phase5": "observed_not_reexecuted"
+  },
+  "source": "GitHub Actions REST API run, job, and artifact endpoints; downloaded ZIP digest independently matched artifact API digest."
+}

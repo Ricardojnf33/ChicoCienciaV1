@@ -1,7 +1,7 @@
 # Relatório final do projeto — documento em construção
 
 Este arquivo é um índice cumulativo de evidências, não uma dissertação concluída.
-Atualização inicial: 27/09/2026. Estado: E00 preparado, teste manual pendente.
+Atualizado em 27/09/2026. Estado: gate documental remoto E00 aprovado; aplicação/E2E e validação científica pendentes.
 
 ## Objetivo e contribuição pretendida
 
@@ -16,7 +16,7 @@ Não há afirmação de ganho de desempenho, aprendizado pedagógico ou RSI comp
 |---|---|---|---|
 | Baseline histórica | Fases 1–4 | [Registro de processo](REGISTRO_PROCESSO.md) | Histórico documental; testes desta etapa não foram repetidos aqui |
 | Incidente Fase 5 | Entrada de E01 | [Run 35047877307](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047877307) | Piloto falhou; não há E2E comprovado nesse run |
-| E00 | E00.H02/H03 | [Índice E00](evidencias/e00-20260927/index.md) | Planejamento versionado; integridade local, manual remoto pendente |
+| E00 | E00.H02/H03 | [Run 36350845233](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/36350845233) · [artifact preservado](evidencias/e00-20260927/remote/run-metadata.json) | 11 checks documentais aprovados; sem teste da aplicação, E2E ou validação científica |
 | Monitoramento | E12 / GM | [Roadmap](roadmap.html#monitoramento) | Requisito definido; instrumentação de aplicação ainda não implementada |
 | Jev | E08 | [Plano E08](roadmap.html#E08) | Proposta; nenhuma chamada ou melhoria medida nesta entrega |
 

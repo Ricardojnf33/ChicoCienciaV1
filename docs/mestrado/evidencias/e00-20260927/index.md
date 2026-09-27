@@ -1,6 +1,6 @@
 # E00 — índice de evidências
 
-Data: 27/09/2026. Status: preparado; execução manual remota PENDENTE.
+Data: 27/09/2026. Status: gate documental remoto aprovado; G0 acadêmico e G2 E2E continuam pendentes.
 
 ## Estado observado
 
@@ -27,16 +27,15 @@ execução estão em [EXECUCAO_ROADMAP.md](../../EXECUCAO_ROADMAP.md).
 - Não executa a aplicação, não certifica G2 e não faz validação visual do HTML.
 - O relatório identifica LOCAL_WORKING_TREE; não equivale a um run remoto.
 
-## Evidência remota aguardada
+## Evidência remota preservada
 
-Workflow: `Roadmap E00 - manual evidence gate`.
-Após merge manual, disparar em main com `VALIDAR_E00_SEM_LLM`.
-O próximo registro deve conter URL/id/attempt do run, SHA testado, conclusão,
-nome/id do artifact, report.json e checksums.json preservados antes de expirar.
-O workflow só valida integridade documental; não encerra G0 acadêmico.
+Workflow: `Roadmap E00 - manual evidence gate`; run [36350845233](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/36350845233), tentativa 1, disparado manualmente em `main` pelo responsável. Resultado: `success` no SHA `41857710afd66616423e80ce025f8ec676de7665`; job `validate-evidence` e suas etapas concluíram com sucesso.
+
+O artifact `roadmap-e00-36350845233-1` (ID 10942187121; expira em 26/12/2026) foi baixado e seu SHA-256 conferido contra o digest retornado pela API. Cópias do `report.json`, `summary.md`, `checksums.json` e metadados da execução estão nesta pasta (`remote/`).
+
+Os 11 checks de integridade documental passaram. O validador fez zero chamadas de LLM. Isso não valida a aplicação, não executa experimento/E2E, não reexecuta a Fase 5 e não encerra G0 acadêmico; G2 permanece `NOT_VALIDATED`.
 
 ## Limites e próximo passo
 
-Sem alteração em src/, sem correção da Fase 5, sem dispatch e sem consumo pago
-neste incremento. Aguardar usuário executar e conferir o resultado antes de E01.
+Sem alteração em src/, correção da Fase 5, experimento científico ou consumo pago. O gate documental remoto foi conferido e preservado; antes de E01, revisar e integrar manualmente o PR que registra esta evidência. Aguardar essa integração antes de abrir a próxima branch.
 As informações acadêmicas pendentes estão em [PENDENCIAS_USUARIO.md](../../PENDENCIAS_USUARIO.md).
