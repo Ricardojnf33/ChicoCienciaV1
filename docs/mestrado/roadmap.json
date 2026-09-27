@@ -1,0 +1,1722 @@
+[
+  {
+    "id": "E00",
+    "title": "Escopo, governança e baseline",
+    "track": "Pesquisa / gestão",
+    "window": "S1 · manutenção contínua",
+    "effort": "3–5 dias-pessoa",
+    "deps": [],
+    "goal": "Definir uma pesquisa executável e uma única referência do estado do projeto.",
+    "gate": "G0 · Recorte, responsabilidades, orçamento inicial e baseline registrados.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E00.H01",
+        "title": "Acordo de pesquisa e escopo mínimo",
+        "user": "Como autor, preciso de uma pergunta principal e limites aceitos pela orientação.",
+        "deps": [],
+        "accept": "Documento de escopo revisado pelo orientador; pendências institucionais explícitas.",
+        "tasks": [
+          {
+            "id": "E00.H01.T01",
+            "title": "Definir a pergunta principal",
+            "subtasks": [
+              "Adotar como proposta: histórico melhora eficiência da busca sob validade e rastreabilidade?",
+              "Separar Q1 confiabilidade, Q2 árvore, Q3 adaptação e Q4 reprodução",
+              "Registrar que resultado negativo também responde à pesquisa"
+            ]
+          },
+          {
+            "id": "E00.H01.T02",
+            "title": "Confirmar condições acadêmicas",
+            "subtasks": [
+              "Confirmar vínculo, orientação e prazo real de defesa",
+              "Levantar formato de dissertação, qualificação e depósito exigidos",
+              "Registrar responsáveis e datas sem presumir aprovação institucional"
+            ]
+          },
+          {
+            "id": "E00.H01.T03",
+            "title": "Congelar fronteiras do produto",
+            "subtasks": [
+              "Incluir tarefas tabulares, execução em CPU e política parametrizada",
+              "Manter Jev e estudo pedagógico como extensões",
+              "Excluir autoedição irrestrita do sistema, produção e descoberta científica geral"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E00.H02",
+        "title": "Consolidar fatos e trilha documental",
+        "user": "Como mantenedor, preciso distinguir implementação, observação e proposta.",
+        "deps": [],
+        "accept": "Inventário liga cada afirmação a commit, run ou artefato; documentação não chama mock de resultado científico.",
+        "tasks": [
+          {
+            "id": "E00.H02.T01",
+            "title": "Revalidar baseline antes de implementar",
+            "subtasks": [
+              "Conferir main e branch feat/mestrado-fase-5 antes do primeiro patch",
+              "Usar a inspeção de 27/09/2026 como ponto de partida, não como estado eterno",
+              "Ler instruções do repositório, incluindo AGENTS.md se existir"
+            ]
+          },
+          {
+            "id": "E00.H02.T02",
+            "title": "Corrigir o status da Fase 5",
+            "subtasks": [
+              "Registrar run 35047877307 como falho",
+              "Separar preflight aprovado, piloto falho, cinco cancelados e agregação falha",
+              "Preservar mensagens e links; não apagar incidentes anteriores"
+            ]
+          },
+          {
+            "id": "E00.H02.T03",
+            "title": "Organizar decisões e backlog",
+            "subtasks": [
+              "Criar registro de decisões com problema, alternativas e consequência",
+              "Mapear IDs deste plano a issues somente na execução autorizada",
+              "Identificar PR #7 e evitar reconstruir B0 já implementado na branch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E00.H03",
+        "title": "Controlar trabalho e custos",
+        "user": "Como responsável, preciso evitar recomeços, gastos invisíveis e frentes demais.",
+        "deps": [],
+        "accept": "Plano de capacidade e regra de autorização por campanha documentados.",
+        "tasks": [
+          {
+            "id": "E00.H03.T01",
+            "title": "Definir capacidade",
+            "subtasks": [
+              "Planejar um desenvolvedor principal com apoio periódico do orientador",
+              "Limitar a uma tarefa crítica de código e uma tarefa documental em andamento",
+              "Tratar paralelismo deste plano como independência técnica, não como equipe já disponível"
+            ]
+          },
+          {
+            "id": "E00.H03.T02",
+            "title": "Separar orçamentos",
+            "subtasks": [
+              "Criar centros de custo: depuração, piloto, desenvolvimento de política e coleta final",
+              "Incluir LLM, Jev, infraestrutura, armazenamento e repetições",
+              "Consultar tarifas vigentes ao aprovar o lote; não reutilizar tetos antigos como autorização nova"
+            ]
+          },
+          {
+            "id": "E00.H03.T03",
+            "title": "Definir rotina semanal",
+            "subtasks": [
+              "Revisar entregas, riscos e capacidade",
+              "Registrar desvios e decisões de corte",
+              "Reestimar depois de G2 e G5; não liberar coleta por calendário sem gate"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E01",
+    "title": "Recuperar geração, contratos e execução",
+    "track": "Engenharia",
+    "window": "S1–S2",
+    "effort": "6–10 dias-pessoa",
+    "deps": [
+      "E00"
+    ],
+    "goal": "Eliminar a falha observada e tornar os encerramentos do agente explícitos.",
+    "gate": "G1 · Contratos e regressões offline aprovados; causa do limite investigada.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E01.H01",
+        "title": "Reproduzir o incidente do run 5",
+        "user": "Como engenheiro, preciso reproduzir o erro sem consumir novas chamadas.",
+        "deps": [
+          "E00.H02"
+        ],
+        "accept": "Fixture do incidente reproduz a aceitação incorreta e passa após a correção.",
+        "tasks": [
+          {
+            "id": "E01.H01.T01",
+            "title": "Preservar evidências mínimas",
+            "subtasks": [
+              "Obter code.py, diagnóstico, manifesto e journal do piloto quando disponíveis",
+              "Registrar hashes e origem dos arquivos",
+              "Remover credenciais e dados não necessários da fixture"
+            ]
+          },
+          {
+            "id": "E01.H01.T02",
+            "title": "Construir reprodução offline",
+            "subtasks": [
+              "Usar a mensagem Agent stopped due to iteration limit or time limit. como saída da Crew",
+              "Demonstrar o caminho que a materializa como Python",
+              "Distinguir falha de geração de falha do executor"
+            ]
+          },
+          {
+            "id": "E01.H01.T03",
+            "title": "Investigar encerramento do agente",
+            "subtasks": [
+              "Inspecionar limites, delegações e ferramentas",
+              "Verificar se há repetição de tarefas ou reutilização indevida de estado",
+              "Registrar causa confirmada separada de hipóteses; não aumentar limites como primeira resposta"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E01.H02",
+        "title": "Introduzir um contrato explícito de geração",
+        "user": "Como executor, preciso receber código somente quando a geração terminou adequadamente.",
+        "deps": [
+          "E01.H01"
+        ],
+        "accept": "Saídas inválidas não chegam ao runner; código sintaticamente válido ainda passa pelo isolamento.",
+        "tasks": [
+          {
+            "id": "E01.H02.T01",
+            "title": "Definir resultado de geração",
+            "subtasks": [
+              "Propor estados CODE_READY, LIMIT_REACHED, INVALID_OUTPUT e PROVIDER_ERROR",
+              "Exigir conteúdo, identidade da tentativa e motivo quando aplicável",
+              "Validar schema antes de gravar artefatos executáveis"
+            ]
+          },
+          {
+            "id": "E01.H02.T02",
+            "title": "Validar e materializar código",
+            "subtasks": [
+              "Extrair apenas conteúdo permitido pelo contrato",
+              "Validar sintaxe com parser sem executar código",
+              "Gravar atomicamente code.py somente após aprovação; parser não prova segurança ou correção científica"
+            ]
+          },
+          {
+            "id": "E01.H02.T03",
+            "title": "Cobrir fronteiras reais",
+            "subtasks": [
+              "Testar resposta vazia, prosa, blocos múltiplos e sintaxe inválida",
+              "Testar resposta interrompida e metadados ausentes",
+              "Verificar que nenhum fallback sintético aparece no modo live"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E01.H03",
+        "title": "Recuperação e ledger coerentes",
+        "user": "Como responsável pela campanha, preciso recuperar falhas sem esconder tentativas e custos.",
+        "deps": [
+          "E01.H02"
+        ],
+        "accept": "Retomada conserva custos e identidades; exceções não transformam falha em sucesso.",
+        "tasks": [
+          {
+            "id": "E01.H03.T01",
+            "title": "Classificar recuperação",
+            "subtasks": [
+              "Distinguir erro de transporte, geração inválida, limite e execução",
+              "Definir quais falhas permitem retry e quantas vezes",
+              "Testar abandono após esgotamento sem loop infinito"
+            ]
+          },
+          {
+            "id": "E01.H03.T02",
+            "title": "Reconciliar orçamento",
+            "subtasks": [
+              "Conservar custos já incorridos em recuperações",
+              "Registrar consumo reportado, estimado e reservas separadamente",
+              "Cobrir timeout, ausência de usage e duplicidade de eventos"
+            ]
+          },
+          {
+            "id": "E01.H03.T03",
+            "title": "Preparar integração pequena",
+            "subtasks": [
+              "Executar testes direcionados e CI exigida",
+              "Atualizar documentação e descrição da PR com causa e evidência",
+              "Integrar apenas quando revisado e autorizado; não misturar RSI neste patch"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E02",
+    "title": "Comprovar ponta a ponta",
+    "track": "Engenharia / validação",
+    "window": "S3",
+    "effort": "4–7 dias-pessoa",
+    "deps": [
+      "E01"
+    ],
+    "goal": "Produzir uma cadeia verificável do objetivo ao relatório usando execução real.",
+    "gate": "G2 · Um fluxo real completo e uma falha controlada comprovados; custo reconciliado.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E02.H01",
+        "title": "Preparar smoke real limitado",
+        "user": "Como pesquisador, preciso testar a integração completa antes de ampliar o domínio.",
+        "deps": [
+          "E01"
+        ],
+        "accept": "Plano do smoke identifica objetivo, commit, modelo, limites e resultados esperados.",
+        "tasks": [
+          {
+            "id": "E02.H01.T01",
+            "title": "Fixar configuração do smoke",
+            "subtasks": [
+              "Usar Iris ou Wine como teste de integração",
+              "Fixar versões, seed e objetivo",
+              "Limitar tentativas, tempo e custo; conferir autorização aplicável antes de despachar"
+            ]
+          },
+          {
+            "id": "E02.H01.T02",
+            "title": "Validar ambiente antes de gastar",
+            "subtasks": [
+              "Executar preflight sem chamada paga",
+              "Verificar runner, bibliotecas e ausência de credencial no código gerado",
+              "Exigir falha de acesso à rede no executor científico"
+            ]
+          },
+          {
+            "id": "E02.H01.T03",
+            "title": "Executar uma cadeia completa",
+            "subtasks": [
+              "Gerar plano e código, validar, executar e registrar",
+              "Selecionar candidato pela validação sem consultar teste reservado",
+              "Produzir relatório conectado às evidências"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E02.H02",
+        "title": "Auditar sucesso e falha",
+        "user": "Como avaliador, preciso conferir arquivos e métricas além do sinal verde do workflow.",
+        "deps": [
+          "E02.H01"
+        ],
+        "accept": "Checklist conferido; sucesso não depende apenas do julgamento de um agente.",
+        "tasks": [
+          {
+            "id": "E02.H02.T01",
+            "title": "Verificar resultado independentemente",
+            "subtasks": [
+              "Recalcular a métrica a partir de predições e alvos permitidos",
+              "Conferir identidade de dataset, split, código e tentativa",
+              "Comparar resultado recalculado com o reportado dentro de tolerância definida"
+            ]
+          },
+          {
+            "id": "E02.H02.T02",
+            "title": "Exercitar falha controlada",
+            "subtasks": [
+              "Injetar saída inválida ou timeout em ensaio determinístico",
+              "Confirmar classificação, orçamento e preservação de diagnóstico",
+              "Confirmar que o agregado diferencia cancelado, não iniciado e falho"
+            ]
+          },
+          {
+            "id": "E02.H02.T03",
+            "title": "Publicar pacote de integração",
+            "subtasks": [
+              "Vincular logs, manifests, checksums e relatório",
+              "Identificar exatamente o que foi e não foi demonstrado",
+              "Registrar G2 somente após inspeção; CI isolada não satisfaz G2"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E02.H03",
+        "title": "Encerrar a preparação da Fase 5 existente",
+        "user": "Como autor, preciso reutilizar o trabalho realizado sem confundir protocolos.",
+        "deps": [
+          "E02.H02"
+        ],
+        "accept": "Seis pilotos antigos têm destino documentado; protocolo novo recebe versão própria.",
+        "tasks": [
+          {
+            "id": "E02.H03.T01",
+            "title": "Reavaliar os seis pilotos",
+            "subtasks": [
+              "Determinar quais execuções servem apenas à integração",
+              "Preservar falhas e consumo históricos",
+              "Completar apenas o necessário à decisão de viabilidade, com autorização e limites"
+            ]
+          },
+          {
+            "id": "E02.H03.T02",
+            "title": "Separar amostras",
+            "subtasks": [
+              "Excluir depuração e pilotos da coleta principal",
+              "Não juntar resultados de configurações incompatíveis",
+              "Registrar explicitamente transição do protocolo v0.1 para o novo recorte"
+            ]
+          },
+          {
+            "id": "E02.H03.T03",
+            "title": "Decidir integração da PR #7",
+            "subtasks": [
+              "Conferir CI, evidências e diferenças com main",
+              "Resolver conflitos e documentação antes do merge",
+              "Preservar histórico e criar tag técnica quando apropriado"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E12",
+    "title": "Monitoramento contínuo e evidências do projeto",
+    "track": "Engenharia / evidências",
+    "window": "Após G2 · contínuo até G10",
+    "effort": "6–9 dias-pessoa + manutenção",
+    "deps": [
+      "E02"
+    ],
+    "goal": "Congelar o estado validado e monitorar todas as mudanças posteriores, incluindo integração e avaliação do Jev.",
+    "gate": "GM · Baseline preservada, eventos conciliados e pacote de evidências gerado automaticamente.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E12.H01",
+        "title": "Congelar a referência antes de novas integrações",
+        "user": "Como pesquisador, preciso comparar o sistema anterior e posterior ao Jev com evidências preservadas.",
+        "deps": [
+          "E02.H02"
+        ],
+        "accept": "Baseline identifica código, ambiente, comportamento e custos; não usa resultados históricos incompatíveis como controle.",
+        "tasks": [
+          {
+            "id": "E12.H01.T01",
+            "title": "Criar pacote baseline-validada",
+            "subtasks": [
+              "Identificar commit, lock, prompts, modelo, datasets, splits e configurações",
+              "Preservar smoke válido, falha controlada, métricas e relatórios",
+              "Criar índice com hashes e responsável pela verificação"
+            ]
+          },
+          {
+            "id": "E12.H01.T02",
+            "title": "Definir contrato de observabilidade",
+            "subtasks": [
+              "Usar campaign_id, run_id, node_id, attempt_id, decision_id, policy_version e provider_call_id quando disponível",
+              "Definir eventos de início, decisão, chamada, resultado, erro, fallback e encerramento",
+              "Versionar schema e timestamps; separar status técnico de validade experimental"
+            ]
+          },
+          {
+            "id": "E12.H01.T03",
+            "title": "Medir referência comparável",
+            "subtasks": [
+              "Registrar latência, consumo, tentativas, validade e intervenções sem Jev",
+              "Definir perguntas de comparação antes da integração",
+              "Reexecutar controles com o mesmo benchmark quando a tarefa mudar; o smoke Iris não controla um benchmark novo"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E12.H02",
+        "title": "Instrumentar cada execução posterior",
+        "user": "Como mantenedor, preciso rastrear geração, Jev, política, runner e avaliador sem lacunas.",
+        "deps": [
+          "E12.H01"
+        ],
+        "accept": "Todos os runs posteriores têm manifesto e término explícito; eventos faltantes impedem promoção de evidência.",
+        "tasks": [
+          {
+            "id": "E12.H02.T01",
+            "title": "Persistir eventos duráveis",
+            "subtasks": [
+              "Gravar decisões e chamadas em JSONL ou estrutura equivalente append-only",
+              "Preservar início e término, erros, timeouts e retries como tentativas distintas",
+              "Reconciliar eventos após interrupção e impedir dupla contabilização"
+            ]
+          },
+          {
+            "id": "E12.H02.T02",
+            "title": "Monitorar Jev especificamente",
+            "subtasks": [
+              "Guardar versão do modelo, schema, critérios, hash do estado sanitizado e resposta estruturada",
+              "Registrar probabilidades, confidence quando existente, latência, tokens, custo, erro, cache e fallback",
+              "Salvar ação sugerida, ação efetiva e se Jev influenciou a decisão; confidence não é acerto comprovado"
+            ]
+          },
+          {
+            "id": "E12.H02.T03",
+            "title": "Controlar integridade e proteção",
+            "subtasks": [
+              "Manter cópia sanitizada das entradas necessárias à reprodução em armazenamento com acesso apropriado",
+              "Nunca persistir segredos; hash sozinho não permite reproduzir entrada ausente",
+              "Marcar custo estimado versus reportado e bloquear novo consumo quando o limite não puder ser garantido"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E12.H03",
+        "title": "Anexar evidências a cada entrega",
+        "user": "Como revisor, preciso conferir mudanças a partir de arquivos e comparações, não apenas de CI verde.",
+        "deps": [
+          "E12.H02"
+        ],
+        "accept": "Cada PR experimental referencia pacote verificável e relatório de efeitos; nenhum dado observado é inventado.",
+        "tasks": [
+          {
+            "id": "E12.H03.T01",
+            "title": "Gerar pacote automaticamente",
+            "subtasks": [
+              "Produzir manifest.json, events.jsonl, calls.jsonl, metrics.json, checksums.json e report.md ou equivalentes",
+              "Publicar bundle no Actions mesmo em falha; registrar falha de upload como incidente",
+              "Verificar hashes, schema, contagens e correspondência entre manifestos e ledger"
+            ]
+          },
+          {
+            "id": "E12.H03.T02",
+            "title": "Registrar evidências no repositório",
+            "subtasks": [
+              "Criar índice em docs/mestrado/evidencias por campanha e commit",
+              "Incluir links de runs e artefatos, hashes, conclusões, limitações e desvios",
+              "Manter arquivos grandes fora do Git com retenção explícita e cópia durável; link temporário do Actions não basta"
+            ]
+          },
+          {
+            "id": "E12.H03.T03",
+            "title": "Exigir seção de evidências na PR",
+            "subtasks": [
+              "Documentar hipótese, configuração, testes, resultados e comparação com baseline",
+              "Identificar mocks, observações reais, runs cancelados e dados ausentes",
+              "Impedir marcar tarefa experimental concluída sem evidência ou justificativa formal de não execução"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E12.H04",
+        "title": "Monitorar promoção e regressão do Jev",
+        "user": "Como responsável, preciso decidir com base em qualidade e custo antes e depois da ativação.",
+        "deps": [
+          "E12.H03",
+          "E08.H02"
+        ],
+        "accept": "Jev só assume decisões após comparação e critérios congelados; regressões ficam registradas.",
+        "tasks": [
+          {
+            "id": "E12.H04.T01",
+            "title": "Estabelecer três estados de uso",
+            "subtasks": [
+              "OFF: política base sem chamadas Jev",
+              "SHADOW: Jev observa e registra sem alterar ações; seu custo é reportado à parte",
+              "ACTIVE: Jev influencia decisões permitidas com fallback; separar dados por estado"
+            ]
+          },
+          {
+            "id": "E12.H04.T02",
+            "title": "Comparar e alertar",
+            "subtasks": [
+              "Medir sucesso válido, custo por sucesso, latência, intervenções e decisões prejudiciais revisadas",
+              "Definir limiares após piloto e antes da comparação, sem inventar metas numéricas agora",
+              "Alertar imediatamente sobre vazamento de segredo, inconsistência de ledger, falta de evidência e orçamento esgotado"
+            ]
+          },
+          {
+            "id": "E12.H04.T03",
+            "title": "Promover, reverter e revisar",
+            "subtasks": [
+              "Promover somente após GM e GJ com decisão documentada",
+              "Reverter para política base diante de violação crítica; preservar tentativa falha",
+              "Revisar por lote e semanalmente; atualizar changelog científico e texto da dissertação"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E03",
+    "title": "Construir benchmark de ML mais rico",
+    "track": "Pesquisa / dados",
+    "window": "S2–S5",
+    "effort": "7–11 dias-pessoa",
+    "deps": [
+      "E00"
+    ],
+    "goal": "Sair dos datasets de smoke com tarefas que exijam escolhas reais de modelagem.",
+    "gate": "G3 · Dados, splits, métricas e espaço de candidatos versionados.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E03.H01",
+        "title": "Selecionar tarefas e datasets",
+        "user": "Como pesquisador, preciso de dificuldade relevante e execução acessível.",
+        "deps": [
+          "E00.H01"
+        ],
+        "accept": "Dois ou três datasets candidatos auditados; seleção final justificada antes da coleta.",
+        "tasks": [
+          {
+            "id": "E03.H01.T01",
+            "title": "Definir critérios de seleção",
+            "subtasks": [
+              "Priorizar classificação tabular com colunas mistas e desbalanceamento",
+              "Limitar tamanho para CPU e orçamento disponível",
+              "Exigir licença, origem, documentação de alvo e versão recuperável"
+            ]
+          },
+          {
+            "id": "E03.H01.T02",
+            "title": "Inspecionar dados",
+            "subtasks": [
+              "Verificar ausências, duplicatas, grupos e rótulos",
+              "Identificar variáveis que revelam o alvo ou informação futura",
+              "Produzir datasheet com limitações e usos excluídos"
+            ]
+          },
+          {
+            "id": "E03.H01.T03",
+            "title": "Escolher protocolo de generalização",
+            "subtasks": [
+              "Definir tarefas de desenvolvimento e tarefas ou instâncias reservadas",
+              "Se houver poucos datasets, limitar explicitamente a alegação de transferência",
+              "Não chamar seeds diferentes do mesmo dataset de novos domínios"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E03.H02",
+        "title": "Construir avaliador independente",
+        "user": "Como avaliador, preciso impedir vazamento e comparação injusta.",
+        "deps": [
+          "E03.H01"
+        ],
+        "accept": "Teste fica inacessível à busca; cálculos e critérios de validade são determinísticos.",
+        "tasks": [
+          {
+            "id": "E03.H02.T01",
+            "title": "Materializar splits",
+            "subtasks": [
+              "Salvar índices e hashes",
+              "Aplicar grupos ou ordem temporal quando a estrutura dos dados exigir",
+              "Ajustar pré-processamento apenas no treino de cada fold"
+            ]
+          },
+          {
+            "id": "E03.H02.T02",
+            "title": "Definir métricas e validade",
+            "subtasks": [
+              "Escolher métrica primária por tarefa antes dos resultados",
+              "Separar qualidade preditiva, validade operacional e custo",
+              "Especificar tolerâncias, valores inválidos e regra para zero sucessos"
+            ]
+          },
+          {
+            "id": "E03.H02.T03",
+            "title": "Proteger teste final",
+            "subtasks": [
+              "Manter dados e rótulos de teste fora do sandbox da busca",
+              "Executar avaliação final em processo separado",
+              "Não devolver resultado de teste ao agente nem à política de adaptação"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E03.H03",
+        "title": "Estabelecer baselines justos",
+        "user": "Como autor, preciso saber se os agentes superam alternativas simples.",
+        "deps": [
+          "E03.H02"
+        ],
+        "accept": "Baselines usam os mesmos dados, avaliador e espaço declarado de pipelines.",
+        "tasks": [
+          {
+            "id": "E03.H03.T01",
+            "title": "Adaptar B0 existente",
+            "subtasks": [
+              "Reutilizar pipeline convencional já implementado na branch",
+              "Adicionar tratamento de dados mistos conforme necessário",
+              "Registrar diferenças em relação à versão Iris/Wine/Digits"
+            ]
+          },
+          {
+            "id": "E03.H03.T02",
+            "title": "Adicionar busca convencional",
+            "subtasks": [
+              "Implementar busca aleatória ou equivalente simples",
+              "Fixar espaço de hiperparâmetros e número de avaliações",
+              "Registrar custo total e execução sem LLM"
+            ]
+          },
+          {
+            "id": "E03.H03.T03",
+            "title": "Criar manifesto do benchmark",
+            "subtasks": [
+              "Fixar modelos, transformações e ações permitidas",
+              "Identificar seeds e configuração de validação",
+              "Estabelecer política para erro de treino, timeout e memória"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E04",
+    "title": "Instrumentar árvore e política de busca",
+    "track": "Engenharia",
+    "window": "S4–S6",
+    "effort": "7–10 dias-pessoa",
+    "deps": [
+      "E02"
+    ],
+    "goal": "Separar mecanismo de execução da política e registrar decisões reproduzíveis.",
+    "gate": "G4 · Contrato único de política e árvores auditáveis em casos determinísticos.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E04.H01",
+        "title": "Definir interface de política",
+        "user": "Como desenvolvedor, preciso trocar a estratégia sem trocar o avaliador.",
+        "deps": [
+          "E02"
+        ],
+        "accept": "A mesma interface funciona no executor real e no replay.",
+        "tasks": [
+          {
+            "id": "E04.H01.T01",
+            "title": "Definir observação",
+            "subtasks": [
+              "Incluir apenas nós revelados, métricas de validação e orçamento",
+              "Acrescentar falhas, custos e ações elegíveis",
+              "Excluir rótulos de teste e resultados futuros"
+            ]
+          },
+          {
+            "id": "E04.H01.T02",
+            "title": "Definir ações",
+            "subtasks": [
+              "Representar expandir, aprofundar, corrigir, abandonar e parar",
+              "Validar nó de origem e limites antes de executar",
+              "Definir semântica para ações sem continuação no replay"
+            ]
+          },
+          {
+            "id": "E04.H01.T03",
+            "title": "Extrair política atual",
+            "subtasks": [
+              "Encapsular UCT e parâmetros atuais sem reescrever toda a arquitetura",
+              "Preservar comportamento em testes conhecidos",
+              "Registrar versão e parâmetros por run"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E04.H02",
+        "title": "Persistir eventos e linhagem",
+        "user": "Como reprodutor, preciso reconstruir por que cada nó existe.",
+        "deps": [
+          "E04.H01"
+        ],
+        "accept": "Árvore pode ser reconstruída sem depender de narrativa do LLM.",
+        "tasks": [
+          {
+            "id": "E04.H02.T01",
+            "title": "Definir schema por nó",
+            "subtasks": [
+              "Salvar hipótese, ação, pai, código e evidência",
+              "Guardar custo, duração, resultado de validação e estado",
+              "Distinguir correção do mesmo candidato de novo candidato"
+            ]
+          },
+          {
+            "id": "E04.H02.T02",
+            "title": "Registrar decisões",
+            "subtasks": [
+              "Salvar observação, política, ação escolhida e alternativas elegíveis",
+              "Associar tempo e consumo de decisão",
+              "Preservar mudanças de versão e hashes"
+            ]
+          },
+          {
+            "id": "E04.H02.T03",
+            "title": "Reconciliar artefatos",
+            "subtasks": [
+              "Validar ligação entre árvore, manifesto e ledger",
+              "Cobrir escrita interrompida e evento duplicado",
+              "Produzir exportação estável para análise e replay"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E04.H03",
+        "title": "Controlar parada e seleção",
+        "user": "Como usuário, preciso de uma conclusão mesmo sem melhoria.",
+        "deps": [
+          "E04.H01"
+        ],
+        "accept": "Execução termina por critérios explícitos e preserva o melhor candidato válido.",
+        "tasks": [
+          {
+            "id": "E04.H03.T01",
+            "title": "Implementar limites",
+            "subtasks": [
+              "Parar por orçamento, tempo ou máximo de nós",
+              "Definir estagnação sem olhar o teste",
+              "Impedir autorrevisão dos limites pela política"
+            ]
+          },
+          {
+            "id": "E04.H03.T02",
+            "title": "Selecionar candidato final",
+            "subtasks": [
+              "Usar regra previamente fixada sobre validação",
+              "Definir desempate por custo ou simplicidade",
+              "Retornar sem candidato válido quando necessário"
+            ]
+          },
+          {
+            "id": "E04.H03.T03",
+            "title": "Gerar testes de comportamento",
+            "subtasks": [
+              "Construir árvores artificiais com ramos bons, ruins e inválidos",
+              "Verificar contagem de tentativas e seleção",
+              "Testar estados sem ação elegível e ausência de melhoria"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E05",
+    "title": "Coletar histórico com política fixa",
+    "track": "Experimentação",
+    "window": "S6–S7",
+    "effort": "4–7 dias-pessoa",
+    "deps": [
+      "E03",
+      "E04",
+      "E12.H03"
+    ],
+    "goal": "Criar árvores reais úteis ao replay e medir viabilidade antes de adaptar.",
+    "gate": "G5 · Histórico utilizável, consumo observado e decisão de continuar registrados.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E05.H01",
+        "title": "Preparar campanha de desenvolvimento",
+        "user": "Como pesquisador, preciso de diversidade de trajetórias sem contaminar a avaliação final.",
+        "deps": [
+          "E03",
+          "E04"
+        ],
+        "accept": "Campanha usa somente tarefas de desenvolvimento e tem teto global.",
+        "tasks": [
+          {
+            "id": "E05.H01.T01",
+            "title": "Definir matriz exploratória",
+            "subtasks": [
+              "Escolher pequeno lote inicial de tarefas e seeds",
+              "Usar política fixa e algumas configurações de exploração previamente declaradas",
+              "Separar IDs desta campanha dos pilotos históricos"
+            ]
+          },
+          {
+            "id": "E05.H01.T02",
+            "title": "Congelar condições",
+            "subtasks": [
+              "Fixar gerador, prompts, dependências e avaliador",
+              "Definir correções permitidas e orçamento por execução",
+              "Registrar custo máximo e autorização do lote"
+            ]
+          },
+          {
+            "id": "E05.H01.T03",
+            "title": "Preparar contabilização",
+            "subtasks": [
+              "Somar chamadas de geração e coordenação",
+              "Registrar CPU, tempo e artefatos",
+              "Identificar custo recuperável por cache sem tratar cache como chamada nova"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E05.H02",
+        "title": "Executar e auditar árvores",
+        "user": "Como analista, preciso de histórico válido e também de falhas observadas.",
+        "deps": [
+          "E05.H01"
+        ],
+        "accept": "Cada run tem desfecho; a diversidade e os limites do histórico são reportados.",
+        "tasks": [
+          {
+            "id": "E05.H02.T01",
+            "title": "Executar lotes pequenos",
+            "subtasks": [
+              "Inspecionar o primeiro lote antes de escalar",
+              "Preservar falhas sem substituir por novos sucessos",
+              "Registrar intervenções manuais e motivo"
+            ]
+          },
+          {
+            "id": "E05.H02.T02",
+            "title": "Auditar cobertura",
+            "subtasks": [
+              "Contar tipos de ação, profundidade e ramificação",
+              "Identificar regiões sem observação suficiente",
+              "Verificar se o replay terá alternativas reais para comparar"
+            ]
+          },
+          {
+            "id": "E05.H02.T03",
+            "title": "Classificar incidentes",
+            "subtasks": [
+              "Distinguir defeito do harness de resultado ruim de uma estratégia",
+              "Corrigir defeitos antes de congelar a coleta principal",
+              "Manter execuções afetadas em registro de exclusões justificado"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E05.H03",
+        "title": "Decidir viabilidade e próximo escopo",
+        "user": "Como gerente, preciso de uma decisão baseada no piloto.",
+        "deps": [
+          "E05.H02"
+        ],
+        "accept": "Relatório decide avançar, corrigir ou reduzir escopo.",
+        "tasks": [
+          {
+            "id": "E05.H03.T01",
+            "title": "Estimar orçamento e duração",
+            "subtasks": [
+              "Usar distribuições observadas, não apenas média",
+              "Reservar margem explícita para falhas e repetição",
+              "Atualizar cronograma sem presumir disponibilidade ilimitada"
+            ]
+          },
+          {
+            "id": "E05.H03.T02",
+            "title": "Avaliar sinal de utilidade",
+            "subtasks": [
+              "Comparar árvores com baseline convencional",
+              "Verificar se decisões variam e afetam resultados",
+              "Se tudo converge trivialmente, revisar benchmark antes de alegar adaptação"
+            ]
+          },
+          {
+            "id": "E05.H03.T03",
+            "title": "Fechar gate",
+            "subtasks": [
+              "Aprovar protocolo do replay ou registrar impedimento",
+              "Congelar cópia do histórico de desenvolvimento",
+              "Atualizar relatório metodológico e riscos"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E06",
+    "title": "Construir replay fiel e limitado",
+    "track": "Engenharia / método",
+    "window": "S7–S9",
+    "effort": "8–12 dias-pessoa",
+    "deps": [
+      "E05"
+    ],
+    "goal": "Reavaliar políticas sobre resultados registrados sem inventar contrafactuais.",
+    "gate": "G6 · Replay não revela futuro, não inventa resultados e tem cobertura documentada.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E06.H01",
+        "title": "Transformar árvores em ambientes de replay",
+        "user": "Como pesquisador, preciso reutilizar resultados com semântica explícita.",
+        "deps": [
+          "E05"
+        ],
+        "accept": "Transição do replay está especificada e testada.",
+        "tasks": [
+          {
+            "id": "E06.H01.T01",
+            "title": "Mapear ações a continuidades registradas",
+            "subtasks": [
+              "Preservar ordem pai-filho e artefatos",
+              "Definir desempate entre continuidades equivalentes",
+              "Retornar UNSUPPORTED quando uma ação não tem suporte histórico"
+            ]
+          },
+          {
+            "id": "E06.H01.T02",
+            "title": "Revelar informação progressivamente",
+            "subtasks": [
+              "Iniciar com raiz e observações permitidas",
+              "Revelar métricas só após a ação correspondente",
+              "Excluir score futuro dos atributos de seleção"
+            ]
+          },
+          {
+            "id": "E06.H01.T03",
+            "title": "Separar custo simulado e real",
+            "subtasks": [
+              "Contabilizar custo histórico das ações selecionadas",
+              "Medir separadamente CPU e chamadas do próprio replay",
+              "Não relatar replay como nova descoberta experimental"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E06.H02",
+        "title": "Validar o simulador",
+        "user": "Como avaliador, preciso saber o que uma pontuação de replay significa.",
+        "deps": [
+          "E06.H01"
+        ],
+        "accept": "Reexecução da política histórica reconstrói trajetória compatível; limitações explícitas.",
+        "tasks": [
+          {
+            "id": "E06.H02.T01",
+            "title": "Criar testes manuais",
+            "subtasks": [
+              "Usar árvores pequenas com resultados calculáveis",
+              "Testar parada precoce, ramo esgotado e ação ausente",
+              "Conferir melhor candidato e custos acumulados"
+            ]
+          },
+          {
+            "id": "E06.H02.T02",
+            "title": "Reproduzir política histórica",
+            "subtasks": [
+              "Executar a política original sobre seu registro",
+              "Comparar sequência quando determinismo e suporte permitirem",
+              "Documentar divergências por estocasticidade ou ordem de eventos"
+            ]
+          },
+          {
+            "id": "E06.H02.T03",
+            "title": "Medir cobertura e viés",
+            "subtasks": [
+              "Reportar fração de ações suportadas",
+              "Identificar favorecimento da política que gerou os dados",
+              "Proibir conclusão de superioridade online com base apenas em replay"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E06.H03",
+        "title": "Separar desenvolvimento de política e seleção",
+        "user": "Como autor, preciso evitar otimizar e avaliar no mesmo histórico.",
+        "deps": [
+          "E06.H02"
+        ],
+        "accept": "Conjuntos de desenvolvimento e validação separados e identificados por hash.",
+        "tasks": [
+          {
+            "id": "E06.H03.T01",
+            "title": "Particionar por tarefa ou execução",
+            "subtasks": [
+              "Evitar dividir nós irmãos entre treino e validação como se fossem independentes",
+              "Preservar famílias de árvores correlacionadas",
+              "Definir fronteira de generalização que a amostra permite"
+            ]
+          },
+          {
+            "id": "E06.H03.T02",
+            "title": "Definir função de seleção",
+            "subtasks": [
+              "Usar qualidade de validação, validade e custo com regra prévia",
+              "Normalizar por tarefa quando métricas forem incompatíveis",
+              "Fixar pesos sem consultar o teste final"
+            ]
+          },
+          {
+            "id": "E06.H03.T03",
+            "title": "Criar relatório comparativo",
+            "subtasks": [
+              "Mostrar ganho histórico e incerteza",
+              "Reportar ações sem suporte",
+              "Escolher poucas políticas candidatas para confirmação real"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E07",
+    "title": "Implementar adaptação da política",
+    "track": "Pesquisa / engenharia",
+    "window": "S9–S11",
+    "effort": "7–11 dias-pessoa",
+    "deps": [
+      "E06"
+    ],
+    "goal": "Fechar o ciclo histórico → política candidata → confirmação real.",
+    "gate": "G7 · Adaptação versionada, limitada e comparável; nenhuma promessa de melhoria monotônica.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E07.H01",
+        "title": "Gerar políticas candidatas limitadas",
+        "user": "Como pesquisador, preciso atribuir efeitos à política e preservar o restante do sistema.",
+        "deps": [
+          "E06"
+        ],
+        "accept": "Candidatas alteram apenas parâmetros ou regras permitidos.",
+        "tasks": [
+          {
+            "id": "E07.H01.T01",
+            "title": "Definir espaço de adaptação",
+            "subtasks": [
+              "Permitir exploração, ramificação, correção e estagnação",
+              "Manter gerador, avaliador e limites externos fixos",
+              "Começar com configuração declarativa, sem autoedição arbitrária do repositório"
+            ]
+          },
+          {
+            "id": "E07.H01.T02",
+            "title": "Criar propositor",
+            "subtasks": [
+              "Gerar poucas candidatas a partir de feedback do desenvolvimento",
+              "Comparar com ajuste simples sem LLM",
+              "Contabilizar prompts, chamadas e custo de propostas"
+            ]
+          },
+          {
+            "id": "E07.H01.T03",
+            "title": "Validar candidatas",
+            "subtasks": [
+              "Rejeitar configurações fora dos limites",
+              "Testar ação sempre elegível e parada garantida",
+              "Incluir a política vigente entre as candidatas"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E07.H02",
+        "title": "Selecionar e versionar adaptação",
+        "user": "Como mantenedor, preciso preservar a política anterior e entender a mudança.",
+        "deps": [
+          "E07.H01"
+        ],
+        "accept": "Toda política tem ancestral, evidência de seleção e plano de reversão.",
+        "tasks": [
+          {
+            "id": "E07.H02.T01",
+            "title": "Executar seleção offline",
+            "subtasks": [
+              "Usar desenvolvimento para ajuste e validação separada para seleção",
+              "Fixar número de tentativas de otimização",
+              "Não procurar indefinidamente até obter resultado positivo"
+            ]
+          },
+          {
+            "id": "E07.H02.T02",
+            "title": "Registrar versão",
+            "subtasks": [
+              "Guardar política, configuração, histórico utilizado e função objetivo",
+              "Explicar alterações em linguagem simples",
+              "Preservar versão anterior e reason code da promoção"
+            ]
+          },
+          {
+            "id": "E07.H02.T03",
+            "title": "Definir promoção experimental",
+            "subtasks": [
+              "Estabelecer critério antes da confirmação real",
+              "Registrar não promoção quando evidência for insuficiente",
+              "Distinguir política candidata de política adotada"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E07.H03",
+        "title": "Confirmar em novas execuções",
+        "user": "Como pesquisador, preciso verificar se o ganho histórico se sustenta.",
+        "deps": [
+          "E07.H02"
+        ],
+        "accept": "Comparação real sob orçamento equivalente, incluindo custo da adaptação.",
+        "tasks": [
+          {
+            "id": "E07.H03.T01",
+            "title": "Parear execuções",
+            "subtasks": [
+              "Usar mesmas tarefas, splits, modelos e limites",
+              "Alternar ordem para reduzir efeitos temporais",
+              "Executar política fixa e adaptativa sem compartilhar resultados de teste"
+            ]
+          },
+          {
+            "id": "E07.H03.T02",
+            "title": "Medir o ciclo completo",
+            "subtasks": [
+              "Somar custo de histórico, propostas, replay e descoberta",
+              "Reportar custo amortizado apenas com hipótese explícita de reutilização",
+              "Comparar sucesso válido, qualidade, tempo e orçamento"
+            ]
+          },
+          {
+            "id": "E07.H03.T03",
+            "title": "Atualizar histórico com disciplina",
+            "subtasks": [
+              "Adicionar novas árvores só após encerrar o lote",
+              "Manter política fixa dentro de cada rollout",
+              "Fixar número de rodadas; encerrar se houver regressão ou orçamento esgotado"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E08",
+    "title": "Avaliar Jev como componente opcional",
+    "track": "Extensão / engenharia",
+    "window": "S6–S12 · opcional",
+    "effort": "6–10 dias-pessoa",
+    "deps": [
+      "E04",
+      "E12.H03"
+    ],
+    "goal": "Testar se sinais semânticos estruturados melhoram decisões sem substituir validações.",
+    "gate": "GJ · Utilidade medida; adoção, rejeição ou adiamento documentados.",
+    "scope": "Opcional",
+    "stories": [
+      {
+        "id": "E08.H01",
+        "title": "Preparar adaptador desacoplado",
+        "user": "Como desenvolvedor, preciso ativar Jev sem torná-lo dependência obrigatória.",
+        "deps": [
+          "E04.H01",
+          "E12.H03"
+        ],
+        "accept": "Modo desligado preserva baseline; falha da API tem fallback definido.",
+        "tasks": [
+          {
+            "id": "E08.H01.T01",
+            "title": "Definir perguntas atômicas",
+            "subtasks": [
+              "Começar por classificação de diagnóstico e pertinência de correção",
+              "Evitar perguntas matemáticas ou aprovação científica geral",
+              "Definir alternativas e estado mínimo necessário"
+            ]
+          },
+          {
+            "id": "E08.H01.T02",
+            "title": "Implementar provider interface",
+            "subtasks": [
+              "Fixar versão explícita quando disponível, evitando latest na coleta",
+              "Validar resposta e registrar probabilidades e confiança",
+              "Aplicar timeout, política de retry, custo e mascaramento de credenciais"
+            ]
+          },
+          {
+            "id": "E08.H01.T03",
+            "title": "Definir fallback",
+            "subtasks": [
+              "Usar política determinística quando serviço estiver indisponível",
+              "Registrar abstinência sem inventar confiança",
+              "Garantir que modelo não altere orçamento, avaliador ou isolamento"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E08.H02",
+        "title": "Operar como observador",
+        "user": "Como avaliador, preciso analisar recomendações antes de dar controle.",
+        "deps": [
+          "E08.H01"
+        ],
+        "accept": "Sugestões registradas não influenciam os runs do baseline.",
+        "tasks": [
+          {
+            "id": "E08.H02.T01",
+            "title": "Montar conjunto de decisões",
+            "subtasks": [
+              "Selecionar estados reais apenas de desenvolvimento",
+              "Definir rubrica e revisão humana para casos ambíguos",
+              "Separar conjunto de ajuste e conjunto de avaliação"
+            ]
+          },
+          {
+            "id": "E08.H02.T02",
+            "title": "Medir qualidade dos sinais",
+            "subtasks": [
+              "Medir acerto por classe, abstinência e erros de alto impacto",
+              "Avaliar relação entre confiança e acerto",
+              "Não interpretar confidence como probabilidade validada de correção"
+            ]
+          },
+          {
+            "id": "E08.H02.T03",
+            "title": "Definir limiares",
+            "subtasks": [
+              "Escolher limiares em dados de desenvolvimento",
+              "Manter regras independentes para Choice, Score e Noul",
+              "Registrar custo e latência observados sem presumir vantagem comercial"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E08.H03",
+        "title": "Comparar contribuição isoladamente",
+        "user": "Como pesquisador, preciso separar efeito de Jev e efeito de adaptação.",
+        "deps": [
+          "E08.H02",
+          "E07"
+        ],
+        "accept": "Experimento opcional 2×2 ou estudo separado, com hipótese e orçamento próprios.",
+        "tasks": [
+          {
+            "id": "E08.H03.T01",
+            "title": "Definir desenho",
+            "subtasks": [
+              "Comparar fixa sem Jev, fixa com Jev, adaptativa sem Jev e adaptativa com Jev",
+              "Se orçamento não comportar, manter apenas estudo observacional",
+              "Evitar misturar mudança de features no mesmo experimento"
+            ]
+          },
+          {
+            "id": "E08.H03.T02",
+            "title": "Preservar replay",
+            "subtasks": [
+              "Registrar respostas Jev por estado e configuração",
+              "Reusar cache somente para entradas idênticas e explicitar custo original",
+              "Uma nova pergunta exige avaliação nova, não resultado contrafactual inventado"
+            ]
+          },
+          {
+            "id": "E08.H03.T03",
+            "title": "Decidir adoção",
+            "subtasks": [
+              "Comparar utilidade, custo total e falhas",
+              "Desligar se ganho não compensar complexidade",
+              "Manter integração opcional e documentação de limitações"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E09",
+    "title": "Coleta principal, análise e reprodução",
+    "track": "Pesquisa / avaliação",
+    "window": "S11–S15",
+    "effort": "10–15 dias-pessoa",
+    "deps": [
+      "E07"
+    ],
+    "goal": "Responder às questões com protocolo congelado e evidências reconstruíveis.",
+    "gate": "G8 · Coleta encerrada e análise reproduzível; G9 · reprodução independente registrada.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E09.H01",
+        "title": "Congelar protocolo final",
+        "user": "Como autor, preciso evitar decisões metodológicas orientadas pelos resultados.",
+        "deps": [
+          "E07.H03",
+          "E12.H03"
+        ],
+        "accept": "Protocolo aprovado antes do primeiro run principal.",
+        "tasks": [
+          {
+            "id": "E09.H01.T01",
+            "title": "Definir condições finais",
+            "subtasks": [
+              "Selecionar baselines necessários à pergunta principal",
+              "Não assumir que os antigos 60 runs cobrem RSI e Jev",
+              "Calcular matriz como tarefas × repetições × condições × rodadas, distinguindo execuções de ciclos"
+            ]
+          },
+          {
+            "id": "E09.H01.T02",
+            "title": "Justificar amostra e análise",
+            "subtasks": [
+              "Usar pilotos para viabilidade e variância, não para buscar significância",
+              "Tratar tarefas e seeds correlacionadas adequadamente",
+              "Fixar contrastes primários, métricas, exclusões e análise descritiva ou inferencial justificada"
+            ]
+          },
+          {
+            "id": "E09.H01.T03",
+            "title": "Congelar tudo que afeta comparação",
+            "subtasks": [
+              "Versionar código, política, prompts, modelos, splits e avaliador",
+              "Registrar teto financeiro total e autorização da coleta",
+              "Separar desenvolvimento, validação de políticas e teste final"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E09.H02",
+        "title": "Executar e analisar todos os desfechos",
+        "user": "Como pesquisador, preciso preservar resultados positivos e negativos.",
+        "deps": [
+          "E09.H01"
+        ],
+        "accept": "Todas as linhas planejadas têm estado; tabelas derivam de scripts.",
+        "tasks": [
+          {
+            "id": "E09.H02.T01",
+            "title": "Executar campanha",
+            "subtasks": [
+              "Rodar lotes com checagens de integridade",
+              "Registrar falhas e intervenções no denominador",
+              "Mudança de código exige desvio formal e decisão sobre lote afetado"
+            ]
+          },
+          {
+            "id": "E09.H02.T02",
+            "title": "Construir análise",
+            "subtasks": [
+              "Calcular validade, custo por sucesso e tempo até primeiro válido",
+              "Reportar qualidade por tarefa e diferenças pareadas",
+              "Mostrar distribuição e incerteza; não contar nós ou folds como amostras independentes"
+            ]
+          },
+          {
+            "id": "E09.H02.T03",
+            "title": "Discutir resultados",
+            "subtasks": [
+              "Responder cada questão separadamente",
+              "Incluir falhas, regressões e ausência de ganho",
+              "Explicitar seleção histórica, familiaridade dos datasets e variabilidade do provedor"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E09.H03",
+        "title": "Reproduzir e empacotar",
+        "user": "Como terceiro, preciso reconstruir pelo menos resultados selecionados sem conhecimento tácito.",
+        "deps": [
+          "E09.H02"
+        ],
+        "accept": "Reprodutor identificado executa roteiro; discrepâncias ficam documentadas.",
+        "tasks": [
+          {
+            "id": "E09.H03.T01",
+            "title": "Preparar pacote",
+            "subtasks": [
+              "Incluir ambiente, instruções, hashes e dados distribuíveis",
+              "Separar reprodução de análise offline de novas chamadas pagas",
+              "Vincular cada figura ao script e às linhas de dados"
+            ]
+          },
+          {
+            "id": "E09.H03.T02",
+            "title": "Realizar reprodução independente",
+            "subtasks": [
+              "Convidar avaliador com consentimento e agenda",
+              "Executar checkout limpo e amostra previamente definida",
+              "Registrar tempo, dificuldades, divergências e correções"
+            ]
+          },
+          {
+            "id": "E09.H03.T03",
+            "title": "Arquivar versão final",
+            "subtasks": [
+              "Criar release e inventário de artefatos",
+              "Verificar licenças e ausência de segredos",
+              "Preservar dados brutos e instruções de acesso para o período exigido pelo programa"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E10",
+    "title": "Experiência guiada para o júnior",
+    "track": "Produto / comunicação",
+    "window": "S4–S15 · incremental",
+    "effort": "5–8 dias-pessoa",
+    "deps": [
+      "E02"
+    ],
+    "goal": "Explicar a árvore e o resultado com evidências sem alegar eficácia pedagógica não medida.",
+    "gate": "GU · Relatório compreensível e rastreável; estudo com usuários fica fora do núcleo.",
+    "scope": "Demonstração",
+    "stories": [
+      {
+        "id": "E10.H01",
+        "title": "Definir jornada de aprendizado",
+        "user": "Como júnior, preciso entender o problema antes de iniciar a busca.",
+        "deps": [
+          "E00.H01"
+        ],
+        "accept": "Roteiro cobre objetivo, métrica, baseline, orçamento e hipótese.",
+        "tasks": [
+          {
+            "id": "E10.H01.T01",
+            "title": "Desenhar entrada guiada",
+            "subtasks": [
+              "Perguntar alvo, uso previsto e erros relevantes",
+              "Explicar escolha de métrica e limitações dos dados",
+              "Mostrar orçamento e resultados possíveis, incluindo ausência de ganho"
+            ]
+          },
+          {
+            "id": "E10.H01.T02",
+            "title": "Especificar dois modos",
+            "subtasks": [
+              "Modo guiado pede previsão e justificativa do aluno",
+              "Modo automático limitado executa lote previamente definido",
+              "Evitar aprovação a cada passo técnico de baixo impacto"
+            ]
+          },
+          {
+            "id": "E10.H01.T03",
+            "title": "Definir linguagem do relatório",
+            "subtasks": [
+              "Separar fato calculado, hipótese e interpretação",
+              "Explicar termos com exemplos breves",
+              "Não atribuir causalidade a importância de features"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E10.H02",
+        "title": "Construir relatório da árvore",
+        "user": "Como júnior, preciso saber por que uma alternativa foi escolhida.",
+        "deps": [
+          "E04.H02",
+          "E10.H01"
+        ],
+        "accept": "Cada recomendação referencia nós e métricas existentes.",
+        "tasks": [
+          {
+            "id": "E10.H02.T01",
+            "title": "Exibir trajetória",
+            "subtasks": [
+              "Mostrar hipótese, mudança e resultado por nó",
+              "Destacar ramos abandonados e razão",
+              "Permitir abrir código e evidências relevantes"
+            ]
+          },
+          {
+            "id": "E10.H02.T02",
+            "title": "Gerar recomendação verificável",
+            "subtasks": [
+              "Comparar candidato com baseline",
+              "Explicar trade-off entre custo, qualidade e simplicidade",
+              "Informar quando nenhum candidato válido ou melhor foi encontrado"
+            ]
+          },
+          {
+            "id": "E10.H02.T03",
+            "title": "Testar fidelidade",
+            "subtasks": [
+              "Conferir números contra o resultado estruturado",
+              "Rejeitar referências a nós inexistentes",
+              "Cobrir resultado negativo e indisponibilidade de explicador generativo"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E10.H03",
+        "title": "Validar demonstração sem ampliar tese",
+        "user": "Como autor, preciso apresentar utilidade plausível com limites claros.",
+        "deps": [
+          "E10.H02",
+          "E09.H02"
+        ],
+        "accept": "Demonstração funcional; nenhum ganho pedagógico declarado sem estudo próprio.",
+        "tasks": [
+          {
+            "id": "E10.H03.T01",
+            "title": "Preparar caso demonstrativo",
+            "subtasks": [
+              "Escolher execução representativa e preservada",
+              "Criar roteiro do objetivo até a conclusão",
+              "Ter reprodução offline para apresentação"
+            ]
+          },
+          {
+            "id": "E10.H03.T02",
+            "title": "Revisar clareza",
+            "subtasks": [
+              "Solicitar leitura crítica de colega quando disponível",
+              "Registrar feedback como usabilidade exploratória",
+              "Corrigir termos, navegação e evidências ausentes"
+            ]
+          },
+          {
+            "id": "E10.H03.T03",
+            "title": "Definir extensão futura",
+            "subtasks": [
+              "Se quiser medir aprendizagem, criar protocolo separado",
+              "Definir participantes, consentimento e exigências institucionais aplicáveis",
+              "Não acrescentar estudo humano à reta final sem replanejar"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "E11",
+    "title": "Dissertação, defesa e transferência",
+    "track": "Acadêmico",
+    "window": "S1–S18 · contínuo",
+    "effort": "15–22 dias-pessoa",
+    "deps": [
+      "E00"
+    ],
+    "goal": "Converter artefato e resultados em argumento acadêmico verificável.",
+    "gate": "G10 · Texto revisado, defesa preparada e depósito conforme exigências.",
+    "scope": "Núcleo",
+    "stories": [
+      {
+        "id": "E11.H01",
+        "title": "Escrever enquanto desenvolve",
+        "user": "Como mestrando, preciso evitar que a dissertação comece só após a coleta.",
+        "deps": [
+          "E00.H01"
+        ],
+        "accept": "Introdução, literatura, método e arquitetura avançam por versões revisadas.",
+        "tasks": [
+          {
+            "id": "E11.H01.T01",
+            "title": "Revisar literatura primária",
+            "subtasks": [
+              "Ler trabalhos de busca agentiva, replay e avaliação de agentes",
+              "Comparar pressupostos e limites com o ChicoCiência",
+              "Separar resultados de fornecedores de evidência independente"
+            ]
+          },
+          {
+            "id": "E11.H01.T02",
+            "title": "Escrever capítulos iniciais",
+            "subtasks": [
+              "Consolidar problema, objetivos e delimitação",
+              "Descrever método e ameaças à validade",
+              "Usar futuro para experimentos planejados e passado para executados"
+            ]
+          },
+          {
+            "id": "E11.H01.T03",
+            "title": "Manter rastreabilidade",
+            "subtasks": [
+              "Ligar requisitos a decisões, commits, testes e resultados",
+              "Atualizar diário com causa, mudança e verificação",
+              "Reservar revisão quinzenal com orientador"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E11.H02",
+        "title": "Consolidar contribuição demonstrada",
+        "user": "Como autor, preciso responder à pergunta sem exagerar alcance.",
+        "deps": [
+          "E09.H02",
+          "E11.H01"
+        ],
+        "accept": "Cada contribuição declarada tem evidência e limite correspondentes.",
+        "tasks": [
+          {
+            "id": "E11.H02.T01",
+            "title": "Redigir resultados",
+            "subtasks": [
+              "Inserir figuras geradas por scripts",
+              "Descrever amostra efetiva, exclusões e desvios",
+              "Manter resultados operacionais separados dos preditivos"
+            ]
+          },
+          {
+            "id": "E11.H02.T02",
+            "title": "Redigir discussão",
+            "subtasks": [
+              "Comparar política fixa e adaptativa com custo total",
+              "Explicar o que replay pode e não pode mostrar",
+              "Discutir resultados negativos e dependência de modelos externos"
+            ]
+          },
+          {
+            "id": "E11.H02.T03",
+            "title": "Revisar coerência",
+            "subtasks": [
+              "Conferir objetivo, método, evidência e conclusão",
+              "Validar referências e atribuições",
+              "Incorporar revisão do orientador sem alterar retroativamente o protocolo"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E11.H03",
+        "title": "Preparar defesa e depósito",
+        "user": "Como candidato, preciso apresentar o trabalho e entregar os materiais exigidos.",
+        "deps": [
+          "E09.H03",
+          "E10.H03",
+          "E11.H02"
+        ],
+        "accept": "Documentos e apresentações revisados; exigências institucionais conferidas.",
+        "tasks": [
+          {
+            "id": "E11.H03.T01",
+            "title": "Montar apresentação",
+            "subtasks": [
+              "Explicar problema, arquitetura, comparação e principal resultado",
+              "Demonstrar uma árvore real e um caso de falha",
+              "Preparar resposta sobre originalidade, validade, custos e limites"
+            ]
+          },
+          {
+            "id": "E11.H03.T02",
+            "title": "Ensaiar defesa",
+            "subtasks": [
+              "Cronometrar no tempo exigido pelo programa",
+              "Simular perguntas difíceis e revisar respostas",
+              "Manter demo offline e evidências acessíveis"
+            ]
+          },
+          {
+            "id": "E11.H03.T03",
+            "title": "Finalizar entrega",
+            "subtasks": [
+              "Aplicar correções da banca quando houver",
+              "Conferir formatação e documentos de depósito",
+              "Publicar apenas artefatos autorizados e distribuíveis"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

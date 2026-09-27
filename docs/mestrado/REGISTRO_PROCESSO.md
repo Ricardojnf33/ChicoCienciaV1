@@ -66,6 +66,23 @@ Estado: concluída em 11/09/2026. Foram publicados três incrementos técnicos:
 
 Resultado: Ruff aprovado, 50 testes aprovados e 4 testes live desmarcados. O smoke comparativo percorreu PRELIM, TUNING, RESEARCH_GRADE e ABLATIONS nas três condições, sem LLM e sem avaliação visual presumida. A CI remota [34617850898](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/34617850898) aprovou todos os gates. Detalhes, limites e o gate da Fase 5 estão no [relatório da Fase 4](FASE_4_RELATORIO.md).
 
-## Próxima ação
+## Próxima ação registrada em 11/09/2026 (histórica)
 
 Preparar a Fase 5 sem iniciar chamadas pagas: validar o sandbox em host compatível, adicionar B0 e a matriz dataset/seed ao manifesto, registrar orçamento financeiro e congelar configurações antes dos seis pilotos. As Fases 5 e 6 permanecem planejadas.
+
+
+## 27/09/2026 — E00: retomada pelo roadmap v1.1
+
+O responsável determinou uma nova branch por vez, PR e preparação do Actions,
+com disparo manual e pausa antes do próximo incremento. O estado remoto foi
+revalidado: main 4ba9739, Fase 5 03eaf5a, PR #7 aberta e último piloto falho.
+A próxima ação histórica acima foi parcialmente superada pelo trabalho na branch
+Fase 5; o status atual está no [índice E00](evidencias/e00-20260927/index.md).
+
+Foram preparados roadmap HTML/JSON, snapshot, pendências, relatório final
+cumulativo e validador manual sem LLM. Nenhum workflow foi disparado pelo agente;
+a CI de push/PR permanece automática conforme configuração existente.
+
+Próximo passo: usuário integra a PR documental após revisão/CI e executa
+Roadmap E00 - manual evidence gate em main. Conferir o run e preservar evidências
+antes de iniciar E01. G0 acadêmico e G2 continuam pendentes.

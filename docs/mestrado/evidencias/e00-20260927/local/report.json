@@ -1,0 +1,180 @@
+{
+  "schema_version": "1.0",
+  "increment": "E00",
+  "scope": "Document integrity only; not application tests, live E2E or scientific validation.",
+  "passed": true,
+  "checks": [
+    {
+      "name": "required_files",
+      "passed": true,
+      "detail": {
+        "missing": []
+      }
+    },
+    {
+      "name": "unique_backlog_ids",
+      "passed": true,
+      "detail": 173
+    },
+    {
+      "name": "unique_html_ids",
+      "passed": true,
+      "detail": 195
+    },
+    {
+      "name": "html_anchors_resolve",
+      "passed": true,
+      "detail": [
+        "visao",
+        "estado",
+        "agora",
+        "sequencia",
+        "cronograma",
+        "gates",
+        "backlog",
+        "E00",
+        "E01",
+        "E02",
+        "E12",
+        "E03",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E08",
+        "E09",
+        "E10",
+        "E11",
+        "monitoramento",
+        "metodo",
+        "riscos",
+        "entrega",
+        "fontes",
+        "E00",
+        "E01",
+        "E02",
+        "E12",
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "E09",
+        "E11",
+        "E00",
+        "E00.H02",
+        "E01.H01",
+        "E01.H02",
+        "E01",
+        "E01",
+        "E02.H01",
+        "E02.H02",
+        "E02",
+        "E02.H02",
+        "E12.H01",
+        "E12.H02",
+        "E12.H03",
+        "E08.H02",
+        "E00",
+        "E00.H01",
+        "E03.H01",
+        "E03.H02",
+        "E02",
+        "E02",
+        "E04.H01",
+        "E04.H01",
+        "E03",
+        "E04",
+        "E12.H03",
+        "E03",
+        "E04",
+        "E05.H01",
+        "E05.H02",
+        "E05",
+        "E05",
+        "E06.H01",
+        "E06.H02",
+        "E06",
+        "E06",
+        "E07.H01",
+        "E07.H02",
+        "E04",
+        "E12.H03",
+        "E04.H01",
+        "E12.H03",
+        "E08.H01",
+        "E08.H02",
+        "E07",
+        "E07",
+        "E07.H03",
+        "E12.H03",
+        "E09.H01",
+        "E09.H02",
+        "E02",
+        "E00.H01",
+        "E04.H02",
+        "E10.H01",
+        "E10.H02",
+        "E09.H02",
+        "E00",
+        "E00.H01",
+        "E09.H02",
+        "E11.H01",
+        "E09.H03",
+        "E10.H03",
+        "E11.H02"
+      ]
+    },
+    {
+      "name": "task_parity",
+      "passed": true,
+      "detail": 120
+    },
+    {
+      "name": "dependencies_resolve",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "story_dependency_graph_acyclic",
+      "passed": true,
+      "detail": 40
+    },
+    {
+      "name": "acceptance_criteria_present",
+      "passed": true,
+      "detail": 40
+    },
+    {
+      "name": "monitoring_required",
+      "passed": true,
+      "detail": "E12 and dedicated monitoring section"
+    },
+    {
+      "name": "phase5_not_claimed_valid",
+      "passed": true,
+      "detail": "observed_not_reexecuted"
+    },
+    {
+      "name": "snapshot_shas",
+      "passed": true,
+      "detail": {
+        "main": "4ba97396dcc02aa53d2da4a3365c463df313ce5d",
+        "phase5": "03eaf5a850f7bbb4ce8fbaf9d9f120517edf4d10"
+      }
+    }
+  ],
+  "counts": {
+    "epics": 13,
+    "stories": 40,
+    "tasks": 120,
+    "subtasks": 360
+  },
+  "source_commit": "LOCAL_WORKING_TREE",
+  "run_id": null,
+  "run_attempt": null,
+  "actor": null,
+  "llm_api_calls_performed_by_this_validator": 0,
+  "gate_g0_academic_approval": "PENDING_USER_INPUT",
+  "gate_g2_e2e": "NOT_VALIDATED",
+  "next_step": "WAIT_FOR_MANUAL_ACTIONS_AND_REVIEW"
+}

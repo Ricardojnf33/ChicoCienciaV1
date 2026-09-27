@@ -1,0 +1,13 @@
+{
+  "docs/mestrado/roadmap.html": "100236639b4e03641daee1ab59f51d0e6de408d718b7eaf5ed03db34f18b25c9",
+  "docs/mestrado/roadmap.json": "0034507fa2a78e48fb127d56e9ecea1e4390abf4d024099027c84f5aab6d834b",
+  "docs/mestrado/EXECUCAO_ROADMAP.md": "e81d7ec0f896b2471941454f4db1794a2a47736b284813a2073d61e95af740e0",
+  "docs/mestrado/PENDENCIAS_USUARIO.md": "5c6015fc41e37780b1f067563df780df354a14d0645ef7401a573183361b3c62",
+  "docs/mestrado/RELATORIO_FINAL.md": "511a2b038c79677dbcae66c987b278896ac442854ca2ede079832ebdd3cc841d",
+  "docs/mestrado/README.md": "268d2e7e7139ccb8eb2cdbb8bfbd26d7cd87894221c60c15afd20b06e15bed27",
+  "docs/mestrado/REGISTRO_PROCESSO.md": "eacc0c6ca42f107678a4d8a0337a3a92149b1f14e28c0d6e941c5612b1d3a569",
+  "docs/mestrado/evidencias/e00-20260927/baseline.json": "b4e6c5995acd3620a89727121061d3c2caf736b4ebbabe12dc0fa6f09ad1115f",
+  "docs/mestrado/evidencias/e00-20260927/index.md": "025076a9e25ef28009760cb6c83118c619b6f2b1ec6ee416c368f2adb3774ca9",
+  "scripts/validate_roadmap.py": "64eb8a83d433fbd8a20572462a13cac48dc8355e4aa22bb12b4fab970a1ce418",
+  ".github/workflows/roadmap-e00.yml": "dec70724c1d584fa9e1f8f85833e3f910855660dd05f187b4c85493b69f56a9e"
+}

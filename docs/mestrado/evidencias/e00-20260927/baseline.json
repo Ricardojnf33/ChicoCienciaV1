@@ -1,0 +1,61 @@
+{
+  "inspected_at": "2026-09-27",
+  "repository": "Ricardojnf33/ChicoCienciaV1",
+  "main_sha": "4ba97396dcc02aa53d2da4a3365c463df313ce5d",
+  "phase5_sha": "03eaf5a850f7bbb4ce8fbaf9d9f120517edf4d10",
+  "open_prs": [
+    {
+      "number": 7,
+      "title": "Fase 5: preflight protegido e integração live segura",
+      "head": "feat/mestrado-fase-5",
+      "sha": "03eaf5a850f7bbb4ce8fbaf9d9f120517edf4d10",
+      "url": "https://github.com/Ricardojnf33/ChicoCienciaV1/pull/7"
+    },
+    {
+      "number": 1,
+      "title": "feat: add streamlit frontend for real-time visualization",
+      "head": "feat/frontend-visualization",
+      "sha": "8d4a5513a62d6f37dba55f4e133f0693446177fe",
+      "url": "https://github.com/Ricardojnf33/ChicoCienciaV1/pull/1"
+    }
+  ],
+  "recent_runs": [
+    {
+      "id": 35047877307,
+      "name": "Phase 5 six-pilot campaign",
+      "head_sha": "03eaf5a850f7bbb4ce8fbaf9d9f120517edf4d10",
+      "conclusion": "failure",
+      "url": "https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047877307"
+    },
+    {
+      "id": 35047282318,
+      "name": "CI",
+      "head_sha": "03eaf5a850f7bbb4ce8fbaf9d9f120517edf4d10",
+      "conclusion": "success",
+      "url": "https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047282318"
+    },
+    {
+      "id": 35047282261,
+      "name": "Phase 5 preflight",
+      "head_sha": "03eaf5a850f7bbb4ce8fbaf9d9f120517edf4d10",
+      "conclusion": "success",
+      "url": "https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047282261"
+    }
+  ],
+  "source_urls": [
+    "https://api.github.com/repos/Ricardojnf33/ChicoCienciaV1/git/trees/main?recursive=1",
+    "https://api.github.com/repos/Ricardojnf33/ChicoCienciaV1/branches/feat/mestrado-fase-5",
+    "https://api.github.com/repos/Ricardojnf33/ChicoCienciaV1/pulls?state=open&per_page=20",
+    "https://api.github.com/repos/Ricardojnf33/ChicoCienciaV1/actions/runs?per_page=3"
+  ],
+  "findings": {
+    "agents_md_present": false,
+    "phase5_e2e_validated": false,
+    "last_pilot_outcome": "failure",
+    "known_failure": "Mensagem de limite da Crew materializada como code.py; SyntaxError.",
+    "failure_source": "https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/35047877307",
+    "status": "observed_not_reexecuted"
+  },
+  "scope": "Snapshot documental; não prova validação científica nem execução E2E."
+}
+
