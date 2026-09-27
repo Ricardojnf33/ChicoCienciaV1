@@ -14,7 +14,11 @@ As PRs históricas #7 e #1 já existem; não serão fechadas ou alteradas por es
 regra. Ela vale para novos incrementos. A branch E00 parte de main e não incorpora
 nem executa a implementação live da PR #7.
 
-## Incremento atual: E00 — baseline e governança
+## Incremento atual: registrar e integrar evidência remota do E00
+
+O run manual 36350845233 passou no gate documental e seu artifact foi conferido e copiado para `evidencias/e00-20260927/remote/`. Este registro está sendo preparado em uma PR dedicada. Próximo passo: revisar e integrar manualmente essa PR. E01 permanece bloqueado até essa integração e não será iniciado nesta branch. G0 e G2 seguem pendentes.
+
+### Incremento concluído anteriormente: E00 — baseline e governança
 
 - Escopo: E00.H02 e preparação operacional de E00.H03.
 - E00.H01 permanece parcial: orientação, situação acadêmica, prazo e capacidade
@@ -22,7 +26,7 @@ nem executa a implementação live da PR #7.
 - Entregas: roadmap v1.1, snapshot, registro de evidências, relatório final em
   construção e workflow manual de integridade documental.
 - Não inclui: correção E01, prova E2E, implantação de Jev ou avanço experimental.
-- Gate: validação local registrada; validação manual remota aguardada.
+- Gate documental local e remoto concluído; evidência remota versionada nesta PR. G0 acadêmico e G2 E2E seguem pendentes.
 
 ## Ciclo obrigatório por incremento
 
@@ -34,23 +38,20 @@ nem executa a implementação live da PR #7.
 5. Abrir PR com objetivo, IDs do roadmap, mudanças, testes e limitações.
 6. O usuário executa o workflow manual indicado; o agente não dispara nem faz merge.
 7. Ler o run pela API quando disponível, conferir commit, steps, artifacts e custos.
-8. Versionar o resultado antes de abrir a próxima branch. Correções do mesmo
+8. Versionar o resultado antes de abrir a próxima branch. Para o E00, este registro está em PR e exige integração manual antes de E01. Correções do mesmo
    incremento permanecem na mesma branch enquanto ela estiver aberta.
 
 A CI existente continua automática em push/PR. Sua aprovação não substitui a
 execução manual solicitada e não permite avançar sozinha.
 
-## Bootstrap do novo workflow E00
+## Bootstrap do workflow E00 — concluído
 
-Um workflow novo com workflow_dispatch precisa existir na branch padrão para
-ficar disponível para despacho manual. Por isso:
-
-1. Revisar e integrar manualmente esta PR documental após a CI ficar verde.
-2. Em Actions, abrir **Roadmap E00 - manual evidence gate**.
-3. Escolher **Run workflow**, branch **main**, confirmação **VALIDAR_E00_SEM_LLM**.
-4. Executar uma vez. Não executar workflows Phase 5 nesta etapa.
-5. Enviar o link do run. A leitura de logs e artefatos será feita pelo conector;
-   solicitar print/arquivo somente se houver impedimento concreto de acesso.
+O workflow foi integrado à branch padrão e executado manualmente pelo responsável
+no run [36350845233](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/36350845233).
+O relatório, checksums e metadados foram preservados em
+`evidencias/e00-20260927/remote/`. Esta PR registra a evidência após conferência.
+A integração desta PR é o gate antes de começar E01; nenhum workflow da Fase 5
+foi executado neste incremento.
 
 O workflow usa apenas Python da imagem, não instala o projeto, não recebe secrets,
 não chama serviços de modelos e não escreve no GitHub. Seu resultado valida
@@ -61,7 +62,7 @@ somente a integridade do plano/documentos. Gate G2 continua pendente.
 O índice versionado deve ligar tarefa → commit → PR → workflow/run → pacote →
 conclusão. Registrar também falhas, cancelamentos e tentativas não iniciadas.
 O artifact do E00 contém report.json, checksums.json e summary.md, com identidade
-da execução. A retenção solicitada é 90 dias, sujeita ao limite do repositório.
+da execução; os arquivos e metadados já estão preservados no repositório. A retenção solicitada é 90 dias, sujeita ao limite do repositório.
 Após o run, copiar relatório e checksums para o índice de evidências antes de
 expirarem. Bundles grandes precisam de destino durável acordado com o responsável.
 Links temporários não são arquivo científico permanente.

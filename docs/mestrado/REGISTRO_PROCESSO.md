@@ -86,3 +86,14 @@ a CI de push/PR permanece automática conforme configuração existente.
 Próximo passo: usuário integra a PR documental após revisão/CI e executa
 Roadmap E00 - manual evidence gate em main. Conferir o run e preservar evidências
 antes de iniciar E01. G0 acadêmico e G2 continuam pendentes.
+
+
+## 27/09/2026 — E00: gate documental remoto concluído
+
+O responsável disparou manualmente o workflow `Roadmap E00 - manual evidence gate`. O [run 36350845233](https://github.com/Ricardojnf33/ChicoCienciaV1/actions/runs/36350845233), tentativa 1, concluiu `success` em `main`, no SHA `41857710afd66616423e80ce025f8ec676de7665`. O job `validate-evidence` e todas as etapas reportadas pela API concluíram com sucesso.
+
+O relatório registrou 11/11 checks de integridade documental aprovados: arquivos obrigatórios, unicidade de IDs, âncoras HTML, paridade HTML/JSON, dependências, DAG acíclico, critérios de aceite, monitoramento, ressalva da Fase 5 e SHAs de snapshot. Contagens: 13 épicos, 40 histórias, 120 tarefas e 360 subtarefas. A validação fez zero chamadas de API de LLM.
+
+O artifact `roadmap-e00-36350845233-1` (ID 10942187121) foi baixado. O SHA-256 do ZIP local confere com o digest da API (`0cbd794118c2b0fe19af9cea4b312117c999c8c1f76df7f1f3a10034940a9aac`). Foram versionados `report.json`, `summary.md`, `checksums.json` e `run-metadata.json` em `evidencias/e00-20260927/remote/`, antes do vencimento previsto para 26/12/2026.
+
+**Limite da conclusão:** trata-se somente de integridade documental em CI. Nenhum teste da aplicação, execução live, validação científica ou E2E foi feito; G2 permanece `NOT_VALIDATED`, G0 acadêmico depende de informação do responsável e a Fase 5 foi apenas observada, não reexecutada. A próxima ação é revisar/integrar o PR desta evidência; E01 não foi iniciado.
