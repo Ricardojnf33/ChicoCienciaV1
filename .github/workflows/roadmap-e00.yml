@@ -1,0 +1,42 @@
+name: Roadmap E00 - manual evidence gate
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Valida apenas documentos, sem LLM. Não certifica E2E.'
+        required: true
+        type: choice
+        options:
+          - VALIDAR_E00_SEM_LLM
+permissions:
+  contents: read
+concurrency:
+  group: roadmap-e00-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate-evidence:
+    if: github.ref == 'refs/heads/main' && inputs.confirmation == 'VALIDAR_E00_SEM_LLM'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Validate roadmap and evidence contracts
+        run: python3 scripts/validate_roadmap.py --output evidence-output
+      - name: Publish job summary
+        if: always()
+        run: |
+          if [ -f evidence-output/summary.md ]; then
+            cat evidence-output/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Validation did not produce a report; inspect previous steps.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Preserve evidence even on validation failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: roadmap-e00-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence-output/
+          if-no-files-found: error
+          retention-days: 90
