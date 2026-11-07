@@ -346,3 +346,11 @@ e o preflight
 passaram sem executar pilotos ou acessar a API. O run 5 está apto a um único
 despacho manual, mantendo as duas chamadas anteriores no teto agregado.
 
+
+## 2026-11-07 E01 Contrato de geração
+
+A PR #12 encerrou a integração da evidência documental do E00. O incremento
+E01 usa o head da Fase 5 como base para isolar a correção do caminho live.
+O [índice E01](evidencias/e01-20261107/index.md) registra o run histórico, a
+regressão, os limites e a evidência exigida para G1. G2 depende de uma nova
+validação ponta a ponta sob o orçamento e o fluxo de autorização do projeto.

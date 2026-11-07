@@ -1,6 +1,5 @@
 import json
 import random
-import re
 import time
 from enum import Enum
 from pathlib import Path
@@ -14,6 +13,7 @@ from src.core.atomic_io import atomic_write_text
 from src.core.contracts import (
     AttemptRecord,
     CanonicalResult,
+    ContractError,
     ExecutionEvidence,
     RunManifest,
     canonicalize_attempt,
@@ -50,13 +50,15 @@ def _sync_llm_budget(
     manifest: RunManifest | None,
     manifest_path: str | None,
     crew: Any,
-) -> None:
-    if manifest is None or crew is None:
-        return
+) -> str | None:
+    if crew is None:
+        return None
     from src.crews.ai_scientist_v2 import budget_for_crew
 
     ledger = budget_for_crew(crew)
     snapshot = ledger.snapshot()
+    if manifest is None:
+        return snapshot.stop_reason
     manifest.llm_model = snapshot.model
     manifest.llm_budget_path = str(ledger.journal_path) if ledger.journal_path else None
     manifest.llm_token_limit = snapshot.token_limit
@@ -74,6 +76,7 @@ def _sync_llm_budget(
     manifest.llm_stop_reason = snapshot.stop_reason
     if manifest_path:
         save_manifest(manifest_path, manifest)
+    return snapshot.stop_reason
 
 
 def _node_row(node) -> NodeRow:
@@ -146,16 +149,32 @@ def _reset_manager_delegation_tools(crew: Any) -> None:
 def _extract_python_code(crew_output: Any) -> str:
     raw = getattr(crew_output, "raw", crew_output)
     if not isinstance(raw, str) or not raw.strip():
-        raise ValueError("Crew não retornou código Python textual.")
-    blocks = re.findall(
-        r"```(?:python|py)?\s*(.*?)```",
-        raw,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    code = max(blocks, key=len).strip() if blocks else raw.strip()
-    if not code:
-        raise ValueError("Crew retornou bloco Python vazio.")
-    return code + "\n"
+        raise ContractError("GENERATION_INVALID: resposta do Coder vazia ou não textual.")
+
+    response = raw.strip()
+    if response == "Agent stopped due to iteration limit or time limit.":
+        raise ContractError("GENERATION_LIMIT_REACHED: limite de iteração ou tempo da Crew.")
+
+    lines = response.splitlines(keepends=True)
+    if (
+        len(lines) < 3
+        or lines[0].strip().lower() not in {"```python", "```py"}
+        or lines[-1] != "```"
+        or any(line.lstrip().startswith("```") for line in lines[1:-1])
+    ):
+        raise ContractError("GENERATION_INVALID: esperado um único bloco Markdown Python.")
+
+    code = "".join(lines[1:-1])
+    if not code.strip():
+        raise ContractError("GENERATION_INVALID: bloco Python vazio.")
+    try:
+        compile(code.encode("utf-8"), "code.py", "exec", dont_inherit=True)
+    except (SyntaxError, UnicodeError) as exc:
+        line = getattr(exc, "lineno", None)
+        raise ContractError(
+            f"GENERATION_INVALID: Python inválido (linha {line or 'desconhecida'})."
+        ) from None
+    return code
 
 
 def _run_live_attempt(
@@ -189,11 +208,10 @@ def _run_live_attempt(
             Task(
                 agent=coder,
                 description=(
-                    f"Implementar o plano do nó {node.id}. Salvar o código em {expected_code} "
-                    f"e a métrica primária escalar no topo de {raw_result}. "
+                    f"Implementar o plano do nó {node.id}. Entregar o código na resposta. "
+                    f"O script deve gravar a métrica primária escalar no topo de {raw_result}. "
                     f"Usar a seed experimental {experiment_seed} em random, NumPy, "
                     "partições e estimadores aplicáveis, e registrá-la no resultado. "
-                    f"O código deve gravar o JSON de métricas em {raw_result}. "
                     "A resposta final deve conter somente um bloco Markdown ```python."
                 ),
                 expected_output="Um único bloco Markdown com o código Python completo",
@@ -480,7 +498,13 @@ def run_agentic_tree(
         tree.save_json(checkpoint_path)
         log.info("ats.resume.reconciled", attempts=reconciled, path=checkpoint_path)
     if mode is ExecutionMode.LIVE:
-        _sync_llm_budget(manifest, manifest_path, crew)
+        stop_reason = _sync_llm_budget(manifest, manifest_path, crew)
+        if stop_reason:
+            if manifest is not None:
+                manifest.status = "FAILED"
+                if manifest_path:
+                    save_manifest(manifest_path, manifest)
+            raise ContractError(f"LLM_BUDGET_STOPPED: {stop_reason}")
     if manifest is not None:
         manifest.status = "RUNNING"
         if manifest_path:
@@ -602,8 +626,11 @@ def run_agentic_tree(
                 )
                 break
             except Exception as exc:
-                if mode is ExecutionMode.LIVE:
+                stop_reason = (
                     _sync_llm_budget(manifest, manifest_path, crew)
+                    if mode is ExecutionMode.LIVE
+                    else None
+                )
                 _save_attempt(
                     manifest,
                     manifest_path,
@@ -624,7 +651,7 @@ def run_agentic_tree(
                     attempt=attempt,
                     error=str(exc),
                 )
-                if attempt == max_attempts:
+                if stop_reason or attempt == max_attempts:
                     node.status = ExecStatus.FAILED
                     upsert_node(engine, _node_row(node))
                     if checkpoint_path:
