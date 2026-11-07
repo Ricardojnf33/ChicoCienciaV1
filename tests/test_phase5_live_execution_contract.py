@@ -5,6 +5,7 @@ import crewai
 import pytest
 
 from src.core.contracts import ContractError, RunManifest, load_manifest
+from src.core.llm_budget import BudgetExceeded, LLMBudgetLedger
 from src.core.tree import AgenticTree
 from src.core.variants import ExperimentVariant, policy_for
 from src.processes import ats_process
@@ -68,7 +69,7 @@ def test_live_attempt_refuses_invalid_generation_before_write_and_run(
     )
     node = SimpleNamespace(id="node-1", meta={"primary_metric": "accuracy"})
 
-    with pytest.raises(ContractError, match="GENERATION_INVALID"):
+    with pytest.raises(ContractError, match="GENERATION_(INVALID|LIMIT_REACHED)"):
         ats_process._run_live_attempt(
             make_crew(raw), node, "prompt", 1, tmp_path, 1, 11
         )
@@ -136,7 +137,7 @@ def test_generation_failure_is_recorded_and_resume_respects_attempt_limit(
         "sqlite_url": db_url,
     }
 
-    with pytest.raises(ContractError, match="GENERATION_INVALID"):
+    with pytest.raises(ContractError, match="GENERATION_LIMIT_REACHED"):
         ats_process.run_agentic_tree(
             crew=make_crew(*[AGENT_LIMIT_OUTPUT] * expected_attempts),
             tree=tree,
@@ -149,7 +150,7 @@ def test_generation_failure_is_recorded_and_resume_respects_attempt_limit(
     assert [attempt.attempt for attempt in saved.attempts] == list(range(1, expected_attempts + 1))
     assert all(
         attempt.status == "FAILED"
-        and attempt.error.startswith("GENERATION_INVALID:")
+        and attempt.error.startswith("GENERATION_LIMIT_REACHED:")
         and AGENT_LIMIT_OUTPUT not in attempt.error
         and attempt.result_path is None
         and not list(Path(attempt.directory).iterdir())
@@ -161,3 +162,70 @@ def test_generation_failure_is_recorded_and_resume_respects_attempt_limit(
             crew=make_crew(), tree=AgenticTree.load_json(tree_path), manifest=saved, **run_options
         )
     assert load_manifest(manifest_path).attempts == saved.attempts
+
+
+def test_live_budget_stop_prevents_new_attempts_and_preserves_usage(
+    tmp_path, monkeypatch, make_crew
+):
+    monkeypatch.setenv("OPENAI_API_KEY", "fixture-key-no-network")
+    monkeypatch.setattr(
+        ats_process, "PythonRunnerTool", lambda: pytest.fail("runner acionado")
+    )
+    objective = tmp_path / "objective.yaml"
+    objective.write_text("objective:\n  title: Fixture\n  primary_metric: accuracy\n")
+    tree = AgenticTree.new(str(objective), artifact_root=str(tmp_path / "artifacts"))
+    tree_path = str(tmp_path / "tree.json")
+    manifest_path = str(tmp_path / "manifest.json")
+    ledger_options = {
+        "model": "gpt-4o-mini-2024-07-18",
+        "token_limit": 100,
+        "cost_limit_usd": 0.03,
+        "call_limit": 24,
+        "max_output_tokens_per_call": 20,
+        "input_per_million_usd": 0.15,
+        "cached_input_per_million_usd": 0.075,
+        "output_per_million_usd": 0.60,
+        "journal_path": tmp_path / "llm-budget.json",
+    }
+    ledger = LLMBudgetLedger(**ledger_options)
+    ledger.reserve("previous", input_tokens=50)
+    ledger.complete("previous", input_tokens=50, output_tokens=10)
+    crew = make_crew(AGENT_LIMIT_OUTPUT)
+    crew._chico_llm_budget = ledger
+    kickoff = crew.kickoff
+
+    def stop_after_rejected_reservation():
+        with pytest.raises(BudgetExceeded, match="antes do transporte"):
+            ledger.reserve("rejected", input_tokens=30)
+        return kickoff()
+
+    crew.kickoff = stop_after_rejected_reservation
+    manifest = RunManifest(
+        run_id="budget-fixture", objective_path=str(objective), primary_metric="accuracy"
+    )
+    options = {
+        "budget": 1,
+        "checkpoint_path": tree_path,
+        "manifest_path": manifest_path,
+        "mode": ats_process.ExecutionMode.LIVE,
+        "sqlite_url": f"sqlite:///{tmp_path / 'runs.db'}",
+    }
+    with pytest.raises(ContractError, match="GENERATION_LIMIT_REACHED"):
+        ats_process.run_agentic_tree(crew, tree, manifest=manifest, **options)
+
+    saved = load_manifest(manifest_path)
+    assert saved.status == "FAILED"
+    assert len(saved.attempts) == 1
+    assert saved.llm_started_calls == saved.llm_completed_calls == 1
+    assert saved.llm_rejected_calls == 1
+    assert saved.llm_total_tokens == 60
+    assert saved.llm_cost_usd > 0
+    assert saved.llm_stop_reason == ledger.snapshot().stop_reason
+
+    resumed_crew = make_crew()
+    resumed_crew._chico_llm_budget = LLMBudgetLedger(**ledger_options)
+    with pytest.raises(ContractError, match="LLM_BUDGET_STOPPED"):
+        ats_process.run_agentic_tree(
+            resumed_crew, AgenticTree.load_json(tree_path), manifest=saved, **options
+        )
+    assert load_manifest(manifest_path) == saved

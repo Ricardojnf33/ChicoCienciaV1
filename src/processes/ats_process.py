@@ -50,13 +50,15 @@ def _sync_llm_budget(
     manifest: RunManifest | None,
     manifest_path: str | None,
     crew: Any,
-) -> None:
-    if manifest is None or crew is None:
-        return
+) -> str | None:
+    if crew is None:
+        return None
     from src.crews.ai_scientist_v2 import budget_for_crew
 
     ledger = budget_for_crew(crew)
     snapshot = ledger.snapshot()
+    if manifest is None:
+        return snapshot.stop_reason
     manifest.llm_model = snapshot.model
     manifest.llm_budget_path = str(ledger.journal_path) if ledger.journal_path else None
     manifest.llm_token_limit = snapshot.token_limit
@@ -74,6 +76,7 @@ def _sync_llm_budget(
     manifest.llm_stop_reason = snapshot.stop_reason
     if manifest_path:
         save_manifest(manifest_path, manifest)
+    return snapshot.stop_reason
 
 
 def _node_row(node) -> NodeRow:
@@ -148,7 +151,11 @@ def _extract_python_code(crew_output: Any) -> str:
     if not isinstance(raw, str) or not raw.strip():
         raise ContractError("GENERATION_INVALID: resposta do Coder vazia ou não textual.")
 
-    lines = raw.strip().splitlines(keepends=True)
+    response = raw.strip()
+    if response == "Agent stopped due to iteration limit or time limit.":
+        raise ContractError("GENERATION_LIMIT_REACHED: limite de iteração ou tempo da Crew.")
+
+    lines = response.splitlines(keepends=True)
     if (
         len(lines) < 3
         or lines[0].strip().lower() not in {"```python", "```py"}
@@ -491,7 +498,13 @@ def run_agentic_tree(
         tree.save_json(checkpoint_path)
         log.info("ats.resume.reconciled", attempts=reconciled, path=checkpoint_path)
     if mode is ExecutionMode.LIVE:
-        _sync_llm_budget(manifest, manifest_path, crew)
+        stop_reason = _sync_llm_budget(manifest, manifest_path, crew)
+        if stop_reason:
+            if manifest is not None:
+                manifest.status = "FAILED"
+                if manifest_path:
+                    save_manifest(manifest_path, manifest)
+            raise ContractError(f"LLM_BUDGET_STOPPED: {stop_reason}")
     if manifest is not None:
         manifest.status = "RUNNING"
         if manifest_path:
@@ -613,8 +626,11 @@ def run_agentic_tree(
                 )
                 break
             except Exception as exc:
-                if mode is ExecutionMode.LIVE:
+                stop_reason = (
                     _sync_llm_budget(manifest, manifest_path, crew)
+                    if mode is ExecutionMode.LIVE
+                    else None
+                )
                 _save_attempt(
                     manifest,
                     manifest_path,
@@ -635,7 +651,7 @@ def run_agentic_tree(
                     attempt=attempt,
                     error=str(exc),
                 )
-                if attempt == max_attempts:
+                if stop_reason or attempt == max_attempts:
                     node.status = ExecStatus.FAILED
                     upsert_node(engine, _node_row(node))
                     if checkpoint_path:
