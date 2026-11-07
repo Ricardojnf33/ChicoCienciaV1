@@ -1,6 +1,5 @@
 import json
 import random
-import re
 import time
 from enum import Enum
 from pathlib import Path
@@ -14,6 +13,7 @@ from src.core.atomic_io import atomic_write_text
 from src.core.contracts import (
     AttemptRecord,
     CanonicalResult,
+    ContractError,
     ExecutionEvidence,
     RunManifest,
     canonicalize_attempt,
@@ -146,16 +146,28 @@ def _reset_manager_delegation_tools(crew: Any) -> None:
 def _extract_python_code(crew_output: Any) -> str:
     raw = getattr(crew_output, "raw", crew_output)
     if not isinstance(raw, str) or not raw.strip():
-        raise ValueError("Crew não retornou código Python textual.")
-    blocks = re.findall(
-        r"```(?:python|py)?\s*(.*?)```",
-        raw,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    code = max(blocks, key=len).strip() if blocks else raw.strip()
-    if not code:
-        raise ValueError("Crew retornou bloco Python vazio.")
-    return code + "\n"
+        raise ContractError("GENERATION_INVALID: resposta do Coder vazia ou não textual.")
+
+    lines = raw.strip().splitlines(keepends=True)
+    if (
+        len(lines) < 3
+        or lines[0].strip().lower() not in {"```python", "```py"}
+        or lines[-1] != "```"
+        or any(line.lstrip().startswith("```") for line in lines[1:-1])
+    ):
+        raise ContractError("GENERATION_INVALID: esperado um único bloco Markdown Python.")
+
+    code = "".join(lines[1:-1])
+    if not code.strip():
+        raise ContractError("GENERATION_INVALID: bloco Python vazio.")
+    try:
+        compile(code.encode("utf-8"), "code.py", "exec", dont_inherit=True)
+    except (SyntaxError, UnicodeError) as exc:
+        line = getattr(exc, "lineno", None)
+        raise ContractError(
+            f"GENERATION_INVALID: Python inválido (linha {line or 'desconhecida'})."
+        ) from None
+    return code
 
 
 def _run_live_attempt(
@@ -189,11 +201,10 @@ def _run_live_attempt(
             Task(
                 agent=coder,
                 description=(
-                    f"Implementar o plano do nó {node.id}. Salvar o código em {expected_code} "
-                    f"e a métrica primária escalar no topo de {raw_result}. "
+                    f"Implementar o plano do nó {node.id}. Entregar o código na resposta. "
+                    f"O script deve gravar a métrica primária escalar no topo de {raw_result}. "
                     f"Usar a seed experimental {experiment_seed} em random, NumPy, "
                     "partições e estimadores aplicáveis, e registrá-la no resultado. "
-                    f"O código deve gravar o JSON de métricas em {raw_result}. "
                     "A resposta final deve conter somente um bloco Markdown ```python."
                 ),
                 expected_output="Um único bloco Markdown com o código Python completo",
